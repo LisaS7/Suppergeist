@@ -1,0 +1,248 @@
+/* ============================================================
+   Suppergeist — Pastel Retro / Neobrutalist Theme
+   JavaFX CSS (all properties -fx- prefixed)
+   ============================================================
+
+   Palette
+   -------
+   --cream:       #F5F0E8   (root background)
+   --sage:        #B5C9B1   (header band)
+   --butter:      #F2E07A   (meal card fill)
+   --rose:        #E8B4B8   (sidebar band)
+   --lavender:    #C9C0DA   (footer band)
+   --ink:         #1E1B18   (borders + primary text)
+   --ink-soft:    #3D3830   (secondary text)
+   --shadow-col:  #1E1B18   (hard offset shadow layer)
+   --white:       #FFFFFF
+   ============================================================ */
+
+
+/* ── Root / BorderPane ────────────────────────────────────── */
+
+.root {
+    -fx-background-color: #F5F0E8;
+    -fx-font-family: "System";
+    -fx-font-size: 13px;
+}
+
+
+/* ── Generic resets ──────────────────────────────────────── */
+
+HBox {
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+VBox {
+    -fx-padding: 0;
+    -fx-spacing: 0;
+}
+
+GridPane {
+    -fx-padding: 16 16 16 16;
+    -fx-hgap: 12;
+    -fx-vgap: 12;
+    -fx-border-color: transparent;
+}
+
+Label {
+    -fx-text-fill: #1E1B18;
+}
+
+Separator {
+    -fx-padding: 8 0 8 0;
+}
+
+Separator .line {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 1.5;
+}
+
+
+/* ── Header ──────────────────────────────────────────────── */
+
+.header {
+    -fx-background-color: #B5C9B1;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 0 0 3 0;
+    -fx-padding: 14 20 14 20;
+    -fx-spacing: 12;
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* App title — the first Label inside .header gets larger treatment */
+.header > Label {
+    -fx-font-size: 22px;
+    -fx-font-weight: BOLD;
+    -fx-text-fill: #1E1B18;
+}
+
+
+/* ── Main content area ───────────────────────────────────── */
+
+.main-content {
+    -fx-padding: 20 20 20 20;
+    -fx-spacing: 14;
+    -fx-background-color: #F5F0E8;
+}
+
+/* Section heading inside main-content */
+.main-content > Label {
+    -fx-font-size: 16px;
+    -fx-font-weight: BOLD;
+    -fx-text-fill: #1E1B18;
+    -fx-padding: 0 0 4 0;
+}
+
+
+/* ── Meal Card ───────────────────────────────────────────── */
+/*
+   Neobrutalist hard offset shadow achieved with a two-layer
+   -fx-background-color stack:
+     layer 0 (bottom): ink color shifted 4px right and 4px down  →  background-insets: -4 -4 4 4 (negative insets push the layer out behind-right)
+     Wait — JavaFX -fx-background-insets works differently:
+       insets are (top right bottom left) and clip inward.
+       To fake an offset shadow, we instead use a *border* trick:
+       We paint the card background over a solid ink background with
+       a vertical+horizontal shift via padding offset.
+
+   Simplest reliable approach for JavaFX:
+     -fx-background-color: #1E1B18, #F2E07A
+     -fx-background-insets: 4 -4 -4 4, 0
+     — first (ink) layer bleeds out right+down by 4px
+     — second (butter) layer sits flush at 0
+
+   This produces a solid hard shadow at bottom-right.
+*/
+
+.meal-card {
+    /* Hard offset shadow layer (ink), then card fill layer (butter) */
+    -fx-background-color: #1E1B18, #F2E07A;
+    -fx-background-insets: 4 -4 -4 4, 0;
+    -fx-background-radius: 0, 0;
+
+    /* Solid border on the card face */
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2.5;
+    -fx-border-radius: 0;
+
+    -fx-padding: 12 14 12 14;
+    -fx-min-width: 120;
+    -fx-min-height: 80;
+    -fx-pref-width: 150;
+}
+
+.meal-card > Label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #1E1B18;
+    -fx-wrap-text: true;
+}
+
+/* Day-of-week labels in the GridPane header row */
+GridPane > Label {
+    -fx-font-size: 11px;
+    -fx-font-weight: BOLD;
+    -fx-text-fill: #3D3830;
+    -fx-padding: 0 0 4 2;
+}
+
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+
+.sidebar {
+    -fx-background-color: #EFE8F0;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 20 16 20 16;
+    -fx-spacing: 10;
+    -fx-min-width: 180;
+    -fx-pref-width: 200;
+}
+
+.sidebar > Label {
+    -fx-font-size: 14px;
+    -fx-font-weight: BOLD;
+    -fx-text-fill: #1E1B18;
+    -fx-padding: 0 0 4 0;
+}
+
+.sidebar > CheckBox {
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+}
+
+.sidebar > CheckBox .box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.sidebar > CheckBox:selected .box {
+    -fx-background-color: #B5C9B1;
+}
+
+.sidebar > CheckBox:selected .mark {
+    -fx-background-color: #1E1B18;
+}
+
+
+/* ── Footer ──────────────────────────────────────────────── */
+
+.footer {
+    -fx-background-color: #C9C0DA;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 3 0 0 0;
+    -fx-padding: 10 20 10 20;
+    -fx-spacing: 12;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.footer > Label {
+    -fx-font-size: 11px;
+    -fx-text-fill: #3D3830;
+}
+
+
+/* ── Buttons ─────────────────────────────────────────────── */
+
+.button {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+    -fx-font-weight: BOLD;
+    -fx-padding: 7 16 7 16;
+    -fx-cursor: HAND;
+}
+
+.button:hover {
+    -fx-background-color: #F2E07A;
+}
+
+.button:pressed {
+    -fx-background-color: #B5C9B1;
+    /* Simulate the card pressing down by shifting the label slightly */
+    -fx-translate-x: 1;
+    -fx-translate-y: 1;
+}
+
+.button:focused {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2.5;
+    /* JavaFX default focus ring removed; our border IS the focus indicator */
+}
+
+/* Header prefs button: slightly more prominent */
+.header .button {
+    -fx-background-color: #FFFFFF;
+    -fx-padding: 6 14 6 14;
+}
+
+.header .button:hover {
+    -fx-background-color: #F5F0E8;
+}

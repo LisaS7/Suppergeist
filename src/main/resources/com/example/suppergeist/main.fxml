@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.suppergeist.MainController"
+            prefHeight="400.0" prefWidth="600.0">
+    <top>
+        <HBox spacing="10" styleClass="header">
+            <Label text="Suppergeist"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Prefs" onAction="#togglePrefs"/>
+        </HBox>
+    </top>
+    <center>
+        <VBox styleClass="main-content">
+            <Label text="Weekly Meal Plan" />
+            <GridPane hgap="10" vgap="10">
+                <Label text="Monday" GridPane.columnIndex="0"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="640 calories" />
+                </VBox>
+                <Label text="Tuesday" GridPane.columnIndex="1"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="750 calories" />
+                </VBox>
+                <Label text="Wednesday" GridPane.columnIndex="2"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="820 calories" />
+                </VBox>
+                <Label text="Thursday" GridPane.columnIndex="3"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="710 calories" />
+                </VBox>
+                <Label text="Friday" GridPane.columnIndex="4"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="4" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="560 calories" />
+                </VBox>
+                <Label text="Saturday" GridPane.columnIndex="5"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="5" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="590 calories" />
+                </VBox>
+                <Label text="Sunday" GridPane.columnIndex="6"/>
+                <VBox styleClass="meal-card" GridPane.columnIndex="6" GridPane.rowIndex="1">
+                    <Label text="Meal goes here" />
+                    <Label text="680 calories" />
+                </VBox>
+            </GridPane>
+        </VBox>
+    </center>
+    <right>
+        <VBox spacing="10" fx:id="prefsSidebar" styleClass="sidebar">
+            <Label text="Preferences"/>
+            <Separator />
+            <CheckBox text="Show calories"/>
+            <CheckBox text="Show nutritional info"/>
+        </VBox>
+    </right>
+    <bottom>
+        <HBox spacing="10" styleClass="footer">
+            <Label text="Buttons will go here later"/>
+        </HBox>
+    </bottom>
+</BorderPane>

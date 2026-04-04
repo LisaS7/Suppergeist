@@ -27,7 +27,7 @@ tasks.withType<JavaCompile> {
 
 application {
     mainModule.set("com.example.suppergeist")
-    mainClass.set("com.example.suppergeist.HelloApplication")
+    mainClass.set("com.example.suppergeist.SuppergeistApplication")
 }
 
 javafx {
