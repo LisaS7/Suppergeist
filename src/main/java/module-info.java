@@ -2,6 +2,7 @@ module com.example.suppergeist {
     requires javafx.controls;
     requires javafx.fxml;
     requires static lombok;
+    requires java.sql;
 
 
     opens com.example.suppergeist to javafx.fxml;
