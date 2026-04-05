@@ -49,6 +49,7 @@ data/processed/
 
 # --- Databases ---
 *.db
+*.sqlite
 
 # --- Python ---
 __pycache__/
