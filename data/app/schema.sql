@@ -14,9 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
 -- Null when no nutritional match has been made yet.
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS ingredients (
-    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-    name      TEXT    NOT NULL UNIQUE,
-    food_code TEXT
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    name            TEXT    NOT NULL UNIQUE,
+    food_code       TEXT,
+    energy_kcal     REAL,
+    protein_g       REAL,
+    fat_g           REAL,
+    carbohydrate_g  REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_ingredients_food_code

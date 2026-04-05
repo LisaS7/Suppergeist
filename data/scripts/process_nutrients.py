@@ -29,7 +29,10 @@ VITAMINS_COLUMNS = {
     "Folate (µg)": "Folate (µg)",
 }
 
-# Columns where values should remain as strings (not converted to float)
+# Output column names (as defined in PROXIMATES_COLUMNS values) where values
+# should remain as strings rather than being converted to float. These happen
+# to match the input column names for these three fields, but clean_value
+# receives the *output* name, so this set must use output names.
 STRING_COLUMNS = {"Food Code", "Food Name", "Description"}
 
 

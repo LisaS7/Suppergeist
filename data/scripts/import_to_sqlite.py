@@ -24,7 +24,7 @@ def main():
         snake_cols = next(reader)  # snake_case column names
 
         col_defs = ", ".join(
-            f"{col} {col_type(col)} PRIMARY KEY" if col == "food_code" else f"{col} {col_type(col)}"
+            f"`{col}` {col_type(col)} PRIMARY KEY" if col == "food_code" else f"`{col}` {col_type(col)}"
             for col in snake_cols
         )
 
