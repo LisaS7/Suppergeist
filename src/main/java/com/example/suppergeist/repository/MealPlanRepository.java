@@ -20,7 +20,7 @@ public class MealPlanRepository {
     private MealPlan mapRowToMealPlan(ResultSet rs) throws SQLException {
         int id = rs.getInt("id");
         int userId = rs.getInt("user_id");
-        LocalDate startDate = rs.getDate("start_date").toLocalDate();
+        LocalDate startDate = LocalDate.parse(rs.getString("start_date"));
         return new MealPlan(id, userId, startDate);
     }
 
@@ -29,13 +29,13 @@ public class MealPlanRepository {
 
         try (
                 Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
+                PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
             stmt.setInt(1, userId);
-            stmt.setDate(2, java.sql.Date.valueOf(startDate));
+            stmt.setString(2, startDate.toString());
 
             try (
-                    ResultSet rs = stmt.executeQuery();
+                    ResultSet rs = stmt.executeQuery()
             ) {
                 if (rs.next()) {
                     return Optional.of(mapRowToMealPlan(rs));
