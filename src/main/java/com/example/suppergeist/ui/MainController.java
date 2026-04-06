@@ -1,4 +1,4 @@
-package com.example.suppergeist;
+package com.example.suppergeist.ui;
 
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
@@ -68,7 +68,7 @@ public class MainController {
                 Label calorieLabel = new Label("-- kcal");
 
                 card.getChildren().addAll(nameLabel, calorieLabel);
-                
+
                 int row = nextRowForDate.getOrDefault(meal.date(), 1);
                 nextRowForDate.put(meal.date(), row + 1);
                 mealPlanGrid.add(card, column, 1);
