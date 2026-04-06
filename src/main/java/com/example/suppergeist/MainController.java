@@ -14,7 +14,7 @@ import javafx.scene.layout.VBox;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.*;
 
 public class MainController {
     private MealPlanService mealPlanService;
@@ -43,12 +43,19 @@ public class MainController {
         try {
             weeklyMeals = mealPlanService.getWeeklyMeals(1, LocalDate.of(2026, 4, 6), DayOfWeek.MONDAY);
 
+            Set<LocalDate> labelledDates = new HashSet<>();
+            Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
+
             for (WeeklyMealViewModel meal : weeklyMeals) {
 
                 // Day label
                 int column = meal.date().getDayOfWeek().getValue() - 1;
-                Label dayLabel = new Label(meal.dayLabel());
-                mealPlanGrid.add(dayLabel, column, 0);
+
+                if (!labelledDates.contains(meal.date())) {
+                    Label dayLabel = new Label(meal.dayLabel());
+                    mealPlanGrid.add(dayLabel, column, 0);
+                    labelledDates.add(meal.date());
+                }
 
                 // Create card
                 VBox card = new VBox();
@@ -61,6 +68,9 @@ public class MainController {
                 Label calorieLabel = new Label("-- kcal");
 
                 card.getChildren().addAll(nameLabel, calorieLabel);
+                
+                int row = nextRowForDate.getOrDefault(meal.date(), 1);
+                nextRowForDate.put(meal.date(), row + 1);
                 mealPlanGrid.add(card, column, 1);
             }
         } catch (SQLException e) {
