@@ -20,7 +20,15 @@ CREATE TABLE IF NOT EXISTS ingredients (
     energy_kcal     REAL,
     protein_g       REAL,
     fat_g           REAL,
-    carbohydrate_g  REAL
+    carbohydrate_g  REAL,
+    total_sugars_g  REAL,
+    fibre_g         REAL,
+    vitamin_a_µg    REAL,
+    vitamin_c_mg    REAL,
+    vitamin_d_µg    REAL,
+    vitamin_e_mg    REAL,
+    vitamin_b12_µg  REAL,
+    folate_µg       REAL
 );
 
 CREATE INDEX IF NOT EXISTS idx_ingredients_food_code

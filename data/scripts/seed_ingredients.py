@@ -59,9 +59,25 @@ def import_csv(conn: sqlite3.Connection, csv_path: str) -> int:
 # Step 2 — add nutrition columns if the existing db pre-dates this script
 # ---------------------------------------------------------------------------
 
+NUTRITION_COLS = (
+    "energy_kcal",
+    "protein_g",
+    "fat_g",
+    "carbohydrate_g",
+    "total_sugars_g",
+    "fibre_g",
+    "vitamin_a_µg",
+    "vitamin_c_mg",
+    "vitamin_d_µg",
+    "vitamin_e_mg",
+    "vitamin_b12_µg",
+    "folate_µg",
+)
+
+
 def ensure_nutrition_columns(conn: sqlite3.Connection) -> None:
     existing = {row[1] for row in conn.execute("PRAGMA table_info(ingredients)")}
-    for col in ("energy_kcal", "protein_g", "fat_g", "carbohydrate_g"):
+    for col in NUTRITION_COLS:
         if col not in existing:
             conn.execute(f"ALTER TABLE ingredients ADD COLUMN {col} REAL")
 
@@ -82,10 +98,11 @@ def enrich_from_nutrients(conn: sqlite3.Connection, nutrients_db: str) -> tuple[
     food_codes = [row[1] for row in ingredient_rows]
     placeholders = ",".join("?" * len(food_codes))
 
+    cols_sql = ", ".join(NUTRITION_COLS)
     with sqlite3.connect(nutrients_db) as nutrients_conn:
         nutrient_rows = nutrients_conn.execute(
             f"""
-            SELECT food_code, energy_kcal, protein_g, fat_g, carbohydrate_g
+            SELECT food_code, {cols_sql}
             FROM foods
             WHERE food_code IN ({placeholders})
             """,
@@ -95,17 +112,13 @@ def enrich_from_nutrients(conn: sqlite3.Connection, nutrients_db: str) -> tuple[
     # Index by food_code for fast lookup
     nutrition_by_code = {row[0]: row[1:] for row in nutrient_rows}
 
+    set_sql = ", ".join(f"{col} = ?" for col in NUTRITION_COLS)
     matched = 0
     for _, food_code in ingredient_rows:
         if food_code in nutrition_by_code:
-            kcal, protein, fat, carbs = nutrition_by_code[food_code]
             conn.execute(
-                """
-                UPDATE ingredients
-                SET energy_kcal = ?, protein_g = ?, fat_g = ?, carbohydrate_g = ?
-                WHERE food_code = ?
-                """,
-                (kcal, protein, fat, carbs, food_code),
+                f"UPDATE ingredients SET {set_sql} WHERE food_code = ?",
+                (*nutrition_by_code[food_code], food_code),
             )
             matched += 1
 
