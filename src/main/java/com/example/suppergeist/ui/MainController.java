@@ -15,16 +15,22 @@ import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class MainController {
     private MealPlanService mealPlanService;
     private List<WeeklyMealViewModel> weeklyMeals;
 
+    // UI Elements
     @FXML
     private VBox prefsSidebar;
 
     @FXML
     private GridPane mealPlanGrid;
+
+    // Log
+    private static final Logger log = Logger.getLogger(MainController.class.getName());
 
     @FXML
     private void togglePrefs() {
@@ -33,6 +39,7 @@ public class MainController {
     }
 
     public void initialize() {
+        log.info("Initializing MainController");
         DatabaseManager dbManager = new DatabaseManager();
         MealRepository mealRepository = new MealRepository(dbManager);
         MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
@@ -71,10 +78,13 @@ public class MainController {
 
                 int row = nextRowForDate.getOrDefault(meal.date(), 1);
                 nextRowForDate.put(meal.date(), row + 1);
-                mealPlanGrid.add(card, column, 1);
+                mealPlanGrid.add(card, column, row);
             }
+
+            log.info("Loaded " + weeklyMeals.size() + " meals");
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            log.log(Level.SEVERE, "Failed to load meals", e);
         }
     }
 }
