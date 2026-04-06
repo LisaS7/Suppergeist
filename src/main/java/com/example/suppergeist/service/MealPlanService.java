@@ -10,6 +10,7 @@ import com.example.suppergeist.repository.MealRepository;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,11 @@ public class MealPlanService {
         this.mealRepository = mealRepository;
         this.mealPlanRepository = mealPlanRepository;
         this.mealPlanEntryRepository = mealPlanEntryRepository;
+    }
+
+    private String formatDayLabel(LocalDate date) {
+        DateTimeFormatter dayLabelFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
+        return date.format(dayLabelFormatter);
     }
 
     public List<WeeklyMealViewModel> getWeeklyMeals(int userId, LocalDate referenceDate, DayOfWeek weekStartDay) throws SQLException {
@@ -45,9 +51,9 @@ public class MealPlanService {
                 continue;
             }
             Meal resolvedMeal = meal.get();
+
             LocalDate mealDate = startDate.plusDays(entry.getDayOffset());
-            // TODO: fix crappy date formatting
-            String dayLabel = mealDate.getDayOfWeek() + " " + mealDate.getDayOfMonth();
+            String dayLabel = formatDayLabel(mealDate);
 
             WeeklyMealViewModel vm = new WeeklyMealViewModel(mealDate, dayLabel, entry.getMealType(), resolvedMeal.getName());
             weeklyMeals.add(vm);
