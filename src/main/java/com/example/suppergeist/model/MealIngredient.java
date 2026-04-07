@@ -1,10 +1,8 @@
 package com.example.suppergeist.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class MealIngredient {
     private Integer id;
     private int mealId;
@@ -12,11 +10,19 @@ public class MealIngredient {
     private double quantity;
     private String unit;
 
-    public MealIngredient(int mealId, int ingredientId, double quantity, String unit) {
+    public MealIngredient(Integer id, int mealId, int ingredientId, double quantity, String unit) {
+        if (!(quantity > 0)) {
+            throw new IllegalArgumentException("Quantity must be greater than 0 (got: " + quantity + ")");
+        }
+
         this.mealId = mealId;
         this.ingredientId = ingredientId;
         this.quantity = quantity;
         this.unit = unit;
+    }
+
+    public MealIngredient(int mealId, int ingredientId, double quantity, String unit) {
+        this(null, mealId, ingredientId, quantity, unit);
     }
 
 }
