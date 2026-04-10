@@ -32,7 +32,7 @@
 
 ### FR-06 — Nutritional Estimates
 - Rough calorie and macro estimates shall be shown per meal
-- Estimates shall draw on CoFID 2021 data (`data/processed/nutrients.db`) where ingredient matches are possible
+- Estimates shall draw on CoFID 2021 data (seeded into `app.db.ingredients` at first launch from the bundled `ingredient_mapping.csv`) where ingredient matches are possible
 - Estimates are advisory only; no guarantee of accuracy
 
 ### FR-08 — Plan Management

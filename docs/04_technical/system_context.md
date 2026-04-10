@@ -11,7 +11,7 @@ C4Context
     System(suppergeist, "Suppergeist", "Local-first desktop meal planning app (JavaFX + Java)")
 
     System_Ext(ollama, "Ollama", "Locally-running LLM inference engine — no internet required")
-    SystemDb_Ext(sqlite, "SQLite", "Local database — plans, preferences, nutrients")
+    SystemDb_Ext(sqlite, "SQLite (app.db)", "Local database — plans, preferences, and CoFID nutrition data")
 
     Rel(user, suppergeist, "Uses", "Desktop UI")
     Rel(suppergeist, ollama, "Sends prompts / receives meal suggestions", "HTTP (localhost)")
@@ -25,8 +25,7 @@ C4Context
 | Dependency | Type | Role | Required at runtime? |
 |------------|------|------|----------------------|
 | Ollama | Local process | LLM inference for meal generation | Yes — must be running |
-| SQLite (`nutrients.db`) | File (read-only) | CoFID 2021 nutritional data | Yes — bundled |
-| SQLite (`app.db`) | File (read-write) | User plans and preferences | Yes — created on first run |
+| SQLite (`app.db`) | File (read-write) | Plans, preferences, and CoFID nutrition data (seeded on first run) | Yes — created on first run |
 | Java 21 JRE | Runtime | Executes the application | Yes |
 
 ---
@@ -48,7 +47,6 @@ Suppergeist runs as a single desktop process on the user's machine. It is packag
 User's Machine
 ├── Suppergeist (JavaFX desktop app)
 ├── Ollama (separate install, localhost:11434)
-└── data/
-    └── processed/nutrients.db   ← read-only, bundled
-    └── app.db                   ← created on first run
+└── ~/.suppergeist/
+    └── app.db   ← created on first run; contains plans, preferences, and CoFID nutrition data
 ```

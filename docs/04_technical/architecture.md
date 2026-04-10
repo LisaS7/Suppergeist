@@ -41,9 +41,12 @@ Suppergeist follows a strict three-layer architecture. Each layer has a single r
 - `ShoppingListService` — derives and groups an ingredient list from a `MealPlan`
 
 ### Data Layer
-- `MealPlanRepository` — CRUD for saved plans (SQLite `app.db`)
-- `PreferencesRepository` — read/write user dietary preferences (SQLite `app.db`)
-- `NutrientRepository` — read-only queries against CoFID 2021 data (`nutrients.db`)
+- `MealPlanRepository` — CRUD for saved plans (`app.db`)
+- `MealPlanEntryRepository` — CRUD for plan entries (join between plans and meals) (`app.db`)
+- `MealRepository` — CRUD for meals (`app.db`)
+- `MealIngredientRepository` — ingredient lines per meal, with joined ingredient names (`app.db`)
+- `UserRepository` — read/write user record including all preference fields (`app.db`)
+- `IngredientRepository` — queries against the `ingredients` table, which includes seeded CoFID 2021 nutrition columns (`app.db`)
 
 ---
 
@@ -118,10 +121,9 @@ Ollama calls are blocking HTTP and may take several seconds. These are executed 
 
 ```
 com.example.suppergeist
-├── ui/                  ← controllers
-├── service/             ← business logic, AI integration
-│   ├── ai/              ← OllamaClient, PromptBuilder, MealPlanParser
-│   └── plan/            ← MealPlanService, ShoppingListService
-├── data/                ← repositories, DB connection management
-└── model/               ← MealPlan, Meal, Ingredient, UserPreferences, etc.
+├── ui/                  ← controllers (MainController, PreferencesSidebarController)
+├── service/             ← business logic, AI integration (flat for now; ai/ and plan/ subpackages planned)
+├── repository/          ← SQLite repositories + DatabaseManager, Schema
+├── database/            ← DatabaseManager, Schema
+└── model/               ← domain models
 ```
