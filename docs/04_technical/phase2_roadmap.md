@@ -14,8 +14,8 @@ These tasks belong to Phase 2 but were built ahead of schedule:
 | Task                    | What was built                                                                                               |
 |-------------------------|--------------------------------------------------------------------------------------------------------------|
 | `WeeklyMealViewModel`   | Record in `com.example.suppergeist.service` — `date`, `dayLabel`, `mealType`, `mealName`                     |
-| `MealPlanService`       | Coordinates three repositories; week-start via `TemporalAdjusters`; `dayLabel` formatted as `"Monday 6 Apr"` |
-| `MainController` wiring | Constructs repositories + service in `initialize()`; calls `getWeeklyMeals(1, 2026-04-06, MONDAY)`           |
+| `MealPlanService`       | Coordinates three repositories; `dayLabel` formatted as `"Monday 6 Apr"`; week-start ordering is a display concern handled by `MainController`, not the service |
+| `MainController` wiring | Constructs repositories + service in `initialize()`; calls `getWeeklyMeals(1, 2026-04-06)`; uses loaded `weekStartDay` to order grid columns |
 | Data-driven weekly grid | Day labels and meal cards added dynamically; day label deduplication via `Set<LocalDate>`                    |
 
 Remaining gap from this work: calorie labels show `"-- kcal"` placeholder — pending `NutritionService` (Phase 3).
@@ -119,7 +119,7 @@ public class UserRepository {
 }
 ```
 
-Storage: `dietary_constraints` and `avoid_ingredients` serialised as comma-separated strings. `getUser` returns a
+Storage: `dietary_constraints` and `avoid_food_codes` serialised as comma-separated strings. `getUser` returns a
 synthetic default `User` with empty preferences if the row doesn't exist.
 
 Round-trip tests in `UserRepositoryTest` cover: default creation, idempotency, preference persistence, overwrite,
@@ -143,8 +143,7 @@ This is intentional and will be replaced once active-week navigation or automati
 exists.
 
 **Remaining:** dietary-constraint checkboxes exist in the FXML but are not wired to the model or save path;
-avoid-ingredients is a static label placeholder only; the join-table approach below has not been implemented
-(currently using the denormalised `avoid_food_codes` column on `users`).
+avoid-food-codes is a static label placeholder only.
 
 The preferences sidebar (`prefsSidebar` VBox) exists in the FXML; basic fields are bound and persisted.
 
@@ -152,50 +151,32 @@ The preferences sidebar (`prefsSidebar` VBox) exists in the FXML; basic fields a
 
 - Text fields or checkboxes for common `dietaryConstraints` (e.g. vegetarian, gluten-free)
 - Numeric field for `servingsPerMeal`
+- **Avoid ingredients — searchable multi-select:**
+  1. Search input field — filters the ingredient list; not stored
+  2. Multi-select list — populated via `IngredientRepository.searchByName()`; selected items' food codes are persisted
+  - On startup, pre-select any ingredients whose food code is in the loaded `avoidFoodCodes` set
 - Save button that calls `UserRepository.savePreferences(...)`
 - On startup, load preferences and populate fields
 
-**Avoid ingredients — searchable multi-select (replaces free-text input):**
-
-Free-text entry requires users to guess exact ingredient names and leads to fragile matching (e.g. `"tomato"` vs `"chopped tomatoes"`). Replace with a two-part control:
-
-1. Search input field — filters the ingredient list only; not stored
-2. Multi-select list — populated via `WHERE name LIKE '%<query>%'`; selected items are persisted
-
 ### Schema changes
 
-Add a new join table to `Schema.java` and apply it in `DatabaseManager.init()`:
-
-```sql
-CREATE TABLE IF NOT EXISTS user_avoid_ingredients (
-    user_id      INTEGER NOT NULL,
-    ingredient_id INTEGER NOT NULL,
-    PRIMARY KEY (user_id, ingredient_id),
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
-)
-```
-
-Remove the `avoid_ingredients` column from `users` (or stop using it if already present).
-
-### Model changes
-
-Update `UserPreferences`:
-
-- Change `avoidIngredients` from `List<String>` → `List<Integer>` (ingredient IDs)
+None. `avoidFoodCodes` is stored as a comma-separated string in the `avoid_food_codes` column on `users`. Food codes never contain commas, so this is safe and sufficient.
 
 ### Repository changes
 
-Update `UserRepository`:
+No structural changes to `UserRepository`. `savePreferences(...)` and `getUser(...)` already serialise/deserialise `avoidFoodCodes` as a comma-separated string.
 
-- `savePreferences(...)` — delete existing rows for the user in `user_avoid_ingredients`, then insert selected IDs
-- `getUser(...)` — load ingredient IDs from `user_avoid_ingredients` and populate `UserPreferences.avoidIngredients`
+Add a search method to `IngredientRepository` to drive the multi-select:
 
-Add a query method (can live in `IngredientRepository` or inline in the preferences controller) for the search filter:
+```java
+public List<Ingredient> searchByName(String query) throws SQLException { ... }
+```
 
 ```sql
-SELECT id, name FROM ingredients WHERE name LIKE ? ORDER BY name LIMIT 50
+SELECT id, name, food_code FROM ingredients WHERE name LIKE ? ORDER BY name LIMIT 50
 ```
+
+The controller calls `IngredientRepository.searchByName()` — no SQL in the UI layer.
 
 ### Call-site change in `MainController`
 
@@ -210,13 +191,19 @@ Replace the temporary hardcoded `DayOfWeek.MONDAY` in UI layout logic with the l
 
 > Temporary dev limitation: `referenceDate` may remain fixed to match seeded data until plan generation / active-week navigation is implemented.
 
-### Non-goals (this phase)
+**Done when:** avoid-food-codes survive a restart and are reloaded correctly; dietary-constraint checkboxes persist; `MainController` uses the loaded `weekStartDay` for grid column ordering.
 
-- No fuzzy matching beyond `LIKE '%query%'`
-- No category or tag system
-- No natural language parsing
+---
 
-**Done when:** selected avoid-ingredients survive a restart and are reloaded correctly; `MealPlanService` uses the loaded `weekStartDay`.
+## Task 7a — Consolidate user loading in `MainController` ⬜
+
+*(Complete alongside Task 7 — required before Task 7 is considered closed)*
+
+`MainController` currently loads the user twice: once via `preferencesSidebarController.loadUser(1)` and again inside `refreshMealPlanGrid()` via a direct `userRepository.getUser(1)` call. This is a known TODO in the code. It is not a correctness bug now, but Task 7 wires dietary constraints and avoid-ingredients into the same `User` object — at that point, two independent loads create two independent views of user state, and any field added to preferences doubles the number of places that need updating.
+
+**Fix:** hold a single `User` reference in `MainController`. Load it once on startup; update it via the `onPreferencesSaved` callback when preferences are saved. Pass the cached `User` into `refreshMealPlanGrid()` rather than re-querying.
+
+**Done when:** `userRepository.getUser()` is called exactly once per user action; `refreshMealPlanGrid()` uses the cached `User`; the TODO comment is removed.
 
 ---
 
@@ -237,7 +224,7 @@ Both methods implemented:
 
 ---
 
-## Task 9 — `ShoppingListService` ⬜
+## Task 9 — `ShoppingListService` 🔄
 
 *(Depends on Task 8)*
 
@@ -249,18 +236,43 @@ public class ShoppingListService {
 }
 ```
 
-`ShoppingItem` is a simple record: `name`, `totalQuantity` (String — free-text quantities are combined naively for MVP),
-`category` (String — derive from `Ingredient.foodCode` prefix for MVP, or leave as `"General"` if unclassified).
+`ShoppingItem` is a public record: `name`, `totalQuantity` (String — quantities summed when units match, concatenated when they differ), `category` (String — derived from `foodCode` prefix; `"General"` if unclassified or food code is null).
+
+**Category mapping (presentation concern — not stored in DB):**
+
+Category is derived in `ShoppingListService.determineCategory(String foodCode)` from the two-character CoFID prefix. It is not stored on `Ingredient` and is not in the database.
+
+| Prefix(es) | Category            |
+|-----------|---------------------|
+| `11`      | Bakery & Grains     |
+| `12`      | Dairy & Eggs        |
+| `13`      | Vegetables & Beans  |
+| `14`      | Fruit & Nuts        |
+| `16`      | Fish                |
+| `18`, `19`| Meat                |
+| `17`, `50`| Food Cupboard       |
+| null / other | General          |
+
+Prefixes form loose but supermarket-aligned clusters — good enough for UX grouping; refinement deferred.
+
+**Data requirement:** `MealIngredientRepository.getIngredientsWithNameForMeal()` must include `i.food_code` in its join query, and `MealIngredientRow` gains a `foodCode` field. No schema change required — `food_code` is already on `ingredients`.
 
 **Algorithm (MVP):**
 
 1. Load all `MealPlanEntry` rows for the plan
-2. For each entry, load the meal's `MealIngredient` rows
-3. Aggregate by `Ingredient.name` — concatenate quantities if units differ, sum if units match
-4. Sort alphabetically; group by category
+2. For each entry, load `MealIngredientRow` rows (joined name + food_code)
+3. Aggregate by `ingredientId` (unambiguous; avoids silent failures on case/whitespace differences in names):
+   - same unit → sum quantities
+   - different units → concatenate as `"200 g, 3 tbsp"`
+   - carry `name` and `foodCode` from the first row seen for that ID (they are stable per ingredient)
+4. Derive `category` from `foodCode` prefix
+5. Sort by category then name
 
-**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients
-are consolidated.
+> **Phase 3 note:** `NutritionService` will need numeric quantities and ingredient IDs — do not collapse these into
+> the `totalQuantity` display string early. Keep `ingredientId` and raw quantity data available until after nutrition
+> calculation, or compute nutrition upstream of `ShoppingListService` directly from `MealIngredientRow`.
+
+**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients are consolidated.
 
 ---
 
@@ -286,7 +298,7 @@ reviewed.
 
 ### SQL `ON DELETE` cascade behaviour
 
-Foreign key relationships are defined in `schema.sql` but no `ON DELETE` behaviour has been specified (SQLite defaults
+Foreign key relationships are defined in `Schema.java` but no `ON DELETE` behaviour has been specified (SQLite defaults
 to `NO ACTION`). Decide cascade rules before implementing any delete operations:
 
 | Parent deleted | Child rows in       | Expected behaviour                                                  |
