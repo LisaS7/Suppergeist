@@ -34,20 +34,7 @@ Remaining gap from this work: calorie labels show `"-- kcal"` placeholder — pe
 
 ## Task 2 — Complete `DatabaseManager` 🔄
 
-*(Moved from Phase 1 Task 7)*
-
 `DatabaseManager` exists with `getConnection()` returning a connection to `app.db`. Still needed:
-
-**`getNutrientsDb()`** — read-only connection to `data/processed/nutrients.db`:
-
-```java
-public Connection getNutrientsDb() throws SQLException {
-    var url = "jdbc:sqlite:" + Path.of("data/processed/nutrients.db").toAbsolutePath();
-    var conn = DriverManager.getConnection(url);
-    conn.setReadOnly(true);
-    return conn;
-}
-```
 
 **`init()`** — creates `app.db` if absent and applies schema DDL (depends on Task 3):
 
@@ -61,8 +48,13 @@ public static void init() throws SQLException {
 `./gradlew run`, IDE launch, and a packaged `jlink` binary. Change to a stable location before packaging:
 
 ```java
-Path.of(System.getProperty("user.home"), ".suppergeist","app.db")
+Path.of(System.getProperty("user.home"), ".suppergeist", "app.db")
 ```
+
+> **`nutrients.db` is not opened at runtime.** The runtime app only talks to `app.db`. Nutrition data was pre-joined
+> into `app.db.ingredients` by `seed_ingredients.py` during data prep — one canonical match per ingredient, decided
+> upstream. Having the app query `nutrients.db` directly at runtime would require matching and disambiguation logic
+> that belongs in the data pipeline, not the service layer. `DatabaseManager` stays focused on `app.db` only.
 
 **Done when:** `DatabaseManager.init()` can be called without error and creates `app.db` with the correct tables.
 
@@ -86,22 +78,19 @@ public final class Schema {
 }
 ```
 
-A `preferences` table also needs to be added (not yet in `schema.sql`):
+Preference fields are columns on the `users` table (no separate `preferences` table):
 
 ```sql
-CREATE TABLE IF NOT EXISTS preferences
-(
-    id                  INTEGER PRIMARY KEY CHECK (id = 1),
-    user_id             INTEGER NOT NULL REFERENCES users (id),
+CREATE TABLE IF NOT EXISTS users (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    name                TEXT    NOT NULL,
     dietary_constraints TEXT    NOT NULL DEFAULT '[]',
     avoid_ingredients   TEXT    NOT NULL DEFAULT '[]',
-    servings_per_meal   INTEGER NOT NULL DEFAULT 2
+    servings_per_meal   INTEGER NOT NULL DEFAULT 2 CHECK (servings_per_meal >= 1)
 );
 ```
 
-Add this to both `data/app/schema.sql` and `Schema.java`.
-
-**Done when:** `Schema.java` compiles; `DatabaseManager.init()` creates all tables including `preferences`.
+**Done when:** `Schema.java` compiles; `DatabaseManager.init()` creates all tables.
 
 ---
 
@@ -139,24 +128,24 @@ public void start(Stage stage) {
 
 ---
 
-## Task 5 — `PreferencesRepository` ⬜
+## Task 5 — `UserRepository` ⬜
 
-Read/write dietary preferences from the `preferences` table in `app.db`. Depends on Task 3 (table must exist).
+Read/write user data (including preferences) from the `users` table in `app.db`. Depends on Task 3 (table must exist).
 
 ```java
-public class PreferencesRepository {
-    public UserPreferences getForUser(int userId) throws SQLException { ...}
+public class UserRepository {
+    public User getUser(int userId) throws SQLException { ... }
 
-    public void save(int userId, UserPreferences prefs) throws SQLException { ...}
+    public void savePreferences(int userId, UserPreferences prefs) throws SQLException { ... }
 }
 ```
 
 Storage: `dietary_constraints` and `avoid_ingredients` are serialised as JSON arrays (plain `String` columns). Use
 `String.join`/`split` on `","` for MVP — Jackson is a Phase 3 dependency.
 
-`getForUser` returns `UserPreferences.defaults()` if no row exists for the user yet.
+`getUser` returns a `User` with default preference values if the row has nulls or doesn't exist yet.
 
-**Done when:** round-trip test (save then load) produces the original `UserPreferences`; defaults returned for unknown
+**Done when:** round-trip test (save then load) produces the original preference values; defaults returned for unknown
 user IDs.
 
 ---
@@ -176,15 +165,11 @@ The preferences sidebar (`prefsSidebar` VBox) exists in the FXML and toggles vis
 - On startup, load preferences and populate fields
 
 **Call-site change in `MainController`:** replace the hardcoded `DayOfWeek.MONDAY` and user ID `1` with values loaded
-from `PreferencesRepository`:
+from `UserRepository`:
 
 ```java
-UserPreferences prefs = preferencesRepository.getForUser(userId);
-weeklyMeals =mealPlanService.
-
-getWeeklyMeals(userId, LocalDate.now(),prefs.
-
-weekStartDay());
+User user = userRepository.getUser(userId);
+weeklyMeals = mealPlanService.getWeeklyMeals(userId, LocalDate.now(), user.weekStartDay());
 ```
 
 > `UserPreferences` will need a `weekStartDay` field (default `MONDAY`) added as part of this task.
@@ -305,9 +290,11 @@ Add `com.fasterxml.jackson.core:jackson-databind` to `build.gradle.kts` and `req
 to `module-info.java` when `MealPlanParser` is implemented. Not needed before then. (Phase 2 uses naive
 `String.join`/`split` for preferences serialisation.)
 
-### NutrientRepository + NutritionService (Phase 3)
+### NutritionService (Phase 3)
 
-See Phase 3 roadmap.
+`NutritionService` reads the inline nutrition columns already on `app.db.ingredients` — it does not query
+`nutrients.db` at runtime. The data pipeline (`seed_ingredients.py`) made the food-identity decision once, upstream;
+the app inherits clean, unambiguous data. There is no runtime `NutrientRepository` against the raw CoFID dataset.
 
 ---
 
@@ -318,8 +305,8 @@ See Phase 3 roadmap.
 - [x] `module-info.java` declares all active packages; no redundant `opens`
 - [ ] `DatabaseManager.init()` creates `app.db` on first run with all tables
 - [ ] `app.db` path anchored to a stable location (not CWD-relative)
-- [ ] `preferences` table exists in schema and `Schema.java`
-- [ ] `PreferencesRepository` round-trips `UserPreferences` correctly
+- [ ] `users` table includes preference columns in schema and `Schema.java`
+- [ ] `UserRepository` round-trips user preferences correctly
 - [ ] Preferences sidebar reads/writes preferences; survives restart
 - [ ] `MealPlanService` uses `weekStartDay` from loaded preferences
 - [ ] `MealIngredientRepository` returns correct rows and joined names for seeded data
