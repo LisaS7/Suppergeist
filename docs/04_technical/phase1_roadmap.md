@@ -71,46 +71,21 @@ packages) is Phase 2 Task 1.
 
 ---
 
-## Task 7 — Add basic logging ⬜
+## Task 7 — Add basic logging ✅
 
-The app currently has no logging — only `System.err` and print statements. Add a `java.util.logging.Logger` field (no
-new dependency, built into the JDK) to the key classes in scope for Phase 1: `DatabaseManager` and `MainController`.
-
-```java
-private static final Logger log = Logger.getLogger(DatabaseManager.class.getName());
-```
-
-Log at `INFO` for lifecycle events (connection opened, app started) and `WARNING`/`SEVERE` for errors. This keeps
-observability in place as the service layer grows without adding a logging framework dependency now.
-
-> SLF4J + Logback is the right long-term choice (see Phase 2) — but that's a dependency + JPMS wiring exercise. For
-> Phase 1, `java.util.logging` ships with the JDK and requires zero configuration.
-
-**Done when:** `DatabaseManager` and `MainController` log key events; no raw `System.err` calls remain in those classes.
+`java.util.logging.Logger` fields added to `DatabaseManager` and `MainController`. `DatabaseManager` logs at `INFO` on
+each connection opened. `MainController` logs `initialize()` entry, meal count on success, and `SEVERE` with the
+exception on `SQLException` — no raw `System.err` calls remain in either class.
 
 ---
 
-## Task 8 — Light model validation ⬜ *(optional)*
+## Task 8 — Light model validation ✅
 
-Before the service layer starts persisting data, decide where input validation lives. For Phase 1, constructor guards are
-sufficient:
+Constructor guards in place on all three models:
 
-- `Meal`: reject null or blank `name`
-- `MealIngredient`: reject non-positive `quantity`
-- `UserPreferences`: reject non-positive `servingsPerMeal`
-
-```java
-public Meal(int id, String name) {
-    if (name == null || name.isBlank()) throw new IllegalArgumentException("Meal name must not be blank");
-    this.id = id;
-    this.name = name;
-}
-```
-
-Keep guards narrow — only fields where a bad value would cause a silent bug downstream. Do not add validation
-complexity for fields that are only ever set from trusted DB reads.
-
-**Done when:** guards are in place on the three models above; no service-layer validation is needed yet.
+- `Meal` — rejects null or blank `name`
+- `MealIngredient` — rejects non-positive `quantity` (uses `!(quantity > 0)` to also catch `NaN`)
+- `UserPreferences` — rejects non-positive `servingsPerMeal` via compact record constructor
 
 ---
 
@@ -136,5 +111,5 @@ spacing on every layout container added in future. Replace the element-type sele
 - [x] All domain model types compile
 - [x] `module-info.java` compiles cleanly; app runs
 - [x] UI shell shows weekly grid with real data from seeded `app.db`
-- [ ] Basic logging in place (`DatabaseManager`, `MainController`)
-- [ ] (optional) Constructor guards on `Meal`, `MealIngredient`, `UserPreferences`
+- [x] Basic logging in place (`DatabaseManager`, `MainController`)
+- [x] Constructor guards on `Meal`, `MealIngredient`, `UserPreferences`
