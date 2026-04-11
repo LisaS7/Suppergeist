@@ -11,52 +11,24 @@ Status markers: ✅ Done · 🔄 In Progress · ⬜ Not Started
 
 These tasks belong to Phase 2 but were built ahead of schedule:
 
-| Task | What was built |
-|------|----------------|
-| `WeeklyMealViewModel` | Record in `com.example.suppergeist.service` — `date`, `dayLabel`, `mealType`, `mealName` |
-| `MealPlanService` | Coordinates three repositories; week-start via `TemporalAdjusters`; `dayLabel` formatted as `"Monday 6 Apr"` |
-| `MainController` wiring | Constructs repositories + service in `initialize()`; calls `getWeeklyMeals(1, 2026-04-06, MONDAY)` |
-| Data-driven weekly grid | Day labels and meal cards added dynamically; day label deduplication via `Set<LocalDate>` |
+| Task                    | What was built                                                                                               |
+|-------------------------|--------------------------------------------------------------------------------------------------------------|
+| `WeeklyMealViewModel`   | Record in `com.example.suppergeist.service` — `date`, `dayLabel`, `mealType`, `mealName`                     |
+| `MealPlanService`       | Coordinates three repositories; week-start via `TemporalAdjusters`; `dayLabel` formatted as `"Monday 6 Apr"` |
+| `MainController` wiring | Constructs repositories + service in `initialize()`; calls `getWeeklyMeals(1, 2026-04-06, MONDAY)`           |
+| Data-driven weekly grid | Day labels and meal cards added dynamically; day label deduplication via `Set<LocalDate>`                    |
 
 Remaining gap from this work: calorie labels show `"-- kcal"` placeholder — pending `NutritionService` (Phase 3).
 
 ---
 
-## Task 1 — Strict `module-info.java` cleanup 🔄
+## Task 1 — Strict `module-info.java` cleanup ✅
 
-*(Moved from Phase 1 Task 6)*
+`requires org.xerial.sqlitejdbc` added; redundant `opens com.example.suppergeist` replaced with
+`opens com.example.suppergeist.ui to javafx.fxml`; exports added for `model`, `service`, `database`, `repository`.
 
-Current state compiles and runs but is incomplete. Still needed:
-
-- Remove redundant `opens com.example.suppergeist to javafx.fxml;`
-- Add `requires org.xerial.sqlitejdbc;`
-- Add exports for all active packages
-
-**Target state:**
-
-```java
-module com.example.suppergeist {
-    requires javafx.controls;
-    requires javafx.fxml;
-    requires org.xerial.sqlitejdbc;
-    requires static lombok;
-    requires java.sql;
-
-    opens com.example.suppergeist.ui to javafx.fxml;
-
-    exports com.example.suppergeist;
-    exports com.example.suppergeist.model;
-    exports com.example.suppergeist.service;
-    exports com.example.suppergeist.database;
-    exports com.example.suppergeist.repository;
-}
-```
-
-> Lombok's annotation processor requires the `model` package to be accessible. Missing declarations surface as
-> confusing compile-time reflection errors rather than a clear "package not opened" message — add exports as new
-> packages are introduced.
-
-**Done when:** `./gradlew build` passes with no module descriptor warnings.
+> As new packages are introduced, add an explicit `exports` declaration — missing declarations surface as confusing
+> compile-time reflection errors rather than a clear "package not opened" message.
 
 ---
 
@@ -89,7 +61,7 @@ public static void init() throws SQLException {
 `./gradlew run`, IDE launch, and a packaged `jlink` binary. Change to a stable location before packaging:
 
 ```java
-Path.of(System.getProperty("user.home"), ".suppergeist", "app.db")
+Path.of(System.getProperty("user.home"), ".suppergeist","app.db")
 ```
 
 **Done when:** `DatabaseManager.init()` can be called without error and creates `app.db` with the correct tables.
@@ -105,7 +77,8 @@ Path.of(System.getProperty("user.home"), ".suppergeist", "app.db")
 
 ```java
 public final class Schema {
-    private Schema() {}
+    private Schema() {
+    }
 
     public static final String CREATE_USERS = "CREATE TABLE IF NOT EXISTS users (...)";
     public static final String CREATE_INGREDIENTS = "CREATE TABLE IF NOT EXISTS ingredients (...)";
@@ -172,8 +145,9 @@ Read/write dietary preferences from the `preferences` table in `app.db`. Depends
 
 ```java
 public class PreferencesRepository {
-    public UserPreferences getForUser(int userId) throws SQLException { ... }
-    public void save(int userId, UserPreferences prefs) throws SQLException { ... }
+    public UserPreferences getForUser(int userId) throws SQLException { ...}
+
+    public void save(int userId, UserPreferences prefs) throws SQLException { ...}
 }
 ```
 
@@ -206,7 +180,11 @@ from `PreferencesRepository`:
 
 ```java
 UserPreferences prefs = preferencesRepository.getForUser(userId);
-weeklyMeals = mealPlanService.getWeeklyMeals(userId, LocalDate.now(), prefs.weekStartDay());
+weeklyMeals =mealPlanService.
+
+getWeeklyMeals(userId, LocalDate.now(),prefs.
+
+weekStartDay());
 ```
 
 > `UserPreferences` will need a `weekStartDay` field (default `MONDAY`) added as part of this task.
@@ -221,7 +199,7 @@ Loads ingredient lines for a meal from the `meal_ingredients` table. `ShoppingLi
 
 ```java
 public class MealIngredientRepository {
-    public List<MealIngredient> getIngredientsForMeal(int mealId) throws SQLException { ... }
+    public List<MealIngredient> getIngredientsForMeal(int mealId) throws SQLException { ...}
 }
 ```
 
@@ -229,9 +207,10 @@ The basic query returns `MealIngredient` rows as-is. For callers that also need 
 `ShoppingListService`), add a joined variant that returns a lightweight projection:
 
 ```java
-public record MealIngredientRow(int ingredientId, String ingredientName, double quantity, String unit) {}
+public record MealIngredientRow(int ingredientId, String ingredientName, double quantity, String unit) {
+}
 
-public List<MealIngredientRow> getIngredientsWithNameForMeal(int mealId) throws SQLException { ... }
+public List<MealIngredientRow> getIngredientsWithNameForMeal(int mealId) throws SQLException { ...}
 ```
 
 SQL for the joined variant:
@@ -239,12 +218,13 @@ SQL for the joined variant:
 ```sql
 SELECT mi.ingredient_id, i.name, mi.quantity, mi.unit
 FROM meal_ingredients mi
-JOIN ingredients i ON mi.ingredient_id = i.id
+         JOIN ingredients i ON mi.ingredient_id = i.id
 WHERE mi.meal_id = ?
 ORDER BY i.name
 ```
 
 **Testing:** verify against the seeded `app.db` — the seed includes meals with ingredients. Check that:
+
 - `getIngredientsForMeal` returns the correct row count for a known meal ID
 - `getIngredientsWithNameForMeal` returns the ingredient name correctly joined
 - an unknown `mealId` returns an empty list (not an exception)
@@ -259,7 +239,7 @@ Derives an aggregated ingredient list from a `MealPlan`. Lives in `com.example.s
 
 ```java
 public class ShoppingListService {
-    public List<ShoppingItem> buildList(int mealPlanId) throws SQLException { ... }
+    public List<ShoppingItem> buildList(int mealPlanId) throws SQLException { ...}
 }
 ```
 
@@ -335,7 +315,7 @@ See Phase 3 roadmap.
 
 - [x] `WeeklyMealViewModel`, `MealPlanService`, and `MainController` wiring in place
 - [x] Data-driven weekly grid with correct day labels
-- [ ] `module-info.java` declares all active packages; no redundant `opens`
+- [x] `module-info.java` declares all active packages; no redundant `opens`
 - [ ] `DatabaseManager.init()` creates `app.db` on first run with all tables
 - [ ] `app.db` path anchored to a stable location (not CWD-relative)
 - [ ] `preferences` table exists in schema and `Schema.java`
