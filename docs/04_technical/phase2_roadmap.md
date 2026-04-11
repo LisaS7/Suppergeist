@@ -105,27 +105,25 @@ Both are called from `SuppergeistApplication.init()`. The default user step live
 
 ---
 
-## Task 6 — `UserRepository` 🔄
+## Task 6 — `UserRepository` ✅
 
 Read/write user data (including preferences) from the `users` table in `app.db`. Depends on Task 3 (table must exist).
 
-`ensureDefaultUserExists()` is implemented and called from `SuppergeistApplication.init()`. The read/write methods below are not yet implemented.
+All three methods implemented:
 
 ```java
 public class UserRepository {
-    public User getUser(int userId) throws SQLException { ...}
-
-    public void savePreferences(int userId, UserPreferences prefs) throws SQLException { ...}
+    public void ensureDefaultUserExists() throws SQLException { ... }
+    public User getUser(int userId) throws SQLException { ... }
+    public void savePreferences(User user) throws SQLException { ... }
 }
 ```
 
-Storage: `dietary_constraints` and `avoid_ingredients` are serialised as JSON arrays (plain `String` columns). Use
-`String.join`/`split` on `","` for MVP — Jackson is a Phase 3 dependency.
+Storage: `dietary_constraints` and `avoid_ingredients` serialised as comma-separated strings. `getUser` returns a
+synthetic default `User` with empty preferences if the row doesn't exist.
 
-`getUser` returns a `User` with default preference values if the row has nulls or doesn't exist yet.
-
-**Done when:** round-trip test (save then load) produces the original preference values; defaults returned for unknown
-user IDs.
+Round-trip tests in `UserRepositoryTest` cover: default creation, idempotency, preference persistence, overwrite,
+blank/null handling, and synthetic default for unknown IDs.
 
 ---
 
@@ -135,29 +133,73 @@ user IDs.
 
 The preferences sidebar (`prefsSidebar` VBox) exists in the FXML and toggles visibility, but its fields are unbound.
 
-**What to build:**
+### UI changes
 
-- Text field for `avoidIngredients` (comma-separated)
 - Text fields or checkboxes for common `dietaryConstraints` (e.g. vegetarian, gluten-free)
 - Numeric field for `servingsPerMeal`
 - Save button that calls `UserRepository.savePreferences(...)`
 - On startup, load preferences and populate fields
 
-**Call-site change in `MainController`:** replace the hardcoded `DayOfWeek.MONDAY` and user ID `1` with values loaded
-from `UserRepository`:
+**Avoid ingredients — searchable multi-select (replaces free-text input):**
+
+Free-text entry requires users to guess exact ingredient names and leads to fragile matching (e.g. `"tomato"` vs `"chopped tomatoes"`). Replace with a two-part control:
+
+1. Search input field — filters the ingredient list only; not stored
+2. Multi-select list — populated via `WHERE name LIKE '%<query>%'`; selected items are persisted
+
+### Schema changes
+
+Add a new join table to `Schema.java` and apply it in `DatabaseManager.init()`:
+
+```sql
+CREATE TABLE IF NOT EXISTS user_avoid_ingredients (
+    user_id      INTEGER NOT NULL,
+    ingredient_id INTEGER NOT NULL,
+    PRIMARY KEY (user_id, ingredient_id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (ingredient_id) REFERENCES ingredients(id)
+)
+```
+
+Remove the `avoid_ingredients` column from `users` (or stop using it if already present).
+
+### Model changes
+
+Update `UserPreferences`:
+
+- Change `avoidIngredients` from `List<String>` → `List<Integer>` (ingredient IDs)
+
+### Repository changes
+
+Update `UserRepository`:
+
+- `savePreferences(...)` — delete existing rows for the user in `user_avoid_ingredients`, then insert selected IDs
+- `getUser(...)` — load ingredient IDs from `user_avoid_ingredients` and populate `UserPreferences.avoidIngredients`
+
+Add a query method (can live in `IngredientRepository` or inline in the preferences controller) for the search filter:
+
+```sql
+SELECT id, name FROM ingredients WHERE name LIKE ? ORDER BY name LIMIT 50
+```
+
+### Call-site change in `MainController`
+
+Replace the hardcoded `DayOfWeek.MONDAY` and user ID `1` with values loaded from `UserRepository`:
 
 ```java
 User user = userRepository.getUser(userId);
-weeklyMeals =mealPlanService.
-
-getWeeklyMeals(userId, LocalDate.now(),user.
-
-weekStartDay());
+weeklyMeals = mealPlanService.getWeeklyMeals(userId, LocalDate.now(), user.weekStartDay());
 ```
 
 > `UserPreferences` will need a `weekStartDay` field (default `MONDAY`) added as part of this task.
 
-**Done when:** preferences survive an app restart; `MealPlanService` uses the loaded `weekStartDay`.
+### Non-goals (this phase)
+
+- No fuzzy matching beyond `LIKE '%query%'`
+- No category or tag system
+- No natural language parsing
+
+**Done when:** selected avoid-ingredients survive a restart and are reloaded correctly; `MealPlanService` uses the loaded `weekStartDay`.
 
 ---
 
@@ -292,7 +334,7 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `app.db` path anchored to a stable location (not CWD-relative)
 - [x] `users` table includes preference columns in schema and `Schema.java`
 - [x] `AppSeedService` seeds `ingredients` and ensures default user on first run; skips on subsequent launches
-- [ ] `UserRepository` round-trips user preferences correctly
+- [x] `UserRepository` round-trips user preferences correctly
 - [ ] Preferences sidebar reads/writes preferences; survives restart
 - [ ] `MealPlanService` uses `weekStartDay` from loaded preferences
 - [ ] `MealIngredientRepository` returns correct rows and joined names for seeded data
