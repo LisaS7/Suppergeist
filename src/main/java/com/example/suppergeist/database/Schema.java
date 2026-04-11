@@ -8,6 +8,9 @@ public final class Schema {
             "CREATE TABLE IF NOT EXISTS users (" +
                     "id INTEGER PRIMARY KEY, " +
                     "name TEXT NOT NULL" +
+                    "dietary_constraints TEXT NOT NULL DEFAULT '', " +
+                    "avoid_ingredients TEXT NOT NULL DEFAULT '', " +
+                    "servings_per_meal INTEGER NOT NULL DEFAULT 2 CHECK (servings_per_meal >= 1)" +
                     ");";
 
     public static final String CREATE_MEALS =

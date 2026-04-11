@@ -51,9 +51,9 @@ All DDL lives in `com.example.suppergeist.database.Schema` as string constants �
 
 ---
 
-## Task 4 — Wire `DatabaseManager.init()` into app startup ⬜
+## Task 4 — Wire `DatabaseManager.init()` into app startup ✅
 
-*(Moved from Phase 1 Task 9 — depends on Tasks 2 and 3)*
+*(Depends on Tasks 2 and 3)*
 
 Call `DatabaseManager.init()` from the `init()` lifecycle method of `SuppergeistApplication`. Errors must be surfaced on
 the JavaFX thread — the `start()` method shows an error alert if init failed:
@@ -91,9 +91,9 @@ Read/write user data (including preferences) from the `users` table in `app.db`.
 
 ```java
 public class UserRepository {
-    public User getUser(int userId) throws SQLException { ... }
+    public User getUser(int userId) throws SQLException { ...}
 
-    public void savePreferences(int userId, UserPreferences prefs) throws SQLException { ... }
+    public void savePreferences(int userId, UserPreferences prefs) throws SQLException { ...}
 }
 ```
 
@@ -126,7 +126,11 @@ from `UserRepository`:
 
 ```java
 User user = userRepository.getUser(userId);
-weeklyMeals = mealPlanService.getWeeklyMeals(userId, LocalDate.now(), user.weekStartDay());
+weeklyMeals =mealPlanService.
+
+getWeeklyMeals(userId, LocalDate.now(),user.
+
+weekStartDay());
 ```
 
 > `UserPreferences` will need a `weekStartDay` field (default `MONDAY`) added as part of this task.

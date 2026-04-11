@@ -11,7 +11,7 @@ public class User {
     private String name;
     private final Set<String> dietaryConstraints;
     private final List<String> avoidIngredients;
-    int servingsPerMeal;
+    private int servingsPerMeal;
 
     public User(Integer id, String name, Set<String> dietaryConstraints, List<String> avoidIngredients, int servingsPerMeal) {
         if (name == null || name.isBlank()) {
