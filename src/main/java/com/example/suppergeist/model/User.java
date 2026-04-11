@@ -2,18 +2,17 @@ package com.example.suppergeist.model;
 
 import lombok.Getter;
 
-import java.util.List;
 import java.util.Set;
 
 @Getter
 public class User {
-    private Integer id;
-    private String name;
+    private final Integer id;
+    private final String name;
     private final Set<String> dietaryConstraints;
-    private final List<String> avoidIngredients;
-    private int servingsPerMeal;
+    private final Set<String> avoidFoodCodes;
+    private final int servingsPerMeal;
 
-    public User(Integer id, String name, Set<String> dietaryConstraints, List<String> avoidIngredients, int servingsPerMeal) {
+    public User(Integer id, String name, Set<String> dietaryConstraints, Set<String> avoidFoodCodes, int servingsPerMeal) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("User name must not be null or blank");
         }
@@ -25,11 +24,12 @@ public class User {
         this.id = id;
         this.name = name;
         this.dietaryConstraints = dietaryConstraints == null ? Set.of() : Set.copyOf(dietaryConstraints);
-        this.avoidIngredients = avoidIngredients == null ? List.of() : List.copyOf(avoidIngredients);
+        this.avoidFoodCodes = avoidFoodCodes == null ? Set.of() : Set.copyOf(avoidFoodCodes);
         this.servingsPerMeal = servingsPerMeal;
     }
 
     public User(String name) {
-        this(null, name, Set.of(), List.of(), 2);
+        this(null, name, Set.of(), Set.of(), 2);
     }
+
 }
