@@ -10,12 +10,9 @@ data/
 ├── processed/                  # Generated files used at runtime
 │   ├── nutrients.csv           # Intermediate CSV (produced by process_nutrients.py)
 │   └── nutrients.db            # CoFID SQLite database (read-only at runtime)
-├── app/
-│   └── schema.sql              # DDL for app.db (users, meals, plans, ingredients)
 ├── scripts/                    # Data pipeline scripts (run from project root)
 │   ├── process_nutrients.py
 │   ├── import_to_sqlite.py
-│   ├── create_app_db.py
 │   ├── seed_test_data.py
 │   └── seed_ingredients.py
 └── ingredient_mapping.csv      # Maps ingredient names to CoFID food_codes
@@ -148,17 +145,16 @@ To build everything from a clean state:
 python3 data/scripts/process_nutrients.py
 python3 data/scripts/import_to_sqlite.py
 
-# 2. Create and seed app.db
-python3 data/scripts/create_app_db.py
+# 2. Seed app.db (the app creates app.db on first run; run these after launching once)
 python3 data/scripts/seed_test_data.py
 python3 data/scripts/seed_ingredients.py
 ```
 
-To rebuild just `app.db` (e.g. after a schema change):
+To reseed `app.db` (e.g. after a schema change):
 
 ```bash
 rm app.db
-python3 data/scripts/create_app_db.py
+# Launch the app once to recreate app.db, then:
 python3 data/scripts/seed_test_data.py
 python3 data/scripts/seed_ingredients.py
 ```

@@ -32,65 +32,22 @@ Remaining gap from this work: calorie labels show `"-- kcal"` placeholder — pe
 
 ---
 
-## Task 2 — Complete `DatabaseManager` 🔄
+## Task 2 — Complete `DatabaseManager` ✅
 
-`DatabaseManager` exists with `getConnection()` returning a connection to `app.db`. Still needed:
-
-**`init()`** — creates `app.db` if absent and applies schema DDL (depends on Task 3):
-
-```java
-public static void init() throws SQLException {
-    // create app.db, apply Schema.DDL strings
-}
-```
-
-**Path stability** — `Path.of("app.db")` resolves relative to the JVM working directory, which differs between
-`./gradlew run`, IDE launch, and a packaged `jlink` binary. Change to a stable location before packaging:
-
-```java
-Path.of(System.getProperty("user.home"), ".suppergeist", "app.db")
-```
+`DatabaseManager` has `getConnection()` and `init()`. `init()` applies all DDL constants from `Schema.java` in order.
+DB path is anchored to `~/.suppergeist/app.db` via `Path.of(System.getProperty("user.home"), ".suppergeist", "app.db")`.
 
 > **`nutrients.db` is not opened at runtime.** The runtime app only talks to `app.db`. Nutrition data was pre-joined
 > into `app.db.ingredients` by `seed_ingredients.py` during data prep — one canonical match per ingredient, decided
 > upstream. Having the app query `nutrients.db` directly at runtime would require matching and disambiguation logic
 > that belongs in the data pipeline, not the service layer. `DatabaseManager` stays focused on `app.db` only.
 
-**Done when:** `DatabaseManager.init()` can be called without error and creates `app.db` with the correct tables.
-
 ---
 
-## Task 3 — Define `app.db` schema as `Schema.java` constants ⬜
+## Task 3 — Define `app.db` schema as `Schema.java` constants ✅
 
-*(Moved from Phase 1 Task 8)*
-
-`data/app/schema.sql` is the authoritative reference. Mirror it as string constants in
-`com.example.suppergeist.database.Schema` so `DatabaseManager.init()` can apply it programmatically without file I/O.
-
-```java
-public final class Schema {
-    private Schema() {
-    }
-
-    public static final String CREATE_USERS = "CREATE TABLE IF NOT EXISTS users (...)";
-    public static final String CREATE_INGREDIENTS = "CREATE TABLE IF NOT EXISTS ingredients (...)";
-    // ... one constant per table
-}
-```
-
-Preference fields are columns on the `users` table (no separate `preferences` table):
-
-```sql
-CREATE TABLE IF NOT EXISTS users (
-    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-    name                TEXT    NOT NULL,
-    dietary_constraints TEXT    NOT NULL DEFAULT '[]',
-    avoid_ingredients   TEXT    NOT NULL DEFAULT '[]',
-    servings_per_meal   INTEGER NOT NULL DEFAULT 2 CHECK (servings_per_meal >= 1)
-);
-```
-
-**Done when:** `Schema.java` compiles; `DatabaseManager.init()` creates all tables.
+All DDL lives in `com.example.suppergeist.database.Schema` as string constants — one per table and index.
+`DatabaseManager.init()` applies them in dependency order. No SQL files on disk.
 
 ---
 
@@ -276,7 +233,7 @@ to `NO ACTION`). Decide cascade rules before implementing any delete operations:
 | `ingredients`  | `meal_ingredients`  | RESTRICT — don't silently delete ingredient lines                   |
 | `users`        | `meal_plans`        | CASCADE or RESTRICT — depends on whether user deletion is supported |
 
-Update `data/app/schema.sql` (and `Schema.java`) once decided.
+Update `Schema.java` once decided.
 
 ### Upgrade to SLF4J + Logback (Phase 2+)
 
@@ -303,9 +260,9 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `WeeklyMealViewModel`, `MealPlanService`, and `MainController` wiring in place
 - [x] Data-driven weekly grid with correct day labels
 - [x] `module-info.java` declares all active packages; no redundant `opens`
-- [ ] `DatabaseManager.init()` creates `app.db` on first run with all tables
-- [ ] `app.db` path anchored to a stable location (not CWD-relative)
-- [ ] `users` table includes preference columns in schema and `Schema.java`
+- [x] `DatabaseManager.init()` creates `app.db` on first run with all tables
+- [x] `app.db` path anchored to a stable location (not CWD-relative)
+- [x] `users` table includes preference columns in schema and `Schema.java`
 - [ ] `UserRepository` round-trips user preferences correctly
 - [ ] Preferences sidebar reads/writes preferences; survives restart
 - [ ] `MealPlanService` uses `weekStartDay` from loaded preferences
