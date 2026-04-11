@@ -14,7 +14,7 @@ public class MealIngredient {
         if (!(quantity > 0)) {
             throw new IllegalArgumentException("Quantity must be greater than 0 (got: " + quantity + ")");
         }
-
+        this.id = id;
         this.mealId = mealId;
         this.ingredientId = ingredientId;
         this.quantity = quantity;
