@@ -51,7 +51,7 @@ class MealPlanRepositoryTest {
              PreparedStatement stmt = conn.prepareStatement(
                  "INSERT INTO meal_plans (user_id, start_date) VALUES (?, ?)")) {
             stmt.setInt(1, userId);
-            stmt.setDate(2, java.sql.Date.valueOf(startDate));
+            stmt.setString(2, startDate.toString());
             stmt.executeUpdate();
         }
     }

@@ -179,7 +179,7 @@ class MealPlanServiceTest {
 
         List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30), DayOfWeek.MONDAY);
 
-        assertEquals("MONDAY 30", result.get(0).dayLabel());
+        assertEquals("Monday 30 Mar", result.get(0).dayLabel());
     }
 
     @Test
