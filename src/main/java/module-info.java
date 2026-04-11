@@ -4,8 +4,8 @@ module com.example.suppergeist {
     requires org.xerial.sqlitejdbc;
     requires static lombok;
     requires java.sql;
-
-
+    requires org.apache.commons.csv;
+    
     opens com.example.suppergeist.ui to javafx.fxml;
 
     exports com.example.suppergeist;

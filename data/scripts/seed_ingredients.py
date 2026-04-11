@@ -17,7 +17,7 @@ import sqlite3
 import argparse
 from pathlib import Path
 
-DEFAULT_CSV = Path("data/ingredient_mapping.csv")
+DEFAULT_CSV = Path("src/main/resources/data/ingredient_mapping.csv")
 DEFAULT_DB  = Path("app.db")
 
 NUTRITION_COLS = [

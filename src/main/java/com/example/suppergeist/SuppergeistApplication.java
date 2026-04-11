@@ -1,6 +1,8 @@
 package com.example.suppergeist;
 
 import com.example.suppergeist.database.DatabaseManager;
+import com.example.suppergeist.repository.UserRepository;
+import com.example.suppergeist.service.AppSeedService;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -13,13 +15,22 @@ import java.sql.SQLException;
 
 
 public class SuppergeistApplication extends Application {
-    private SQLException initError;
+    private Exception initError;
 
     @Override
     public void init() {
+
         try {
-            new DatabaseManager().init();
-        } catch (SQLException e) {
+            DatabaseManager dbManager = new DatabaseManager();
+            dbManager.init();
+
+            AppSeedService appSeedService = new AppSeedService(dbManager);
+            appSeedService.seedIfEmpty();
+
+            UserRepository userRepository = new UserRepository(dbManager);
+            userRepository.ensureDefaultUserExists();
+        } catch (SQLException | IOException e) {
+            // TODO: better error handling
             initError = e;
         }
     }
@@ -30,7 +41,7 @@ public class SuppergeistApplication extends Application {
         if (initError != null) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Startup Error");
-            alert.setHeaderText("Database initialisation failed");
+            alert.setHeaderText("Application startup failed");
             alert.setContentText(initError.getMessage());
             alert.showAndWait();
 

@@ -21,14 +21,14 @@ Usage (run from the project root):
 """
 
 import csv
-import os
 import argparse
+from pathlib import Path
 
 import openpyxl
 
-DATA_DIR = os.path.dirname(os.path.dirname(__file__))
-DEFAULT_XLSX = os.path.join(DATA_DIR, "raw", "McCance_Widdowsons_Composition_of_Foods_Integrated_Dataset_2021..xlsx")
-DEFAULT_CSV = os.path.join(DATA_DIR, "ingredient_mapping.csv")
+_SCRIPTS_DIR = Path(__file__).parent
+DEFAULT_XLSX = _SCRIPTS_DIR.parent / "raw" / "McCance_Widdowsons_Composition_of_Foods_Integrated_Dataset_2021..xlsx"
+DEFAULT_CSV = _SCRIPTS_DIR.parent.parent.parent / "src" / "main" / "resources" / "data" / "ingredient_mapping.csv"
 
 PROXIMATES_COLUMNS = {
     "Food Code": "food_code",

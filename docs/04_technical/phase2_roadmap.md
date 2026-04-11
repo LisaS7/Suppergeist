@@ -85,9 +85,31 @@ public void start(Stage stage) {
 
 ---
 
-## Task 5 — `UserRepository` ⬜
+## Task 5 — `AppSeedService` ✅
+
+*(Depends on Task 4)*
+
+A freshly initialized `app.db` has the correct schema but no data. `AppSeedService` runs immediately after `DatabaseManager.init()` and handles two bootstrap concerns: seeding the ingredient catalogue and ensuring a default user exists. Both checks are idempotent — they do nothing on subsequent launches.
+
+This removes the need for any manual data script during normal app startup. The Python scripts remain useful for developer workflows (re-seeding after a schema reset, re-enriching the CSV from CoFID), but are no longer required to get a working app.
+
+**Bootstrap sequence (as implemented):**
+
+1. `DatabaseManager.init()` creates the schema (if absent)
+2. `AppSeedService.seedIfEmpty(conn)` — if `ingredients` is empty, reads `ingredient_mapping.csv` from the classpath and inserts all rows in a single `executeBatch()`; otherwise skips and logs
+3. `UserRepository.ensureDefaultUserExists()` — if no row with `id = 1` exists in `users`, inserts one; otherwise skips and logs
+
+Both are called from `SuppergeistApplication.init()`. The default user step lives in `UserRepository` rather than `AppSeedService` but the behaviour is identical to the original spec.
+
+**Bundling:** `ingredient_mapping.csv` lives at `src/main/resources/data/ingredient_mapping.csv`. This path is picked up by Gradle's standard resource processing and included in the built JAR. `AppSeedService` reads it via `getResourceAsStream("/data/ingredient_mapping.csv")`.
+
+---
+
+## Task 6 — `UserRepository` 🔄
 
 Read/write user data (including preferences) from the `users` table in `app.db`. Depends on Task 3 (table must exist).
+
+`ensureDefaultUserExists()` is implemented and called from `SuppergeistApplication.init()`. The read/write methods below are not yet implemented.
 
 ```java
 public class UserRepository {
@@ -107,9 +129,9 @@ user IDs.
 
 ---
 
-## Task 6 — Wire preferences sidebar ⬜
+## Task 7 — Wire preferences sidebar ⬜
 
-*(Depends on Task 5)*
+*(Depends on Task 6)*
 
 The preferences sidebar (`prefsSidebar` VBox) exists in the FXML and toggles visibility, but its fields are unbound.
 
@@ -118,7 +140,7 @@ The preferences sidebar (`prefsSidebar` VBox) exists in the FXML and toggles vis
 - Text field for `avoidIngredients` (comma-separated)
 - Text fields or checkboxes for common `dietaryConstraints` (e.g. vegetarian, gluten-free)
 - Numeric field for `servingsPerMeal`
-- Save button that calls `PreferencesRepository.save()`
+- Save button that calls `UserRepository.savePreferences(...)`
 - On startup, load preferences and populate fields
 
 **Call-site change in `MainController`:** replace the hardcoded `DayOfWeek.MONDAY` and user ID `1` with values loaded
@@ -139,9 +161,9 @@ weekStartDay());
 
 ---
 
-## Task 7 — `MealIngredientRepository` ⬜
+## Task 8 — `MealIngredientRepository` ⬜
 
-Loads ingredient lines for a meal from the `meal_ingredients` table. `ShoppingListService` (Task 8) depends on this.
+Loads ingredient lines for a meal from the `meal_ingredients` table. `ShoppingListService` (Task 9) depends on this.
 
 ```java
 public class MealIngredientRepository {
@@ -180,6 +202,8 @@ ORDER BY i.name
 ---
 
 ## Task 9 — `ShoppingListService` ⬜
+
+*(Depends on Task 8)*
 
 Derives an aggregated ingredient list from a `MealPlan`. Lives in `com.example.suppergeist.service`.
 
@@ -267,6 +291,7 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `DatabaseManager.init()` creates `app.db` on first run with all tables
 - [x] `app.db` path anchored to a stable location (not CWD-relative)
 - [x] `users` table includes preference columns in schema and `Schema.java`
+- [x] `AppSeedService` seeds `ingredients` and ensures default user on first run; skips on subsequent launches
 - [ ] `UserRepository` round-trips user preferences correctly
 - [ ] Preferences sidebar reads/writes preferences; survives restart
 - [ ] `MealPlanService` uses `weekStartDay` from loaded preferences
