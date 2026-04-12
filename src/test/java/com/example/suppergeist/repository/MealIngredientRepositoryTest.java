@@ -2,6 +2,7 @@ package com.example.suppergeist.repository;
 
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.MealIngredient;
+import com.example.suppergeist.repository.MealIngredientRepository.MealIngredientRow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,30 +27,7 @@ class MealIngredientRepositoryTest {
         tempDb = Files.createTempFile("suppergeist-meal-ingredient-test-", ".db");
         dbManager = new DatabaseManager(tempDb);
 
-        try (Connection conn = dbManager.getConnection()) {
-            conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS meals (
-                    id   INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL
-                )
-            """);
-            conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS ingredients (
-                    id        INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name      TEXT NOT NULL UNIQUE,
-                    food_code TEXT
-                )
-            """);
-            conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS meal_ingredients (
-                    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-                    meal_id       INTEGER NOT NULL,
-                    ingredient_id INTEGER NOT NULL,
-                    quantity      REAL    NOT NULL,
-                    unit          TEXT
-                )
-            """);
-        }
+        dbManager.init();
 
         repository = new MealIngredientRepository(dbManager);
     }
@@ -174,7 +152,7 @@ class MealIngredientRepositoryTest {
     void getIngredientsWithNameForMeal_returnsEmptyList_whenNoIngredients() throws SQLException {
         int mealId = insertMeal("Pasta");
 
-        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRepository.MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
 
         assertTrue(result.isEmpty());
     }
@@ -185,7 +163,7 @@ class MealIngredientRepositoryTest {
         int ingredientId = insertIngredient("Spaghetti");
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRepository.MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
 
         assertEquals(1, result.size());
         assertEquals("Spaghetti", result.get(0).ingredientName());

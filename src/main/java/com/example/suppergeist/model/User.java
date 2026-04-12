@@ -16,9 +16,6 @@ public class User {
     private final int weekStartDay;
 
     public User(Integer id, String name, Set<String> dietaryConstraints, Set<String> avoidFoodCodes, int servingsPerMeal, boolean showCalories, boolean showNutritionalInfo, int weekStartDay) {
-        this.showCalories = showCalories;
-        this.showNutritionalInfo = showNutritionalInfo;
-        this.weekStartDay = weekStartDay;
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("User name must not be null or blank");
         }
@@ -27,6 +24,9 @@ public class User {
             throw new IllegalArgumentException("Servings per meal must be greater than 0 (got: " + servingsPerMeal + ")");
         }
 
+        this.showCalories = showCalories;
+        this.showNutritionalInfo = showNutritionalInfo;
+        this.weekStartDay = weekStartDay;
         this.id = id;
         this.name = name;
         this.dietaryConstraints = dietaryConstraints == null ? Set.of() : Set.copyOf(dietaryConstraints);

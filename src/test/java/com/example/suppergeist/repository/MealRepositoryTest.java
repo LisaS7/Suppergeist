@@ -27,14 +27,7 @@ class MealRepositoryTest {
         tempDb = Files.createTempFile("suppergeist-test-", ".db");
         dbManager = new DatabaseManager(tempDb);
 
-        try (Connection conn = dbManager.getConnection()) {
-            conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS meals (
-                    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name  TEXT    NOT NULL
-                )
-            """);
-        }
+        dbManager.init();
 
         repository = new MealRepository(dbManager);
     }

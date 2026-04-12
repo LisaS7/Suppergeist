@@ -31,13 +31,14 @@ public class AppSeedService {
     public void seedIfEmpty() throws SQLException, IOException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM ingredients LIMIT 1")) {
-            ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                log.info("Ingredients already present, skipping seed.");
-                return;
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    log.info("Ingredients already present, skipping seed.");
+                    return;
+                }
             }
-
+            
             try (InputStream inputStream = AppSeedService.class.getResourceAsStream(CSV_RESOURCE)) {
                 if (inputStream == null) {
                     throw new IllegalStateException("Could not find resource: " + CSV_RESOURCE);

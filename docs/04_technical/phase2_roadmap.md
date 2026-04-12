@@ -127,11 +127,26 @@ blank/null handling, and synthetic default for unknown IDs.
 
 ---
 
-## Task 7 — Wire preferences sidebar ⬜
+## Task 7 — Wire preferences sidebar 🔄
 
 *(Depends on Task 6)*
 
-The preferences sidebar (`prefsSidebar` VBox) exists in the FXML and toggles visibility, but its fields are unbound.
+**What's done:** `PreferencesSidebarController` is wired to `UserRepository`; servings spinner, week-start-day
+`ChoiceBox`, show-calories / show-nutritional-info checkboxes, and the Save button all work end-to-end.
+`MainController.initialize()` calls `preferencesSidebarController.loadUser(1)` on startup. `MainController`
+reads `weekStartDay` from the loaded `User` and uses it to drive grid column ordering — no longer hardcoded.
+An `onPreferencesSaved` callback triggers `refreshMealPlanGrid()` so the grid reacts immediately when
+preferences are saved.
+
+For development, `MainController` still uses a fixed reference date (`2026-04-06`) aligned with seeded data.
+This is intentional and will be replaced once active-week navigation or automatic current-week plan loading
+exists.
+
+**Remaining:** dietary-constraint checkboxes exist in the FXML but are not wired to the model or save path;
+avoid-ingredients is a static label placeholder only; the join-table approach below has not been implemented
+(currently using the denormalised `avoid_food_codes` column on `users`).
+
+The preferences sidebar (`prefsSidebar` VBox) exists in the FXML; basic fields are bound and persisted.
 
 ### UI changes
 
@@ -184,14 +199,16 @@ SELECT id, name FROM ingredients WHERE name LIKE ? ORDER BY name LIMIT 50
 
 ### Call-site change in `MainController`
 
-Replace the hardcoded `DayOfWeek.MONDAY` and user ID `1` with values loaded from `UserRepository`:
+Replace the hardcoded user ID `1` with the loaded/current user.
 
-```java
-User user = userRepository.getUser(userId);
-weeklyMeals = mealPlanService.getWeeklyMeals(userId, LocalDate.now(), user.weekStartDay());
-```
+Keep `weekStartDay` as a display concern:
+- load `weekStartDay` from `UserRepository`
+- use it when calculating grid column ordering / visual week layout
+- do not let it change meal-plan lookup in a way that makes an existing stored plan unreachable
 
-> `UserPreferences` will need a `weekStartDay` field (default `MONDAY`) added as part of this task.
+Replace the temporary hardcoded `DayOfWeek.MONDAY` in UI layout logic with the loaded value from `UserRepository`.
+
+> Temporary dev limitation: `referenceDate` may remain fixed to match seeded data until plan generation / active-week navigation is implemented.
 
 ### Non-goals (this phase)
 
@@ -203,41 +220,18 @@ weeklyMeals = mealPlanService.getWeeklyMeals(userId, LocalDate.now(), user.weekS
 
 ---
 
-## Task 8 — `MealIngredientRepository` ⬜
+## Task 8 — `MealIngredientRepository` ✅
 
 Loads ingredient lines for a meal from the `meal_ingredients` table. `ShoppingListService` (Task 9) depends on this.
 
-```java
-public class MealIngredientRepository {
-    public List<MealIngredient> getIngredientsForMeal(int mealId) throws SQLException { ...}
-}
-```
+Both methods implemented:
 
-The basic query returns `MealIngredient` rows as-is. For callers that also need the ingredient name (e.g.
-`ShoppingListService`), add a joined variant that returns a lightweight projection:
+- `getIngredientsForMeal(int mealId)` — returns `List<MealIngredient>` from `meal_ingredients`
+- `getIngredientsWithNameForMeal(int mealId)` — returns `List<MealIngredientRow>`, joined with `ingredients` for the name, ordered alphabetically
 
-```java
-public record MealIngredientRow(int ingredientId, String ingredientName, double quantity, String unit) {
-}
+`MealIngredientRow` is a package-private record in the same file as the repository.
 
-public List<MealIngredientRow> getIngredientsWithNameForMeal(int mealId) throws SQLException { ...}
-```
-
-SQL for the joined variant:
-
-```sql
-SELECT mi.ingredient_id, i.name, mi.quantity, mi.unit
-FROM meal_ingredients mi
-         JOIN ingredients i ON mi.ingredient_id = i.id
-WHERE mi.meal_id = ?
-ORDER BY i.name
-```
-
-**Testing:** verify against the seeded `app.db` — the seed includes meals with ingredients. Check that:
-
-- `getIngredientsForMeal` returns the correct row count for a known meal ID
-- `getIngredientsWithNameForMeal` returns the ingredient name correctly joined
-- an unknown `mealId` returns an empty list (not an exception)
+`MealIngredientRepositoryTest` covers: empty list for unknown meal, field mapping, null unit, isolation between meals, multiple ingredients, joined name, alphabetical ordering.
 
 **Done when:** both query methods work against the seeded DB; tests pass.
 
@@ -335,8 +329,9 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `users` table includes preference columns in schema and `Schema.java`
 - [x] `AppSeedService` seeds `ingredients` and ensures default user on first run; skips on subsequent launches
 - [x] `UserRepository` round-trips user preferences correctly
-- [ ] Preferences sidebar reads/writes preferences; survives restart
-- [ ] `MealPlanService` uses `weekStartDay` from loaded preferences
-- [ ] `MealIngredientRepository` returns correct rows and joined names for seeded data
+- [~] Preferences sidebar reads/writes preferences; survives restart (servings/week-start/display flags done; dietary constraints and avoid-ingredients not yet wired)
+- [x] Weekly grid layout uses `weekStartDay` from loaded preferences
+- [x] Saving preferences refreshes the grid immediately without restart
+- [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
 - [ ] `ShoppingListService` produces a consolidated ingredient list
 - [ ] Shopping list panel renders and copy-to-clipboard works

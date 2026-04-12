@@ -39,7 +39,7 @@ public class MainController {
         mealPlanGrid.getChildren().clear();
         User user = userRepository.getUser(1);
         DayOfWeek weekStart = DayOfWeek.of(user.getWeekStartDay());
-        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), LocalDate.of(2026, 4, 6), weekStart);
+        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), LocalDate.of(2026, 4, 6));
 
         Set<LocalDate> labelledDates = new HashSet<>();
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();

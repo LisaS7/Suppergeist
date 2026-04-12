@@ -28,15 +28,10 @@ class MealPlanRepositoryTest {
         tempDb = Files.createTempFile("suppergeist-test-", ".db");
         dbManager = new DatabaseManager(tempDb);
 
-        try (Connection conn = dbManager.getConnection()) {
-            conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS meal_plans (
-                    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id    INTEGER NOT NULL,
-                    start_date DATE    NOT NULL
-                )
-            """);
-        }
+        dbManager.init();
+        insertUser(1);
+        insertUser(2);
+        insertUser(42);
 
         repository = new MealPlanRepository(dbManager);
     }
@@ -44,6 +39,16 @@ class MealPlanRepositoryTest {
     @AfterEach
     void tearDown() throws IOException {
         Files.deleteIfExists(tempDb);
+    }
+
+    private void insertUser(int id) throws SQLException {
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                 "INSERT INTO users (id, name) VALUES (?, ?)")) {
+            stmt.setInt(1, id);
+            stmt.setString(2, "User " + id);
+            stmt.executeUpdate();
+        }
     }
 
     private void insertPlan(int userId, LocalDate startDate) throws SQLException {

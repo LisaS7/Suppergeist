@@ -76,7 +76,6 @@ public final class Schema {
                     "    meal_id      INTEGER NOT NULL REFERENCES meals(id), " +
                     "    day_offset   INTEGER NOT NULL CHECK (day_offset BETWEEN 0 AND 6), " +
                     "    meal_type    TEXT    NOT NULL, " +
-                    "\n" +
                     "    UNIQUE (meal_plan_id, day_offset, meal_type)" +
                     ");";
 

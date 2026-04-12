@@ -22,7 +22,7 @@ public class MealRepository {
     }
 
     public Optional<Meal> getMealById(int id) throws SQLException {
-        String sql = "SELECT * from meals where id=?";
+        String sql = "SELECT * FROM meals WHERE id = ?";
 
         try (
                 Connection conn = dbManager.getConnection();

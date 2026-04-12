@@ -36,8 +36,7 @@ public class DatabaseManager {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("PRAGMA foreign_keys = ON");
         }
-
-        log.info("Opened connection to " + dbPath.toAbsolutePath());
+        
         return conn;
     }
 

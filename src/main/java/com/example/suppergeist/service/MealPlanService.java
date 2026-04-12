@@ -21,6 +21,7 @@ public class MealPlanService {
     private final MealRepository mealRepository;
     private final MealPlanRepository mealPlanRepository;
     private final MealPlanEntryRepository mealPlanEntryRepository;
+    private static final DateTimeFormatter dayLabelFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
 
     public MealPlanService(MealRepository mealRepository, MealPlanRepository mealPlanRepository, MealPlanEntryRepository mealPlanEntryRepository) {
         this.mealRepository = mealRepository;
@@ -29,11 +30,10 @@ public class MealPlanService {
     }
 
     private String formatDayLabel(LocalDate date) {
-        DateTimeFormatter dayLabelFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
         return date.format(dayLabelFormatter);
     }
 
-    public List<WeeklyMealViewModel> getWeeklyMeals(int userId, LocalDate referenceDate, DayOfWeek weekStartDay) throws SQLException {
+    public List<WeeklyMealViewModel> getWeeklyMeals(int userId, LocalDate referenceDate) throws SQLException {
         LocalDate startDate = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         Optional<MealPlan> mealPlan = mealPlanRepository.getMealPlanByUserAndStartDate(userId, startDate);
         if (mealPlan.isEmpty()) {
@@ -42,7 +42,6 @@ public class MealPlanService {
 
         MealPlan plan = mealPlan.get();
         List<MealPlanEntry> entries = mealPlanEntryRepository.getEntriesByMealPlanId(plan.getId());
-
         List<WeeklyMealViewModel> weeklyMeals = new ArrayList<>();
 
         for (MealPlanEntry entry : entries) {

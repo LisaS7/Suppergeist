@@ -25,19 +25,18 @@ public class UserRepository {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM users WHERE id = 1")) {
 
-            ResultSet rs = stmt.executeQuery();
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    log.info("Default user already exists, skipping creation.");
+                    return;
+                }
 
-            if (rs.next()) {
-                log.info("Default user already exists, skipping creation.");
-                return;
+                try (PreparedStatement insertStmt = conn.prepareStatement("INSERT INTO users (id, name) VALUES (1, ?)")) {
+                    insertStmt.setString(1, "Default User");
+                    insertStmt.executeUpdate();
+                    log.info("Default user created.");
+                }
             }
-
-            try (PreparedStatement insertStmt = conn.prepareStatement("INSERT INTO users (id, name) VALUES (1, ?)")) {
-                insertStmt.setString(1, "Default User");
-                insertStmt.executeUpdate();
-                log.info("Default user created.");
-            }
-
         }
     }
 

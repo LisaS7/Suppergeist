@@ -27,15 +27,21 @@ class MealPlanEntryRepositoryTest {
         tempDb = Files.createTempFile("suppergeist-test-", ".db");
         dbManager = new DatabaseManager(tempDb);
 
+        dbManager.init();
+
         try (Connection conn = dbManager.getConnection()) {
+            // Seed parent rows required by FK constraints.
+            conn.createStatement().execute("INSERT INTO users (id, name) VALUES (1, 'Test User')");
+            // Meal IDs used by tests: 10, 11, 12, 20, 42
             conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS meal_plan_entries (
-                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                    meal_plan_id INTEGER NOT NULL,
-                    meal_id     INTEGER NOT NULL,
-                    day_offset  INTEGER NOT NULL,
-                    meal_type   TEXT    NOT NULL
-                )
+                INSERT INTO meals (id, name) VALUES
+                    (10, 'Test Meal A'), (11, 'Test Meal B'),
+                    (12, 'Test Meal C'), (20, 'Test Meal D'), (42, 'Test Meal E')
+            """);
+            // Meal plan IDs used by tests: 1, 2
+            conn.createStatement().execute("""
+                INSERT INTO meal_plans (id, user_id, start_date) VALUES
+                    (1, 1, '2026-01-01'), (2, 1, '2026-01-08')
             """);
         }
 

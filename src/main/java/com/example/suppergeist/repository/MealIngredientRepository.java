@@ -10,11 +10,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-record MealIngredientRow(int ingredientId, String ingredientName, double quantity, String unit) {
-}
 
 public class MealIngredientRepository {
     private final DatabaseManager dbManager;
+
+    public static record MealIngredientRow(int ingredientId, String ingredientName, double quantity, String unit) {
+    }
 
     public MealIngredientRepository(DatabaseManager dbManager) {
         this.dbManager = dbManager;
