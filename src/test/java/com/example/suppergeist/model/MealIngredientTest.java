@@ -36,7 +36,6 @@ class MealIngredientTest {
     @Test
     void fullConstructor_setsId() {
         MealIngredient mi = new MealIngredient(99, 1, 2, 100.0, "ml");
-        // NOTE: this test will fail — the 5-arg constructor does not assign this.id = id
         assertEquals(99, mi.getId());
     }
 

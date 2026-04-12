@@ -213,6 +213,35 @@ class MealPlanServiceTest {
     }
 
     @Test
+    void getWeeklyMeals_resolvesWeekStart_withSundayAsFirstDay() throws SQLException {
+        // Week starting Sunday 2026-03-29; reference date is Monday 2026-03-30
+        LocalDate weekStart = LocalDate.of(2026, 3, 29); // Sunday
+        int planId = insertMealPlan(1, weekStart);
+        int mealId = insertMeal("Sunday Roast");
+        insertEntry(planId, mealId, 0, "dinner");
+
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30), DayOfWeek.SUNDAY);
+
+        assertEquals(1, result.size());
+        assertEquals("Sunday Roast", result.get(0).mealName());
+        assertEquals(weekStart, result.get(0).date());
+    }
+
+    @Test
+    void getWeeklyMeals_computesMealDateAndLabel_forLastDayOfWeek() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 3, 30); // Monday
+        int planId = insertMealPlan(1, weekStart);
+        int mealId = insertMeal("Sunday Roast");
+        insertEntry(planId, mealId, 6, "dinner"); // day offset 6 → Sunday 2026-04-05
+
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30), DayOfWeek.MONDAY);
+
+        assertEquals(1, result.size());
+        assertEquals(LocalDate.of(2026, 4, 5), result.get(0).date());
+        assertEquals("Sunday 5 Apr", result.get(0).dayLabel());
+    }
+
+    @Test
     void getWeeklyMeals_isolatesResultsByUser() throws SQLException {
         LocalDate weekStart = LocalDate.of(2026, 3, 30);
         int plan1 = insertMealPlan(1, weekStart);

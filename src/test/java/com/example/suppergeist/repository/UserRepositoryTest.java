@@ -103,6 +103,12 @@ class UserRepositoryTest {
     }
 
     @Test
+    void savePreferences_doesNotThrow_whenUserDoesNotExist() {
+        assertDoesNotThrow(() -> repository.savePreferences(
+                new User(999, "Ghost", Set.of(), Set.of(), 2, true, true, 1)));
+    }
+
+    @Test
     void savePreferences_overwritesPreviousPreferences() throws SQLException {
         repository.ensureDefaultUserExists();
         repository.savePreferences(new User(1, "Default User", Set.of("vegetarian"), Set.of(), 2, true, true, 1));
