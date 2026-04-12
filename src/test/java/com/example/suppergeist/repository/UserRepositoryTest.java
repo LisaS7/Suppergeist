@@ -65,7 +65,7 @@ class UserRepositoryTest {
     @Test
     void getUser_parsesDietaryConstraints() throws SQLException {
         repository.ensureDefaultUserExists();
-        repository.savePreferences(new User(1, "Default User", Set.of("vegetarian", "gluten-free"), Set.of(), 2));
+        repository.savePreferences(new User(1, "Default User", Set.of("vegetarian", "gluten-free"), Set.of(), 2, true, true, 1));
 
         User loaded = repository.getUser(1);
         assertEquals(Set.of("vegetarian", "gluten-free"), loaded.getDietaryConstraints());
@@ -74,7 +74,7 @@ class UserRepositoryTest {
     @Test
     void getUser_parsesAvoidFoodCodes() throws SQLException {
         repository.ensureDefaultUserExists();
-        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of("A001", "B002"), 2));
+        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of("A001", "B002"), 2, true, true, 1));
 
         User loaded = repository.getUser(1);
         assertEquals(Set.of("A001", "B002"), loaded.getAvoidFoodCodes());
@@ -91,22 +91,27 @@ class UserRepositoryTest {
     @Test
     void savePreferences_persistsAllFields() throws SQLException {
         repository.ensureDefaultUserExists();
-        repository.savePreferences(new User(1, "Default User", Set.of("vegan"), Set.of("A001"), 4));
+        repository.savePreferences(new User(1, "Default User", Set.of("vegan"), Set.of("A001"), 4, false, false, 7));
 
         User loaded = repository.getUser(1);
         assertEquals(Set.of("vegan"), loaded.getDietaryConstraints());
         assertEquals(Set.of("A001"), loaded.getAvoidFoodCodes());
         assertEquals(4, loaded.getServingsPerMeal());
+        assertFalse(loaded.isShowCalories());
+        assertFalse(loaded.isShowNutritionalInfo());
+        assertEquals(7, loaded.getWeekStartDay());
     }
 
     @Test
     void savePreferences_overwritesPreviousPreferences() throws SQLException {
         repository.ensureDefaultUserExists();
-        repository.savePreferences(new User(1, "Default User", Set.of("vegetarian"), Set.of(), 2));
-        repository.savePreferences(new User(1, "Default User", Set.of("vegan"), Set.of(), 3));
+        repository.savePreferences(new User(1, "Default User", Set.of("vegetarian"), Set.of(), 2, true, true, 1));
+        repository.savePreferences(new User(1, "Default User", Set.of("vegan"), Set.of(), 3, false, true, 2));
 
         User loaded = repository.getUser(1);
         assertEquals(Set.of("vegan"), loaded.getDietaryConstraints());
         assertEquals(3, loaded.getServingsPerMeal());
+        assertFalse(loaded.isShowCalories());
+        assertEquals(2, loaded.getWeekStartDay());
     }
 }

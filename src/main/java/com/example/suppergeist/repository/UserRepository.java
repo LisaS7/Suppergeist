@@ -43,32 +43,35 @@ public class UserRepository {
 
     public User getUser(int id) throws SQLException {
         try (Connection conn = dbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT id, name, dietary_constraints, avoid_ingredients, servings_per_meal FROM users WHERE id = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, name, dietary_constraints, avoid_food_codes, servings_per_meal, show_calories, show_nutritional_info, week_start_day FROM users WHERE id = ?")) {
             stmt.setInt(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     String name = rs.getString("name");
                     String dietaryConstraintsRaw = rs.getString("dietary_constraints");
-                    String avoidFoodCodesRaw = rs.getString("avoid_ingredients");
+                    String avoidFoodCodesRaw = rs.getString("avoid_food_codes");
                     int servingsPerMeal = rs.getInt("servings_per_meal");
+                    boolean showCalories = rs.getBoolean("show_calories");
+                    boolean showNutritionalInfo = rs.getBoolean("show_nutritional_info");
+                    int weekStartDay = rs.getInt("week_start_day");
 
                     Set<String> dietaryConstraints = dietaryConstraintsRaw.isBlank() ? Set.of() :
                             Arrays.stream(dietaryConstraintsRaw.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
-                    Set<String> avoidIngredientFoodCodes = avoidFoodCodesRaw.isBlank() ? Set.of() :
+                    Set<String> avoidFoodCodes = avoidFoodCodesRaw.isBlank() ? Set.of() :
                             Arrays.stream(avoidFoodCodesRaw.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
 
-                    return new User(id, name, dietaryConstraints, avoidIngredientFoodCodes, servingsPerMeal);
+                    return new User(id, name, dietaryConstraints, avoidFoodCodes, servingsPerMeal, showCalories, showNutritionalInfo, weekStartDay);
                 } else {
                     log.warning("No user found for id: " + id + " Returning default user.");
-                    return new User(id, "Default User", Set.of(), Set.of(), 2);
+                    return new User(id, "Default User", Set.of(), Set.of(), 2, true, true, 1);
                 }
             }
         }
     }
 
     public void savePreferences(User user) throws SQLException {
-        String sql = "UPDATE users SET dietary_constraints = ?, avoid_ingredients = ?, servings_per_meal = ? WHERE id = ?";
+        String sql = "UPDATE users SET dietary_constraints = ?, avoid_food_codes = ?, servings_per_meal = ?, show_calories = ?, show_nutritional_info = ?, week_start_day = ? WHERE id = ?";
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             String dietaryConstraints = String.join(",", user.getDietaryConstraints());
@@ -77,7 +80,10 @@ public class UserRepository {
             stmt.setString(1, dietaryConstraints);
             stmt.setString(2, avoidFoodCodes);
             stmt.setInt(3, user.getServingsPerMeal());
-            stmt.setInt(4, user.getId());
+            stmt.setBoolean(4, user.isShowCalories());
+            stmt.setBoolean(5, user.isShowNutritionalInfo());
+            stmt.setInt(6, user.getWeekStartDay());
+            stmt.setInt(7, user.getId());
 
             int rowsUpdated = stmt.executeUpdate();
 

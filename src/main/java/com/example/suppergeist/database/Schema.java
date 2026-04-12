@@ -9,8 +9,11 @@ public final class Schema {
                     "id INTEGER PRIMARY KEY, " +
                     "name TEXT NOT NULL, " +
                     "dietary_constraints TEXT NOT NULL DEFAULT '', " +
-                    "avoid_ingredients TEXT NOT NULL DEFAULT '', " +
-                    "servings_per_meal INTEGER NOT NULL DEFAULT 2 CHECK (servings_per_meal >= 1)" +
+                    "avoid_food_codes TEXT NOT NULL DEFAULT '', " +
+                    "servings_per_meal INTEGER NOT NULL DEFAULT 2 CHECK (servings_per_meal >= 1), " +
+                    "show_calories BOOLEAN DEFAULT true, " +
+                    "show_nutritional_info BOOLEAN DEFAULT true, " +
+                    "week_start_day INT DEFAULT 1" +
                     ");";
 
     public static final String CREATE_MEALS =

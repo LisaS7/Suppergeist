@@ -11,8 +11,14 @@ public class User {
     private final Set<String> dietaryConstraints;
     private final Set<String> avoidFoodCodes;
     private final int servingsPerMeal;
+    private final boolean showCalories;
+    private final boolean showNutritionalInfo;
+    private final int weekStartDay;
 
-    public User(Integer id, String name, Set<String> dietaryConstraints, Set<String> avoidFoodCodes, int servingsPerMeal) {
+    public User(Integer id, String name, Set<String> dietaryConstraints, Set<String> avoidFoodCodes, int servingsPerMeal, boolean showCalories, boolean showNutritionalInfo, int weekStartDay) {
+        this.showCalories = showCalories;
+        this.showNutritionalInfo = showNutritionalInfo;
+        this.weekStartDay = weekStartDay;
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("User name must not be null or blank");
         }
@@ -29,7 +35,7 @@ public class User {
     }
 
     public User(String name) {
-        this(null, name, Set.of(), Set.of(), 2);
+        this(null, name, Set.of(), Set.of(), 2, true, true, 1);
     }
 
 }
