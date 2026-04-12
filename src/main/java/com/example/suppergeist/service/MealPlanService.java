@@ -34,7 +34,7 @@ public class MealPlanService {
     }
 
     public List<WeeklyMealViewModel> getWeeklyMeals(int userId, LocalDate referenceDate, DayOfWeek weekStartDay) throws SQLException {
-        LocalDate startDate = referenceDate.with(TemporalAdjusters.previousOrSame(weekStartDay));
+        LocalDate startDate = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         Optional<MealPlan> mealPlan = mealPlanRepository.getMealPlanByUserAndStartDate(userId, startDate);
         if (mealPlan.isEmpty()) {
             return Collections.emptyList();

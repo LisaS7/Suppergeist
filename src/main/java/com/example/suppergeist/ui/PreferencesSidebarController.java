@@ -16,6 +16,7 @@ public class PreferencesSidebarController {
     private UserRepository userRepository;
     private User user;
     private static final Logger log = Logger.getLogger(PreferencesSidebarController.class.getName());
+    private Runnable onPreferencesSaved;
 
     // UI Elements
     @FXML private VBox root;
@@ -45,6 +46,10 @@ public class PreferencesSidebarController {
         this.userRepository = userRepository;
     }
 
+    public void setOnPreferencesSaved(Runnable onPreferencesSaved) {
+        this.onPreferencesSaved = onPreferencesSaved;
+    }
+
     public void loadUser(int userId) throws SQLException {
         this.user = this.userRepository.getUser(userId);
 
@@ -67,9 +72,12 @@ public class PreferencesSidebarController {
                 this.showNutritionalInfoCheckbox.isSelected(),
                 this.weekStartDayChoiceBox.getValue().getValue()
         );
-        
+
         try {
             this.userRepository.savePreferences(this.user);
+            if (this.onPreferencesSaved != null) {
+                this.onPreferencesSaved.run();
+            }
         } catch (SQLException e) {
             log.log(Level.SEVERE, "Failed to save user preferences", e);
             new Alert(Alert.AlertType.ERROR, "Failed to save preferences").showAndWait();
