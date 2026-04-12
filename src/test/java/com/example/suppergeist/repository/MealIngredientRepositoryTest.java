@@ -2,7 +2,6 @@ package com.example.suppergeist.repository;
 
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.MealIngredient;
-import com.example.suppergeist.repository.MealIngredientRepository.MealIngredientRow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -152,7 +151,7 @@ class MealIngredientRepositoryTest {
     void getIngredientsWithNameForMeal_returnsEmptyList_whenNoIngredients() throws SQLException {
         int mealId = insertMeal("Pasta");
 
-        List<MealIngredientRepository.MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
 
         assertTrue(result.isEmpty());
     }
@@ -163,11 +162,11 @@ class MealIngredientRepositoryTest {
         int ingredientId = insertIngredient("Spaghetti");
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        List<MealIngredientRepository.MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
 
         assertEquals(1, result.size());
-        assertEquals("Spaghetti", result.get(0).ingredientName());
-        assertEquals(ingredientId, result.get(0).ingredientId());
+        assertEquals("Spaghetti", result.get(0).ingredient().getName());
+        assertEquals(ingredientId, result.get(0).ingredient().getId());
         assertEquals(200.0, result.get(0).quantity());
         assertEquals("g", result.get(0).unit());
     }
@@ -184,9 +183,9 @@ class MealIngredientRepositoryTest {
 
         List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
 
-        assertEquals("Aubergine", result.get(0).ingredientName());
-        assertEquals("Mushroom", result.get(1).ingredientName());
-        assertEquals("Zucchini", result.get(2).ingredientName());
+        assertEquals("Aubergine", result.get(0).ingredient().getName());
+        assertEquals("Mushroom", result.get(1).ingredient().getName());
+        assertEquals("Zucchini", result.get(2).ingredient().getName());
     }
 
     @Test
