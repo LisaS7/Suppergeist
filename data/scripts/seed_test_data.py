@@ -3,23 +3,26 @@
 seed_test_data.py
 
 Seeds app.db with a minimal but complete set of test data:
-  - 1 user
   - 7 meals (one per day, dinner only — keeps it simple)
   - 1 meal plan starting 2026-04-06 (Monday)
   - 7 meal_plan_entries, one per day
 
 Safe to re-run: existing rows are skipped (INSERT OR IGNORE).
 
+The database must already exist (created by the app on first launch).
+
 Usage (run from the project root):
     python3 data/scripts/seed_test_data.py
     python3 data/scripts/seed_test_data.py --db path/to/app.db
+    python3 data/scripts/seed_test_data.py --clear   # wipe meals/plans/entries
+    python3 data/scripts/seed_test_data.py --reset   # clear then reseed
 """
 
 import argparse
 import sqlite3
 from pathlib import Path
 
-DEFAULT_DB = Path("app.db")
+DEFAULT_DB = Path.home() / ".suppergeist" / "app.db"
 WEEK_START = "2026-04-06"
 
 MEALS = [
@@ -33,17 +36,55 @@ MEALS = [
 ]
 
 
+def clear(conn: sqlite3.Connection) -> None:
+    """Delete only the rows inserted by this script (known meals, plan, and entries)."""
+    placeholders = ",".join("?" * len(MEALS))
+    meal_ids = [
+        row[0]
+        for row in conn.execute(
+            f"SELECT id FROM meals WHERE name IN ({placeholders})", MEALS
+        ).fetchall()
+    ]
+
+    if not meal_ids:
+        print("Nothing to clear (no known seed meals found).")
+        return
+
+    user_row = conn.execute("SELECT id FROM users LIMIT 1").fetchone()
+    plan_id_row = (
+        conn.execute(
+            "SELECT id FROM meal_plans WHERE user_id = ? AND start_date = ?",
+            (user_row[0], WEEK_START),
+        ).fetchone()
+        if user_row
+        else None
+    )
+    plan_id = plan_id_row[0] if plan_id_row else None
+
+    with conn:
+        entry_placeholders = ",".join("?" * len(meal_ids))
+        params: list = list(meal_ids)
+        if plan_id is not None:
+            conn.execute(
+                f"DELETE FROM meal_plan_entries WHERE meal_plan_id = ? OR meal_id IN ({entry_placeholders})",
+                [plan_id] + params,
+            )
+            conn.execute("DELETE FROM meal_plans WHERE id = ?", (plan_id,))
+        else:
+            conn.execute(
+                f"DELETE FROM meal_plan_entries WHERE meal_id IN ({entry_placeholders})",
+                params,
+            )
+        conn.execute(f"DELETE FROM meals WHERE id IN ({entry_placeholders})", params)
+
+    print("Cleared seed data: meal_plan_entries, meal_plans, meals.")
+
+
 def seed(db_path: Path) -> None:
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA foreign_keys = ON")
 
     with conn:
-        # --- user ---
-        conn.execute(
-            "INSERT OR IGNORE INTO users (id, name) VALUES (1, 'Test User')"
-        )
-        user_id = 1
-
         # --- meals ---
         meal_ids = []
         for name in MEALS:
@@ -59,6 +100,12 @@ def seed(db_path: Path) -> None:
                 meal_ids.append(row[0])
 
         # --- meal plan ---
+        user_row = conn.execute("SELECT id FROM users LIMIT 1").fetchone()
+        if user_row is None:
+            print("ERROR: No user found. Launch the app once to create the default user.")
+            raise SystemExit(1)
+        user_id = user_row[0]
+
         conn.execute(
             "INSERT OR IGNORE INTO meal_plans (user_id, start_date) VALUES (?, ?)",
             (user_id, WEEK_START),
@@ -80,19 +127,34 @@ def seed(db_path: Path) -> None:
             )
 
     conn.close()
-    print(f"Seeded {db_path}: 1 user, {len(MEALS)} meals, 1 plan, {len(MEALS)} entries.")
+    print(f"Seeded {db_path}: {len(MEALS)} meals, 1 plan, {len(MEALS)} entries.")
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed app.db with test data.")
     parser.add_argument("--db", type=Path, default=DEFAULT_DB)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--clear", action="store_true", help="Delete all meals, plans, and entries.")
+    mode.add_argument("--reset", action="store_true", help="Clear then reseed.")
     args = parser.parse_args()
 
     if not args.db.exists():
-        print(f"ERROR: {args.db} not found. Run create_app_db.py first.")
+        print(f"ERROR: {args.db} not found. Launch the app once to initialise the database.")
         raise SystemExit(1)
 
-    seed(args.db)
+    if args.clear:
+        conn = sqlite3.connect(args.db)
+        conn.execute("PRAGMA foreign_keys = ON")
+        clear(conn)
+        conn.close()
+    elif args.reset:
+        conn = sqlite3.connect(args.db)
+        conn.execute("PRAGMA foreign_keys = ON")
+        clear(conn)
+        conn.close()
+        seed(args.db)
+    else:
+        seed(args.db)
 
 
 if __name__ == "__main__":
