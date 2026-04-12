@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -24,12 +21,7 @@
         </VBox>
     </center>
     <right>
-        <VBox spacing="10" fx:id="prefsSidebar" styleClass="sidebar">
-            <Label text="Preferences"/>
-            <Separator/>
-            <CheckBox text="Show calories"/>
-            <CheckBox text="Show nutritional info"/>
-        </VBox>
+        <fx:include fx:id="preferencesSidebar" source="preferences-sidebar.fxml"/>
     </right>
     <bottom>
         <HBox spacing="10" styleClass="footer">

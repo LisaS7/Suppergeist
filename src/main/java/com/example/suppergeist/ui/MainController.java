@@ -4,6 +4,7 @@ import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
 import com.example.suppergeist.repository.MealPlanRepository;
 import com.example.suppergeist.repository.MealRepository;
+import com.example.suppergeist.repository.UserRepository;
 import com.example.suppergeist.service.MealPlanService;
 import com.example.suppergeist.service.WeeklyMealViewModel;
 import javafx.fxml.FXML;
@@ -21,21 +22,18 @@ import java.util.logging.Logger;
 public class MainController {
     private MealPlanService mealPlanService;
     private List<WeeklyMealViewModel> weeklyMeals;
+    private static final Logger log = Logger.getLogger(MainController.class.getName());
 
     // UI Elements
     @FXML
-    private VBox prefsSidebar;
-
-    @FXML
     private GridPane mealPlanGrid;
 
-    // Log
-    private static final Logger log = Logger.getLogger(MainController.class.getName());
+    @FXML
+    private PreferencesSidebarController preferencesSidebarController;
 
     @FXML
     private void togglePrefs() {
-        prefsSidebar.setVisible(!prefsSidebar.isVisible());
-        prefsSidebar.setManaged(prefsSidebar.isVisible());
+        preferencesSidebarController.toggleVisibility();
     }
 
     public void initialize() {
@@ -44,10 +42,14 @@ public class MainController {
         MealRepository mealRepository = new MealRepository(dbManager);
         MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
         MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
+        UserRepository userRepository = new UserRepository(dbManager);
+        preferencesSidebarController.setUserRepository(userRepository);
 
         mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
 
         try {
+            preferencesSidebarController.loadUser(1);
+
             weeklyMeals = mealPlanService.getWeeklyMeals(1, LocalDate.of(2026, 4, 6), DayOfWeek.MONDAY);
 
             Set<LocalDate> labelledDates = new HashSet<>();

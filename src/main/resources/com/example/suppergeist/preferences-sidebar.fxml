@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<VBox fx:id="root"
+      spacing="10"
+      styleClass="sidebar"
+      xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.suppergeist.ui.PreferencesSidebarController">
+    <Label text="Preferences"/>
+
+    <Separator/>
+    <VBox fx:id="dietaryConstraintsBox">
+        <CheckBox text="Vegetarian"/>
+        <CheckBox text="Vegan"/>
+        <CheckBox text="Gluten-free"/>
+        <CheckBox text="Dairy-free"/>
+    </VBox>
+
+    <Separator/>
+    <Label text="placeholder for avoid food codes"/>
+
+    <Separator/>
+    <Label text="Servings per meal"/>
+    <Spinner fx:id="servingsPerMealSpinner"/>
+
+    <Separator/>
+    <CheckBox fx:id="showCaloriesCheckbox" text="Show calories"/>
+    <CheckBox fx:id="showNutritionalInfoCheckbox" text="Show nutritional info"/>
+
+    <Separator/>
+    <Label text="Week starts on"/>
+    <ChoiceBox fx:id="weekStartDayChoiceBox"/>
+
+    <Separator/>
+    <Button text="Save" onAction="#savePreferences"/>
+</VBox>
+

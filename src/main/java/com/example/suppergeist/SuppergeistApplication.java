@@ -12,10 +12,13 @@ import javafx.scene.control.Alert;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class SuppergeistApplication extends Application {
     private Exception initError;
+    private static final Logger log = Logger.getLogger(SuppergeistApplication.class.getName());
 
     @Override
     public void init() {
@@ -30,7 +33,7 @@ public class SuppergeistApplication extends Application {
             UserRepository userRepository = new UserRepository(dbManager);
             userRepository.ensureDefaultUserExists();
         } catch (SQLException | IOException e) {
-            // TODO: better error handling
+            log.log(Level.SEVERE, "Application startup failed", e);
             initError = e;
         }
     }
@@ -42,7 +45,7 @@ public class SuppergeistApplication extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Startup Error");
             alert.setHeaderText("Application startup failed");
-            alert.setContentText(initError.getMessage());
+            alert.setContentText("Suppergeist could not start.\n\n" + initError.getMessage());
             alert.showAndWait();
 
             Platform.exit();
