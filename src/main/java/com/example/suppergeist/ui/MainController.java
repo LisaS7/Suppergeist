@@ -25,6 +25,7 @@ public class MainController {
     private UserRepository userRepository;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
+    private User user;
 
     // UI Elements
     @FXML private GridPane mealPlanGrid;
@@ -37,7 +38,6 @@ public class MainController {
 
     private void refreshMealPlanGrid() throws SQLException {
         mealPlanGrid.getChildren().clear();
-        User user = userRepository.getUser(1);
         DayOfWeek weekStart = DayOfWeek.of(user.getWeekStartDay());
         weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), LocalDate.of(2026, 4, 6));
 
@@ -76,18 +76,22 @@ public class MainController {
         }
     }
 
-    public void initialize() {
+    public void initialize() throws SQLException {
         log.info("Initializing MainController");
         DatabaseManager dbManager = new DatabaseManager();
+
         this.userRepository = new UserRepository(dbManager);
+        this.user = userRepository.getUser(1);
+
         MealRepository mealRepository = new MealRepository(dbManager);
         MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
         MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
 
         // Sidebar
         preferencesSidebarController.setUserRepository(userRepository);
-        preferencesSidebarController.setOnPreferencesSaved(() -> {
+        preferencesSidebarController.setOnPreferencesSaved((User updatedUser) -> {
             try {
+                this.user = updatedUser;
                 refreshMealPlanGrid();
             } catch (SQLException e) {
                 log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
@@ -97,8 +101,7 @@ public class MainController {
         mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
 
         try {
-            // TODO - remove duplication of loading user twice
-            preferencesSidebarController.loadUser(1);
+            preferencesSidebarController.setFormValues(this.user);
             refreshMealPlanGrid();
             log.info("Loaded " + weeklyMeals.size() + " meals");
 

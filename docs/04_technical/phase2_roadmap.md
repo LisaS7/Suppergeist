@@ -195,13 +195,13 @@ Replace the temporary hardcoded `DayOfWeek.MONDAY` in UI layout logic with the l
 
 ---
 
-## Task 7a — Consolidate user loading in `MainController` ⬜
+## Task 7a — Consolidate user loading in `MainController` ✅
 
 *(Complete alongside Task 7 — required before Task 7 is considered closed)*
 
-`MainController` currently loads the user twice: once via `preferencesSidebarController.loadUser(1)` and again inside `refreshMealPlanGrid()` via a direct `userRepository.getUser(1)` call. This is a known TODO in the code. It is not a correctness bug now, but Task 7 wires dietary constraints and avoid-ingredients into the same `User` object — at that point, two independent loads create two independent views of user state, and any field added to preferences doubles the number of places that need updating.
+`MainController` holds a single `private User user` field, loaded once in `initialize()` via `userRepository.getUser(1)`. The `onPreferencesSaved` callback is typed as `Consumer<User>` (changed from `Runnable`) so the sidebar passes the updated `User` back on save; the lambda assigns `this.user = updatedUser` before calling `refreshMealPlanGrid()`. `refreshMealPlanGrid()` reads from the field — no DB re-query.
 
-**Fix:** hold a single `User` reference in `MainController`. Load it once on startup; update it via the `onPreferencesSaved` callback when preferences are saved. Pass the cached `User` into `refreshMealPlanGrid()` rather than re-querying.
+`PreferencesSidebarController.loadUser(int)` was renamed to `setFormValues(User)` — it now accepts a `User` directly, assigns it to `this.user`, and populates the form fields. No DB access. The `throws SQLException` declaration was removed accordingly.
 
 **Done when:** `userRepository.getUser()` is called exactly once per user action; `refreshMealPlanGrid()` uses the cached `User`; the TODO comment is removed.
 
@@ -214,9 +214,9 @@ Loads ingredient lines for a meal from the `meal_ingredients` table. `ShoppingLi
 Both methods implemented:
 
 - `getIngredientsForMeal(int mealId)` — returns `List<MealIngredient>` from `meal_ingredients`
-- `getIngredientsWithNameForMeal(int mealId)` — returns `List<MealIngredientRow>`, joined with `ingredients` for the name, ordered alphabetically
+- `getIngredientsWithNameForMeal(int mealId)` — returns `List<MealIngredientRow>`, joined with `ingredients` for the name and food code, ordered alphabetically
 
-`MealIngredientRow` is a package-private record in the same file as the repository.
+`MealIngredientRow` is a top-level public record in its own file (`repository/MealIngredientRow.java`): `ingredient` (full `Ingredient` model), `quantity`, `unit`. Food code is accessible as `row.ingredient().getFoodCode()` — no flat `foodCode` field needed.
 
 `MealIngredientRepositoryTest` covers: empty list for unknown meal, field mapping, null unit, isolation between meals, multiple ingredients, joined name, alphabetical ordering.
 
@@ -236,11 +236,14 @@ public class ShoppingListService {
 }
 ```
 
-`ShoppingItem` is a public record: `name`, `totalQuantity` (String — quantities summed when units match, concatenated when they differ), `category` (String — derived from `foodCode` prefix; `"General"` if unclassified or food code is null).
+**What's built:** `buildList` aggregates ingredients across all meals in a plan, deduplicating by ingredient ID and summing quantities. `ShoppingItem` is a package-private record inside `ShoppingListService`: `name`, `totalQuantity` (Double), `unit` (String), `category` (String). Food code is accessed via `MealIngredientRow.ingredient().getFoodCode()` — no flat field needed.
 
-**Category mapping (presentation concern — not stored in DB):**
+`ShoppingListServiceTest` covers: empty plan, single ingredient, name/unit carry-through, quantity aggregation across two and three meals, distinct ingredients, non-existent plan ID.
 
-Category is derived in `ShoppingListService.determineCategory(String foodCode)` from the two-character CoFID prefix. It is not stored on `Ingredient` and is not in the database.
+**Remaining:**
+
+- Mixed-unit handling: when the same ingredient appears with different units across meals, quantities should be concatenated as `"200 g, 3 tbsp"` rather than summed. Currently quantities are summed regardless of unit, and the unit from the first row is used.
+- Category derivation from `foodCode` prefix (currently always `""`):
 
 | Prefix(es) | Category            |
 |-----------|---------------------|
@@ -253,26 +256,15 @@ Category is derived in `ShoppingListService.determineCategory(String foodCode)` 
 | `17`, `50`| Food Cupboard       |
 | null / other | General          |
 
-Prefixes form loose but supermarket-aligned clusters — good enough for UX grouping; refinement deferred.
+Prefixes form loose but supermarket-aligned clusters — good enough for UX grouping; refinement deferred. Category is a presentation concern — not stored in the DB.
 
-**Data requirement:** `MealIngredientRepository.getIngredientsWithNameForMeal()` must include `i.food_code` in its join query, and `MealIngredientRow` gains a `foodCode` field. No schema change required — `food_code` is already on `ingredients`.
+- Sort by category then name (currently insertion order).
 
-**Algorithm (MVP):**
+> **Phase 3 note:** `NutritionService` will need numeric quantities and ingredient IDs — keeping `totalQuantity` as
+> a `Double` (rather than collapsing into a display string) preserves this. When mixed-unit concatenation is
+> implemented, the numeric quantity and unit should remain accessible separately for nutrition calculation.
 
-1. Load all `MealPlanEntry` rows for the plan
-2. For each entry, load `MealIngredientRow` rows (joined name + food_code)
-3. Aggregate by `ingredientId` (unambiguous; avoids silent failures on case/whitespace differences in names):
-   - same unit → sum quantities
-   - different units → concatenate as `"200 g, 3 tbsp"`
-   - carry `name` and `foodCode` from the first row seen for that ID (they are stable per ingredient)
-4. Derive `category` from `foodCode` prefix
-5. Sort by category then name
-
-> **Phase 3 note:** `NutritionService` will need numeric quantities and ingredient IDs — do not collapse these into
-> the `totalQuantity` display string early. Keep `ingredientId` and raw quantity data available until after nutrition
-> calculation, or compute nutrition upstream of `ShoppingListService` directly from `MealIngredientRow`.
-
-**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients are consolidated.
+**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients are consolidated; category is derived from food code prefix; items are sorted by category then name; mixed units are concatenated rather than summed.
 
 ---
 
@@ -345,5 +337,5 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] Weekly grid layout uses `weekStartDay` from loaded preferences
 - [x] Saving preferences refreshes the grid immediately without restart
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
-- [ ] `ShoppingListService` produces a consolidated ingredient list
+- [~] `ShoppingListService` aggregates ingredients by ID and sums quantities (category derivation, mixed-unit handling, and sort not yet implemented)
 - [ ] Shopping list panel renders and copy-to-clipboard works

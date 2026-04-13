@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
@@ -16,7 +17,7 @@ public class PreferencesSidebarController {
     private UserRepository userRepository;
     private User user;
     private static final Logger log = Logger.getLogger(PreferencesSidebarController.class.getName());
-    private Runnable onPreferencesSaved;
+    private Consumer<User> onPreferencesSaved;
 
     // UI Elements
     @FXML private VBox root;
@@ -46,19 +47,18 @@ public class PreferencesSidebarController {
         this.userRepository = userRepository;
     }
 
-    public void setOnPreferencesSaved(Runnable onPreferencesSaved) {
+    public void setOnPreferencesSaved(Consumer<User> onPreferencesSaved) {
         this.onPreferencesSaved = onPreferencesSaved;
     }
 
-    public void loadUser(int userId) throws SQLException {
-        this.user = this.userRepository.getUser(userId);
+    public void setFormValues(User user) {
+        this.user = user;
+        this.servingsPerMealSpinner.getValueFactory().setValue(user.getServingsPerMeal());
 
-        this.servingsPerMealSpinner.getValueFactory().setValue(this.user.getServingsPerMeal());
+        this.showCaloriesCheckbox.setSelected(user.isShowCalories());
+        this.showNutritionalInfoCheckbox.setSelected(user.isShowNutritionalInfo());
 
-        this.showCaloriesCheckbox.setSelected(this.user.isShowCalories());
-        this.showNutritionalInfoCheckbox.setSelected(this.user.isShowNutritionalInfo());
-
-        this.weekStartDayChoiceBox.setValue(DayOfWeek.of(this.user.getWeekStartDay()));
+        this.weekStartDayChoiceBox.setValue(DayOfWeek.of(user.getWeekStartDay()));
     }
 
     public void savePreferences() {
@@ -76,7 +76,7 @@ public class PreferencesSidebarController {
         try {
             this.userRepository.savePreferences(this.user);
             if (this.onPreferencesSaved != null) {
-                this.onPreferencesSaved.run();
+                this.onPreferencesSaved.accept(this.user);
             }
         } catch (SQLException e) {
             log.log(Level.SEVERE, "Failed to save user preferences", e);
