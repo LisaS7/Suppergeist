@@ -1,16 +1,22 @@
 package com.example.suppergeist.ui;
 
+import com.example.suppergeist.model.Ingredient;
 import com.example.suppergeist.model.User;
+import com.example.suppergeist.repository.IngredientRepository;
 import com.example.suppergeist.repository.UserRepository;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import lombok.Setter;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -18,14 +24,18 @@ import java.util.logging.Level;
 
 public class PreferencesSidebarController {
 
-    private UserRepository userRepository;
+    @Setter private UserRepository userRepository;
     private User user;
+    @Setter private IngredientRepository ingredientRepository;
     private static final Logger log = Logger.getLogger(PreferencesSidebarController.class.getName());
-    private Consumer<User> onPreferencesSaved;
+    @Setter private Consumer<User> onPreferencesSaved;
+    private FilteredList<Ingredient> filteredIngredients;
 
     // UI Elements
     @FXML private VBox root;
     @FXML private VBox dietaryConstraintsBox;
+    @FXML private TextField avoidFoodCodesSearch;
+    @FXML private ListView<Ingredient> avoidFoodCodesListView;
     @FXML private Spinner<Integer> servingsPerMealSpinner;
     @FXML private CheckBox showCaloriesCheckbox;
     @FXML private CheckBox showNutritionalInfoCheckbox;
@@ -47,23 +57,42 @@ public class PreferencesSidebarController {
         root.setManaged(root.isVisible());
     }
 
-    public void setUserRepository(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public void setOnPreferencesSaved(Consumer<User> onPreferencesSaved) {
-        this.onPreferencesSaved = onPreferencesSaved;
-    }
-
-    public void setFormValues(User user) {
+    public void setFormValues(User user) throws SQLException {
         this.user = user;
 
+        // ---------- Dietary Constraints ----------
         ObservableList<Node> dietaryConstraintBoxes = dietaryConstraintsBox.getChildren();
         for (Node node : dietaryConstraintBoxes) {
             CheckBox box = (CheckBox) node;
             String boxString = box.getText().toLowerCase();
             box.setSelected(user.getDietaryConstraints().contains(boxString));
         }
+
+        // ---------- Avoid Food Codes ----------
+        // Load all ingredients into an ObservableList once. The ListView doesn't use this directly —
+        // instead a FilteredList wraps it and acts as a live window, showing only items that match
+        // the current search text. The predicate starts as always-true (show everything) and is
+        // swapped on each search keystroke. The ObservableList itself never changes.
+        List<Ingredient> allIngredients = ingredientRepository.getAllIngredients();
+        ObservableList<Ingredient> avoidFoodCodes = FXCollections.observableArrayList();
+        avoidFoodCodes.addAll(allIngredients);
+        this.filteredIngredients = new FilteredList<>(avoidFoodCodes, ingredient -> true);
+        
+        avoidFoodCodesSearch.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredIngredients.setPredicate(ingredient ->
+                    newValue == null || newValue.isEmpty() || ingredient.getName().toLowerCase().contains(newValue.toLowerCase())
+            );
+        });
+
+        avoidFoodCodesListView.setItems(filteredIngredients);
+        avoidFoodCodesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+        for (Ingredient ingredient : allIngredients) {
+            if (user.getAvoidFoodCodes().contains(ingredient.getFoodCode())) {
+                avoidFoodCodesListView.getSelectionModel().select(ingredient);
+            }
+        }
+        // ------------------------------------------
 
         this.servingsPerMealSpinner.getValueFactory().setValue(user.getServingsPerMeal());
 
@@ -74,6 +103,8 @@ public class PreferencesSidebarController {
     }
 
     public void savePreferences() {
+
+        // ---------- Dietary Constraints ----------
         ObservableList<Node> dietaryConstraintBoxes = dietaryConstraintsBox.getChildren();
         Set<String> dietaryConstraints = new HashSet<>();
         for (Node node : dietaryConstraintBoxes) {
@@ -82,12 +113,19 @@ public class PreferencesSidebarController {
                 dietaryConstraints.add(box.getText().toLowerCase());
             }
         }
-        
+
+        // ---------- Avoid Food Codes ----------
+        List<Ingredient> selectedIngredients = avoidFoodCodesListView.getSelectionModel().getSelectedItems();
+        Set<String> selectedFoodCodes = new HashSet<>();
+        for (Ingredient ingredient : selectedIngredients) {
+            selectedFoodCodes.add(ingredient.getFoodCode());
+        }
+
         this.user = new User(
                 this.user.getId(),
                 this.user.getName(),
                 dietaryConstraints,
-                this.user.getAvoidFoodCodes(),
+                selectedFoodCodes,
                 this.servingsPerMealSpinner.getValue(),
                 this.showCaloriesCheckbox.isSelected(),
                 this.showNutritionalInfoCheckbox.isSelected(),

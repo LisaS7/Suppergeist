@@ -1,4 +1,5 @@
 package com.example.suppergeist.model;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -14,6 +15,10 @@ public class Ingredient {
         this.foodCode = foodCode;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
 }
 
 

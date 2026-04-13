@@ -21,7 +21,8 @@
     </VBox>
 
     <Separator/>
-    <Label text="placeholder for avoid food codes"/>
+    <TextField fx:id="avoidFoodCodesSearch"/>
+    <ListView fx:id="avoidFoodCodesListView"/>
 
     <Separator/>
     <Label text="Servings per meal"/>

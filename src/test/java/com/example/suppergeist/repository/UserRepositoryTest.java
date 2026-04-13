@@ -123,6 +123,26 @@ class UserRepositoryTest {
     }
 
     @Test
+    void savePreferences_clearsAvoidFoodCodes_whenSetIsEmpty() throws SQLException {
+        repository.ensureDefaultUserExists();
+        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of("A001", "B002"), 2, true, true, 1));
+        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of(), 2, true, true, 1));
+
+        User loaded = repository.getUser(1);
+        assertTrue(loaded.getAvoidFoodCodes().isEmpty());
+    }
+
+    @Test
+    void savePreferences_overwritesPreviousAvoidFoodCodes() throws SQLException {
+        repository.ensureDefaultUserExists();
+        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of("A001", "B002"), 2, true, true, 1));
+        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of("C003"), 2, true, true, 1));
+
+        User loaded = repository.getUser(1);
+        assertEquals(Set.of("C003"), loaded.getAvoidFoodCodes());
+    }
+
+    @Test
     void savePreferences_doesNotThrow_whenUserDoesNotExist() {
         assertDoesNotThrow(() -> repository.savePreferences(
                 new User(999, "Ghost", Set.of(), Set.of(), 2, true, true, 1)));

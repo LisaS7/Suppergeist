@@ -127,71 +127,30 @@ blank/null handling, and synthetic default for unknown IDs.
 
 ---
 
-## Task 7 — Wire preferences sidebar 🔄
+## Task 7 — Wire preferences sidebar ✅
 
 *(Depends on Task 6)*
 
-**What's done:** `PreferencesSidebarController` is wired to `UserRepository`; servings spinner, week-start-day
-`ChoiceBox`, show-calories / show-nutritional-info checkboxes, and the Save button all work end-to-end.
-`MainController.initialize()` calls `preferencesSidebarController.loadUser(1)` on startup. `MainController`
-reads `weekStartDay` from the loaded `User` and uses it to drive grid column ordering — no longer hardcoded.
-An `onPreferencesSaved` callback triggers `refreshMealPlanGrid()` so the grid reacts immediately when
-preferences are saved.
+**What's built:** `PreferencesSidebarController` is fully wired end-to-end. All preference fields are loaded on startup and persisted on save:
 
-For development, `MainController` still uses a fixed reference date (`2026-04-06`) aligned with seeded data.
-This is intentional and will be replaced once active-week navigation or automatic current-week plan loading
-exists.
-
-**Remaining:** dietary-constraint checkboxes exist in the FXML but are not wired to the model or save path;
-avoid-food-codes is a static label placeholder only.
-
-The preferences sidebar (`prefsSidebar` VBox) exists in the FXML; basic fields are bound and persisted.
-
-### UI changes
-
-- Text fields or checkboxes for common `dietaryConstraints` (e.g. vegetarian, gluten-free)
-- Numeric field for `servingsPerMeal`
+- Dietary constraint checkboxes (vegetarian, vegan, gluten-free, dairy-free) — stored/loaded as lowercase strings
+- Servings-per-meal spinner
+- Show-calories / show-nutritional-info checkboxes
+- Week-start-day `ChoiceBox`
 - **Avoid ingredients — searchable multi-select:**
-  1. Search input field — filters the ingredient list; not stored
-  2. Multi-select list — populated via `IngredientRepository.searchByName()`; selected items' food codes are persisted
-  - On startup, pre-select any ingredients whose food code is in the loaded `avoidFoodCodes` set
-- Save button that calls `UserRepository.savePreferences(...)`
-- On startup, load preferences and populate fields
+  - All ingredients loaded once into an `ObservableList<Ingredient>` via `IngredientRepository.getAllIngredients()`
+  - A `FilteredList<Ingredient>` wraps it; the `ListView` is bound to the `FilteredList`
+  - A `TextField` (`avoidFoodCodesSearch`) drives the filter — on each keystroke, the `FilteredList` predicate is swapped to a case-insensitive name-contains check
+  - On load, ingredients whose food code is in `user.getAvoidFoodCodes()` are pre-selected via `getSelectionModel().select(ingredient)`
+  - On save, `getSelectionModel().getSelectedItems()` is read and food codes extracted into a `Set<String>`
+- `IngredientRepository` is injected into the sidebar from `MainController.initialize()` alongside `UserRepository`
+- `Ingredient.toString()` overridden to return `name` so the `ListView` renders ingredient names correctly
 
-### Schema changes
+`MainController.initialize()` calls `preferencesSidebarController.setFormValues(user)` on startup. An `onPreferencesSaved` callback triggers `refreshMealPlanGrid()` so the grid reacts immediately when preferences are saved.
 
-None. `avoidFoodCodes` is stored as a comma-separated string in the `avoid_food_codes` column on `users`. Food codes never contain commas, so this is safe and sufficient.
+For development, `MainController` still uses a fixed reference date (`2026-04-06`) aligned with seeded data. This is intentional and will be replaced once active-week navigation or automatic current-week plan loading exists.
 
-### Repository changes
-
-No structural changes to `UserRepository`. `savePreferences(...)` and `getUser(...)` already serialise/deserialise `avoidFoodCodes` as a comma-separated string.
-
-Add a search method to `IngredientRepository` to drive the multi-select:
-
-```java
-public List<Ingredient> searchByName(String query) throws SQLException { ... }
-```
-
-```sql
-SELECT id, name, food_code FROM ingredients WHERE name LIKE ? ORDER BY name LIMIT 50
-```
-
-The controller calls `IngredientRepository.searchByName()` — no SQL in the UI layer.
-
-### Call-site change in `MainController`
-
-Replace the hardcoded user ID `1` with the loaded/current user.
-
-Keep `weekStartDay` as a display concern:
-- load `weekStartDay` from `UserRepository`
-- use it when calculating grid column ordering / visual week layout
-- do not let it change meal-plan lookup in a way that makes an existing stored plan unreachable
-
-Replace the temporary hardcoded `DayOfWeek.MONDAY` in UI layout logic with the loaded value from `UserRepository`.
-
-> Temporary dev limitation: `referenceDate` may remain fixed to match seeded data until plan generation / active-week navigation is implemented.
-
-**Done when:** avoid-food-codes survive a restart and are reloaded correctly; dietary-constraint checkboxes persist; `MainController` uses the loaded `weekStartDay` for grid column ordering.
+> **Design note:** Filtering is done in-memory rather than per-keystroke DB queries. All ~2000 ingredients are loaded once; the `FilteredList` predicate is swapped on each keystroke. This avoids repeated DB connections and is fast enough for the dataset size.
 
 ---
 
@@ -333,7 +292,7 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `users` table includes preference columns in schema and `Schema.java`
 - [x] `AppSeedService` seeds `ingredients` and ensures default user on first run; skips on subsequent launches
 - [x] `UserRepository` round-trips user preferences correctly
-- [~] Preferences sidebar reads/writes preferences; survives restart (servings/week-start/display flags done; dietary constraints and avoid-ingredients not yet wired)
+- [x] Preferences sidebar reads/writes preferences; survives restart (all fields including avoid-ingredients)
 - [x] Weekly grid layout uses `weekStartDay` from loaded preferences
 - [x] Saving preferences refreshes the grid immediately without restart
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
