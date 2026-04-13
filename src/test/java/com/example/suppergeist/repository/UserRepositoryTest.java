@@ -103,6 +103,26 @@ class UserRepositoryTest {
     }
 
     @Test
+    void getUser_parsesAllCheckboxDietaryConstraints() throws SQLException {
+        repository.ensureDefaultUserExists();
+        Set<String> all = Set.of("vegetarian", "vegan", "gluten-free", "dairy-free");
+        repository.savePreferences(new User(1, "Default User", all, Set.of(), 2, true, true, 1));
+
+        User loaded = repository.getUser(1);
+        assertEquals(all, loaded.getDietaryConstraints());
+    }
+
+    @Test
+    void savePreferences_clearsDietaryConstraintsWhenSetIsEmpty() throws SQLException {
+        repository.ensureDefaultUserExists();
+        repository.savePreferences(new User(1, "Default User", Set.of("vegetarian", "vegan"), Set.of(), 2, true, true, 1));
+        repository.savePreferences(new User(1, "Default User", Set.of(), Set.of(), 2, true, true, 1));
+
+        User loaded = repository.getUser(1);
+        assertTrue(loaded.getDietaryConstraints().isEmpty());
+    }
+
+    @Test
     void savePreferences_doesNotThrow_whenUserDoesNotExist() {
         assertDoesNotThrow(() -> repository.savePreferences(
                 new User(999, "Ghost", Set.of(), Set.of(), 2, true, true, 1)));

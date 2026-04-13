@@ -2,12 +2,16 @@ package com.example.suppergeist.ui;
 
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.repository.UserRepository;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -53,6 +57,14 @@ public class PreferencesSidebarController {
 
     public void setFormValues(User user) {
         this.user = user;
+
+        ObservableList<Node> dietaryConstraintBoxes = dietaryConstraintsBox.getChildren();
+        for (Node node : dietaryConstraintBoxes) {
+            CheckBox box = (CheckBox) node;
+            String boxString = box.getText().toLowerCase();
+            box.setSelected(user.getDietaryConstraints().contains(boxString));
+        }
+
         this.servingsPerMealSpinner.getValueFactory().setValue(user.getServingsPerMeal());
 
         this.showCaloriesCheckbox.setSelected(user.isShowCalories());
@@ -62,10 +74,19 @@ public class PreferencesSidebarController {
     }
 
     public void savePreferences() {
+        ObservableList<Node> dietaryConstraintBoxes = dietaryConstraintsBox.getChildren();
+        Set<String> dietaryConstraints = new HashSet<>();
+        for (Node node : dietaryConstraintBoxes) {
+            CheckBox box = (CheckBox) node;
+            if (box.isSelected()) {
+                dietaryConstraints.add(box.getText().toLowerCase());
+            }
+        }
+        
         this.user = new User(
                 this.user.getId(),
                 this.user.getName(),
-                this.user.getDietaryConstraints(),
+                dietaryConstraints,
                 this.user.getAvoidFoodCodes(),
                 this.servingsPerMealSpinner.getValue(),
                 this.showCaloriesCheckbox.isSelected(),
