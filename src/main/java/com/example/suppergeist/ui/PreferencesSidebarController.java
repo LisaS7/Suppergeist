@@ -2,8 +2,7 @@ package com.example.suppergeist.ui;
 
 import com.example.suppergeist.model.Ingredient;
 import com.example.suppergeist.model.User;
-import com.example.suppergeist.repository.IngredientRepository;
-import com.example.suppergeist.repository.UserRepository;
+import com.example.suppergeist.service.UserPreferencesService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -23,10 +22,8 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 public class PreferencesSidebarController {
-
-    @Setter private UserRepository userRepository;
+    @Setter private UserPreferencesService userPreferencesService;
     private User user;
-    @Setter private IngredientRepository ingredientRepository;
     private static final Logger log = Logger.getLogger(PreferencesSidebarController.class.getName());
     @Setter private Consumer<User> onPreferencesSaved;
     private FilteredList<Ingredient> filteredIngredients;
@@ -73,11 +70,11 @@ public class PreferencesSidebarController {
         // instead a FilteredList wraps it and acts as a live window, showing only items that match
         // the current search text. The predicate starts as always-true (show everything) and is
         // swapped on each search keystroke. The ObservableList itself never changes.
-        List<Ingredient> allIngredients = ingredientRepository.getAllIngredients();
+        List<Ingredient> allIngredients = userPreferencesService.getAllIngredients();
         ObservableList<Ingredient> avoidFoodCodes = FXCollections.observableArrayList();
         avoidFoodCodes.addAll(allIngredients);
         this.filteredIngredients = new FilteredList<>(avoidFoodCodes, ingredient -> true);
-        
+
         avoidFoodCodesSearch.textProperty().addListener((observable, oldValue, newValue) -> {
             filteredIngredients.setPredicate(ingredient ->
                     newValue == null || newValue.isEmpty() || ingredient.getName().toLowerCase().contains(newValue.toLowerCase())
@@ -133,7 +130,7 @@ public class PreferencesSidebarController {
         );
 
         try {
-            this.userRepository.savePreferences(this.user);
+            this.userPreferencesService.savePreferences(this.user);
             if (this.onPreferencesSaved != null) {
                 this.onPreferencesSaved.accept(this.user);
             }

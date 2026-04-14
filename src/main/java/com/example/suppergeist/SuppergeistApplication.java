@@ -1,8 +1,11 @@
 package com.example.suppergeist;
 
 import com.example.suppergeist.database.DatabaseManager;
+import com.example.suppergeist.repository.IngredientRepository;
 import com.example.suppergeist.repository.UserRepository;
 import com.example.suppergeist.service.AppSeedService;
+import com.example.suppergeist.service.UserPreferencesService;
+import com.example.suppergeist.ui.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -17,6 +20,7 @@ import java.util.logging.Logger;
 
 
 public class SuppergeistApplication extends Application {
+    private UserPreferencesService userPreferencesService;
     private Exception initError;
     private static final Logger log = Logger.getLogger(SuppergeistApplication.class.getName());
 
@@ -31,7 +35,10 @@ public class SuppergeistApplication extends Application {
             appSeedService.seedIfEmpty();
 
             UserRepository userRepository = new UserRepository(dbManager);
+            IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
             userRepository.ensureDefaultUserExists();
+
+            this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
         } catch (SQLException | IOException e) {
             log.log(Level.SEVERE, "Application startup failed", e);
             initError = e;
@@ -53,6 +60,9 @@ public class SuppergeistApplication extends Application {
         }
         FXMLLoader fxmlLoader = new FXMLLoader(SuppergeistApplication.class.getResource("main.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 1200, 900);
+
+        MainController controller = fxmlLoader.getController();
+        controller.setUserPreferencesService(userPreferencesService);
 
         var css = SuppergeistApplication.class.getResource("style.css");
         if (css != null) {

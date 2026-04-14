@@ -166,6 +166,30 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 
 ---
 
+## Task 7b — Preferences sidebar architectural cleanup ⬜
+
+*(Stems from architecture review of Task 7 — address before Phase 3 begins)*
+
+**Structural (address first)**
+
+1. **Introduce `UserPreferencesService`** — `PreferencesSidebarController` and `MainController` both hold repository references directly, violating the "UI never touches the database" rule. A `UserPreferencesService` should own three responsibilities: loading a `User` by ID, saving preferences via `UserRepository`, and fetching the ingredient list for the avoid-foods picker via `IngredientRepository`. Controllers receive the service, not the individual repositories.
+
+2. **Replace DOM-walking for dietary constraint checkboxes** — the save/load path casts every child of `dietaryConstraintsBox` to `CheckBox` and uses `.getText().toLowerCase()` as the persistence key. A `Label` or `Separator` added to that `VBox` would throw a `ClassCastException` at runtime. Give each checkbox an `fx:id` (`vegetarianCheckbox`, `veganCheckbox`, etc.) and wire as `@FXML` fields; the save/load path then references fields explicitly and display text is decoupled from the persistence key.
+
+**Correctness**
+
+3. **Fix listener accumulation in `setFormValues`** — the `avoidFoodCodesSearch` text-change listener is added on every `setFormValues` call. Move listener registration to `initialize()`.
+
+**Minor UI polish** *(can be batched in one pass)*
+
+4. Add `promptText="Search ingredients…"` to `avoidFoodCodesSearch` in the FXML.
+5. Add a `StringConverter` to `weekStartDayChoiceBox` so it renders `Monday` rather than `MONDAY`.
+6. Tag the hardcoded `getUser(1)` call in `MainController` with a `// TODO: resolve when multi-user support is added`.
+
+**Done when:** no controller holds a direct repository reference; `UserPreferencesService` mediates all user preference and ingredient access; dietary constraint save/load uses `@FXML`-wired fields; the text-search listener is registered once in `initialize()`; minor UI polish applied.
+
+---
+
 ## Task 8 — `MealIngredientRepository` ✅
 
 Loads ingredient lines for a meal from the `meal_ingredients` table. `ShoppingListService` (Task 9) depends on this.
@@ -295,6 +319,7 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] Preferences sidebar reads/writes preferences; survives restart (all fields including avoid-ingredients)
 - [x] Weekly grid layout uses `weekStartDay` from loaded preferences
 - [x] Saving preferences refreshes the grid immediately without restart
+- [ ] Controllers hold no direct repository references; `UserPreferencesService` mediates all preference and ingredient access; dietary constraints use `@FXML`-wired fields; text-search listener registered once; minor UI polish applied
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
 - [~] `ShoppingListService` aggregates ingredients by ID and sums quantities (category derivation, mixed-unit handling, and sort not yet implemented)
 - [ ] Shopping list panel renders and copy-to-clipboard works

@@ -4,11 +4,13 @@ import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.repository.*;
 import com.example.suppergeist.service.MealPlanService;
+import com.example.suppergeist.service.UserPreferencesService;
 import com.example.suppergeist.service.WeeklyMealViewModel;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import lombok.Setter;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
@@ -19,8 +21,7 @@ import java.util.logging.Logger;
 
 public class MainController {
     private MealPlanService mealPlanService;
-    private UserRepository userRepository;
-    private IngredientRepository ingredientRepository;
+    @Setter private UserPreferencesService userPreferencesService;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private User user;
@@ -78,17 +79,14 @@ public class MainController {
         log.info("Initializing MainController");
         DatabaseManager dbManager = new DatabaseManager();
 
-        this.userRepository = new UserRepository(dbManager);
-        this.ingredientRepository = new IngredientRepository(dbManager);
-        this.user = userRepository.getUser(1);
+        this.user = userPreferencesService.loadUser(1);
 
         MealRepository mealRepository = new MealRepository(dbManager);
         MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
         MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
 
         // Sidebar
-        preferencesSidebarController.setUserRepository(userRepository);
-        preferencesSidebarController.setIngredientRepository(ingredientRepository);
+        preferencesSidebarController.setUserPreferencesService(userPreferencesService);
         preferencesSidebarController.setOnPreferencesSaved((User updatedUser) -> {
             try {
                 this.user = updatedUser;
