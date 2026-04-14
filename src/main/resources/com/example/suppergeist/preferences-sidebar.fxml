@@ -13,15 +13,15 @@
     <Label text="Preferences"/>
 
     <Separator/>
-    <VBox fx:id="dietaryConstraintsBox">
-        <CheckBox text="Vegetarian"/>
-        <CheckBox text="Vegan"/>
-        <CheckBox text="Gluten-free"/>
-        <CheckBox text="Dairy-free"/>
+    <VBox>
+        <CheckBox fx:id="vegetarianCheckbox" text="Vegetarian"/>
+        <CheckBox fx:id="veganCheckbox" text="Vegan"/>
+        <CheckBox fx:id="glutenFreeCheckbox" text="Gluten-free"/>
+        <CheckBox fx:id="dairyFreeCheckbox" text="Dairy-free"/>
     </VBox>
 
     <Separator/>
-    <TextField fx:id="avoidFoodCodesSearch"/>
+    <TextField fx:id="avoidFoodCodesSearch" promptText="Search ingredients..."/>
     <ListView fx:id="avoidFoodCodesListView"/>
 
     <Separator/>

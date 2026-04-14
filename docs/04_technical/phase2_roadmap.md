@@ -188,6 +188,8 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 
 **Done when:** no controller holds a direct repository reference; `UserPreferencesService` mediates all user preference and ingredient access; dietary constraint save/load uses `@FXML`-wired fields; the text-search listener is registered once in `initialize()`; minor UI polish applied.
 
+> **Follow-up (not in scope for 7b):** `MainController.initialize()` still constructs its own `DatabaseManager`, `MealRepository`, `MealPlanRepository`, `MealPlanEntryRepository`, and `MealPlanService` directly. These should move to `SuppergeistApplication` and be injected via setter (the same pattern used for `UserPreferencesService`). Deferred until `MealPlanService` gains more responsibilities that make the wiring worth touching.
+
 ---
 
 ## Task 8 — `MealIngredientRepository` ✅

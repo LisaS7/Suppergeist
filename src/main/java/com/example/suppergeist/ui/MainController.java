@@ -75,10 +75,11 @@ public class MainController {
         }
     }
 
-    public void initialize() throws SQLException {
+    public void setup() throws SQLException {
         log.info("Initializing MainController");
         DatabaseManager dbManager = new DatabaseManager();
 
+        // TODO: resolve if multi-user support is added
         this.user = userPreferencesService.loadUser(1);
 
         MealRepository mealRepository = new MealRepository(dbManager);
@@ -106,5 +107,6 @@ public class MainController {
         } catch (SQLException e) {
             log.log(Level.SEVERE, "Failed to load meals", e);
         }
+
     }
 }

@@ -7,15 +7,17 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import lombok.Setter;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
+import java.time.format.TextStyle;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -30,7 +32,10 @@ public class PreferencesSidebarController {
 
     // UI Elements
     @FXML private VBox root;
-    @FXML private VBox dietaryConstraintsBox;
+    @FXML private CheckBox vegetarianCheckbox;
+    @FXML private CheckBox veganCheckbox;
+    @FXML private CheckBox glutenFreeCheckbox;
+    @FXML private CheckBox dairyFreeCheckbox;
     @FXML private TextField avoidFoodCodesSearch;
     @FXML private ListView<Ingredient> avoidFoodCodesListView;
     @FXML private Spinner<Integer> servingsPerMealSpinner;
@@ -40,6 +45,13 @@ public class PreferencesSidebarController {
 
     @FXML
     public void initialize() {
+        // Avoid Food Codes Search Listener
+        avoidFoodCodesSearch.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredIngredients.setPredicate(ingredient ->
+                    newValue == null || newValue.isEmpty() || ingredient.getName().toLowerCase().contains(newValue.toLowerCase())
+            );
+        });
+
         // Spinner: servings per meal
         this.servingsPerMealSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2)
@@ -47,6 +59,17 @@ public class PreferencesSidebarController {
 
         // ChoiceBox: week start day
         this.weekStartDayChoiceBox.getItems().addAll(DayOfWeek.values());
+        weekStartDayChoiceBox.setConverter(new StringConverter<DayOfWeek>() {
+            @Override
+            public String toString(DayOfWeek day) {
+                return day == null ? "" : day.getDisplayName(TextStyle.FULL, Locale.getDefault());
+            }
+
+            @Override
+            public DayOfWeek fromString(String s) {
+                return null;
+            }
+        });
     }
 
     public void toggleVisibility() {
@@ -58,12 +81,10 @@ public class PreferencesSidebarController {
         this.user = user;
 
         // ---------- Dietary Constraints ----------
-        ObservableList<Node> dietaryConstraintBoxes = dietaryConstraintsBox.getChildren();
-        for (Node node : dietaryConstraintBoxes) {
-            CheckBox box = (CheckBox) node;
-            String boxString = box.getText().toLowerCase();
-            box.setSelected(user.getDietaryConstraints().contains(boxString));
-        }
+        vegetarianCheckbox.setSelected(user.getDietaryConstraints().contains("vegetarian"));
+        veganCheckbox.setSelected(user.getDietaryConstraints().contains("vegan"));
+        glutenFreeCheckbox.setSelected(user.getDietaryConstraints().contains("gluten-free"));
+        dairyFreeCheckbox.setSelected(user.getDietaryConstraints().contains("dairy-free"));
 
         // ---------- Avoid Food Codes ----------
         // Load all ingredients into an ObservableList once. The ListView doesn't use this directly —
@@ -75,11 +96,6 @@ public class PreferencesSidebarController {
         avoidFoodCodes.addAll(allIngredients);
         this.filteredIngredients = new FilteredList<>(avoidFoodCodes, ingredient -> true);
 
-        avoidFoodCodesSearch.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredIngredients.setPredicate(ingredient ->
-                    newValue == null || newValue.isEmpty() || ingredient.getName().toLowerCase().contains(newValue.toLowerCase())
-            );
-        });
 
         avoidFoodCodesListView.setItems(filteredIngredients);
         avoidFoodCodesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -102,13 +118,22 @@ public class PreferencesSidebarController {
     public void savePreferences() {
 
         // ---------- Dietary Constraints ----------
-        ObservableList<Node> dietaryConstraintBoxes = dietaryConstraintsBox.getChildren();
         Set<String> dietaryConstraints = new HashSet<>();
-        for (Node node : dietaryConstraintBoxes) {
-            CheckBox box = (CheckBox) node;
-            if (box.isSelected()) {
-                dietaryConstraints.add(box.getText().toLowerCase());
-            }
+
+        if (vegetarianCheckbox.isSelected()) {
+            dietaryConstraints.add("vegetarian");
+        }
+
+        if (veganCheckbox.isSelected()) {
+            dietaryConstraints.add("vegan");
+        }
+
+        if (glutenFreeCheckbox.isSelected()) {
+            dietaryConstraints.add("gluten-free");
+        }
+
+        if (dairyFreeCheckbox.isSelected()) {
+            dietaryConstraints.add("dairy-free");
         }
 
         // ---------- Avoid Food Codes ----------

@@ -24,6 +24,16 @@ public class SuppergeistApplication extends Application {
     private Exception initError;
     private static final Logger log = Logger.getLogger(SuppergeistApplication.class.getName());
 
+    private void showFatalError(Exception error) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Startup Error");
+        alert.setHeaderText("Application startup failed");
+        alert.setContentText("Suppergeist could not start.\n\n" + error.getMessage());
+        alert.showAndWait();
+
+        Platform.exit();
+    }
+
     @Override
     public void init() {
 
@@ -41,28 +51,33 @@ public class SuppergeistApplication extends Application {
             this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
         } catch (SQLException | IOException e) {
             log.log(Level.SEVERE, "Application startup failed", e);
-            initError = e;
+            this.initError = e;
         }
     }
 
     @Override
     public void start(Stage stage) throws IOException {
-
         if (initError != null) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Startup Error");
-            alert.setHeaderText("Application startup failed");
-            alert.setContentText("Suppergeist could not start.\n\n" + initError.getMessage());
-            alert.showAndWait();
-
-            Platform.exit();
+            showFatalError(initError);
             return;
         }
-        FXMLLoader fxmlLoader = new FXMLLoader(SuppergeistApplication.class.getResource("main.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 1200, 900);
 
+        // FXML
+        FXMLLoader fxmlLoader = new FXMLLoader(SuppergeistApplication.class.getResource("main.fxml"));
+        fxmlLoader.load();
+
+        // Controller
         MainController controller = fxmlLoader.getController();
         controller.setUserPreferencesService(userPreferencesService);
+
+        try {
+            controller.setup();
+        } catch (SQLException e) {
+            showFatalError(e);
+            return;
+        }
+
+        Scene scene = new Scene(fxmlLoader.getRoot(), 1200, 900);
 
         var css = SuppergeistApplication.class.getResource("style.css");
         if (css != null) {
