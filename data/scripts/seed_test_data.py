@@ -35,6 +35,56 @@ MEALS = [
     "Roast Chicken with Potatoes",
 ]
 
+# Ingredient search terms use SQL LIKE patterns — partial matches keep this robust
+# against CoFID naming variations. Each entry is (like_pattern, quantity, unit).
+MEAL_INGREDIENTS = {
+    "Spaghetti Bolognese": [
+        ("%spaghetti%", 100.0, "g"),
+        ("%beef%mince%", 150.0, "g"),
+        ("%tomatoes%raw%", 200.0, "g"),
+        ("%onions%raw%", 80.0, "g"),
+        ("%olive oil%", 15.0, "ml"),
+    ],
+    "Chicken and Vegetable Stir-Fry": [
+        ("%chicken%breast%raw%", 200.0, "g"),
+        ("%carrots%raw%", 100.0, "g"),
+        ("%broccoli%raw%", 100.0, "g"),
+        ("%soy sauce%", 20.0, "ml"),
+        ("%rapeseed oil%", 10.0, "ml"),
+    ],
+    "Lentil and Sweet Potato Curry": [
+        ("%lentils%raw%", 150.0, "g"),
+        ("%sweet potato%raw%", 200.0, "g"),
+        ("%onions%raw%", 100.0, "g"),
+        ("%tomatoes%raw%", 150.0, "g"),
+    ],
+    "Grilled Salmon with Roasted Veg": [
+        ("%salmon%raw%", 180.0, "g"),
+        ("%courgette%raw%", 150.0, "g"),
+        ("%peppers%raw%", 100.0, "g"),
+        ("%olive oil%", 15.0, "ml"),
+    ],
+    "Mushroom Risotto": [
+        ("%rice%white%raw%", 150.0, "g"),
+        ("%mushrooms%raw%", 200.0, "g"),
+        ("%onions%raw%", 80.0, "g"),
+        ("%butter%", 20.0, "g"),
+        ("%parmesan%", 30.0, "g"),
+    ],
+    "Black Bean Tacos": [
+        ("%black-eyed beans%", 200.0, "g"),
+        ("%peppers%raw%", 120.0, "g"),
+        ("%onions%raw%", 80.0, "g"),
+        ("%tortilla%", 2.0, "wraps"),
+    ],
+    "Roast Chicken with Potatoes": [
+        ("%chicken%whole%raw%", 400.0, "g"),
+        ("%potatoes%raw%", 300.0, "g"),
+        ("%carrots%raw%", 150.0, "g"),
+        ("%olive oil%", 20.0, "ml"),
+    ],
+}
+
 
 def clear(conn: sqlite3.Connection) -> None:
     """Delete only the rows inserted by this script (known meals, plan, and entries)."""
@@ -64,6 +114,10 @@ def clear(conn: sqlite3.Connection) -> None:
     with conn:
         entry_placeholders = ",".join("?" * len(meal_ids))
         params: list = list(meal_ids)
+        conn.execute(
+            f"DELETE FROM meal_ingredients WHERE meal_id IN ({entry_placeholders})",
+            params,
+        )
         if plan_id is not None:
             conn.execute(
                 f"DELETE FROM meal_plan_entries WHERE meal_plan_id = ? OR meal_id IN ({entry_placeholders})",
@@ -77,7 +131,7 @@ def clear(conn: sqlite3.Connection) -> None:
             )
         conn.execute(f"DELETE FROM meals WHERE id IN ({entry_placeholders})", params)
 
-    print("Cleared seed data: meal_plan_entries, meal_plans, meals.")
+    print("Cleared seed data: meal_ingredients, meal_plan_entries, meal_plans, meals.")
 
 
 def seed(db_path: Path) -> None:
@@ -126,8 +180,32 @@ def seed(db_path: Path) -> None:
                 (plan_id, meal_id, day_offset),
             )
 
+        # --- meal ingredients ---
+        ingredients_inserted = 0
+        ingredients_skipped = 0
+        for meal_name, meal_id in zip(MEALS, meal_ids):
+            for pattern, quantity, unit in MEAL_INGREDIENTS.get(meal_name, []):
+                row = conn.execute(
+                    "SELECT id FROM ingredients WHERE name LIKE ? LIMIT 1", (pattern,)
+                ).fetchone()
+                if row is None:
+                    print(f"  SKIP: no ingredient matched '{pattern}' for '{meal_name}'")
+                    ingredients_skipped += 1
+                    continue
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO meal_ingredients (meal_id, ingredient_id, quantity, unit)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (meal_id, row[0], quantity, unit),
+                )
+                ingredients_inserted += 1
+
     conn.close()
-    print(f"Seeded {db_path}: {len(MEALS)} meals, 1 plan, {len(MEALS)} entries.")
+    print(
+        f"Seeded {db_path}: {len(MEALS)} meals, 1 plan, {len(MEALS)} entries, "
+        f"{ingredients_inserted} ingredient rows ({ingredients_skipped} skipped — no match in ingredients table)."
+    )
 
 
 def main() -> None:

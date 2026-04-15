@@ -54,7 +54,7 @@ public class MealPlanService {
             LocalDate mealDate = startDate.plusDays(entry.getDayOffset());
             String dayLabel = formatDayLabel(mealDate);
 
-            WeeklyMealViewModel vm = new WeeklyMealViewModel(mealDate, dayLabel, entry.getMealType(), resolvedMeal.getName());
+            WeeklyMealViewModel vm = new WeeklyMealViewModel(entry.getMealPlanId(), mealDate, dayLabel, entry.getMealType(), resolvedMeal.getName());
             weeklyMeals.add(vm);
         }
 

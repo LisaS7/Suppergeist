@@ -246,3 +246,102 @@ GridPane > Label {
 .header .button:hover {
     -fx-background-color: #F5F0E8;
 }
+
+
+/* ── Tabs ────────────────────────────────────────────────── */
+
+/*
+   Structure of the tab header in JavaFX Modena:
+     .tab-pane
+       .tab-header-area
+         .tab-header-background   ← the full-width strip behind all tabs
+         .headers-region
+           .tab                   ← individual tab node
+             .tab-container
+               .tab-label
+               .tab-close-button
+       .tab-content-area          ← the pane below the strip
+
+   Goal: sage strip → cream tabs with ink border → selected tab butter
+   fill, no bottom border, so it reads as one block with the content area.
+*/
+
+/* Strip background — sage, matching the header band */
+.tab-pane .tab-header-area {
+    -fx-padding: 0;
+}
+
+.tab-pane .tab-header-background {
+    -fx-background-color: #B5C9B1;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 0 0 2.5 0;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+}
+
+/* Individual tab — cream fill, full ink border, bold label */
+.tab-pane .tab {
+    -fx-background-color: #F5F0E8;
+    -fx-background-radius: 0;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2 2 2.5 2;
+    -fx-border-radius: 0;
+    -fx-padding: 6 16 6 16;
+    -fx-cursor: HAND;
+    /* Sit the tab slightly above the strip bottom border */
+    -fx-background-insets: 0;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #1E1B18;
+    -fx-font-weight: BOLD;
+    -fx-font-size: 12px;
+}
+
+/* Hover state — cream lightened; border stays ink */
+.tab-pane .tab:hover {
+    -fx-background-color: #FFFFFF;
+}
+
+/*
+   Selected tab:
+   - Butter fill to call out the active tab
+   - Bottom border removed (width → 0) so the tab visually merges
+     with the cream content area beneath it
+   - The strip's 2.5px bottom border sits behind the tab node;
+     removing the tab's own bottom border lets them share the edge
+*/
+.tab-pane .tab:selected {
+    -fx-background-color: #F2E07A;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2 2 0 2;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #1E1B18;
+}
+
+/* Content area — cream fill, ink border on all sides minus top
+   (the tab strip / selected tab already provides the top boundary) */
+.tab-pane .tab-content-area {
+    -fx-background-color: #F5F0E8;
+    -fx-background-radius: 0;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 0 2.5 2.5 2.5;
+    -fx-border-radius: 0;
+}
+
+/* Neutralise Modena's focus ring — our ink border is the indicator */
+.tab-pane .tab:focused {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2 2 0 2;
+}
+
+.tab-pane:focused .tab-header-background {
+    -fx-background-color: #B5C9B1;
+}
+
+.tab-pane .tab .focus-indicator {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}

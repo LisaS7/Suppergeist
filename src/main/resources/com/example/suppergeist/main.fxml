@@ -15,10 +15,16 @@
         </HBox>
     </top>
     <center>
-        <VBox styleClass="main-content">
-            <Label text="Weekly Meal Plan"/>
-            <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
-        </VBox>
+        <TabPane>
+            <tabs>
+                <Tab text="Meal Plan">
+                    <content>
+                        <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
+                    </content>
+                </Tab>
+                <fx:include fx:id="shoppingList" source="shopping-list.fxml"/>
+            </tabs>
+        </TabPane>
     </center>
     <right>
         <fx:include fx:id="preferencesSidebar" source="preferences-sidebar.fxml"/>

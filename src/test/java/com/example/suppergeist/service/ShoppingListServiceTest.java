@@ -217,10 +217,10 @@ class ShoppingListServiceTest {
         assertTrue(result.isEmpty());
     }
 
-    // --- category derivation ---
+    // --- food code carry-through ---
 
     @Test
-    void buildList_assignsDairyAndEggsCategory_forFoodCodeStartingWith12() throws SQLException {
+    void buildList_carriesFoodCode_fromIngredient() throws SQLException {
         int planId = insertMealPlan();
         int mealId = insertMeal("Omelette");
         int ingredientId = insertIngredient("Egg", "12-001");
@@ -229,63 +229,11 @@ class ShoppingListServiceTest {
 
         ShoppingItem item = service.buildList(planId).get(0);
 
-        assertEquals("Dairy & Eggs", item.category());
+        assertEquals("12-001", item.foodCode());
     }
 
     @Test
-    void buildList_assignsVegetablesAndBeansCategory_forFoodCodeStartingWith13() throws SQLException {
-        int planId = insertMealPlan();
-        int mealId = insertMeal("Salad");
-        int ingredientId = insertIngredient("Carrot", "13-045");
-        insertMealPlanEntry(planId, mealId, 0);
-        insertMealIngredient(mealId, ingredientId, 100.0, "g");
-
-        ShoppingItem item = service.buildList(planId).get(0);
-
-        assertEquals("Vegetables & Beans", item.category());
-    }
-
-    @Test
-    void buildList_assignsMeatCategory_forFoodCodeStartingWith18() throws SQLException {
-        int planId = insertMealPlan();
-        int mealId = insertMeal("Roast");
-        int ingredientId = insertIngredient("Chicken breast", "18-102");
-        insertMealPlanEntry(planId, mealId, 0);
-        insertMealIngredient(mealId, ingredientId, 300.0, "g");
-
-        ShoppingItem item = service.buildList(planId).get(0);
-
-        assertEquals("Meat", item.category());
-    }
-
-    @Test
-    void buildList_assignsMeatCategory_forFoodCodeStartingWith19() throws SQLException {
-        int planId = insertMealPlan();
-        int mealId = insertMeal("Steak Night");
-        int ingredientId = insertIngredient("Beef mince", "19-023");
-        insertMealPlanEntry(planId, mealId, 0);
-        insertMealIngredient(mealId, ingredientId, 250.0, "g");
-
-        ShoppingItem item = service.buildList(planId).get(0);
-
-        assertEquals("Meat", item.category());
-    }
-
-    @Test
-    void buildList_assignsFoodCupboardCategory_forFoodCodeStartingWith50() throws SQLException {
-        int planId = insertMealPlan();
-        int mealId = insertMeal("Soup");
-        int ingredientId = insertIngredient("Vegetable stock", "50-010");
-        insertMealPlanEntry(planId, mealId, 0);
-        insertMealIngredient(mealId, ingredientId, 500.0, "ml");
-
-        ShoppingItem item = service.buildList(planId).get(0);
-
-        assertEquals("Food Cupboard", item.category());
-    }
-
-    @Test
-    void buildList_assignsGeneralCategory_forNullFoodCode() throws SQLException {
+    void buildList_carriesNullFoodCode_whenIngredientHasNoFoodCode() throws SQLException {
         int planId = insertMealPlan();
         int mealId = insertMeal("Mystery Dish");
         int ingredientId = insertIngredient("Unknown ingredient", null);
@@ -294,56 +242,6 @@ class ShoppingListServiceTest {
 
         ShoppingItem item = service.buildList(planId).get(0);
 
-        assertEquals("General", item.category());
-    }
-
-    @Test
-    void buildList_assignsGeneralCategory_forUnrecognisedFoodCodePrefix() throws SQLException {
-        int planId = insertMealPlan();
-        int mealId = insertMeal("Exotic Dish");
-        int ingredientId = insertIngredient("Mystery spice", "99-001");
-        insertMealPlanEntry(planId, mealId, 0);
-        insertMealIngredient(mealId, ingredientId, 5.0, "g");
-
-        ShoppingItem item = service.buildList(planId).get(0);
-
-        assertEquals("General", item.category());
-    }
-
-    // --- sort order ---
-
-    @Test
-    void buildList_sortsByCategoryThenName() throws SQLException {
-        int planId = insertMealPlan();
-        int mealId = insertMeal("Mixed Meal");
-
-        // Bakery & Grains (11), Dairy & Eggs (12), Vegetables & Beans (13)
-        int flourId = insertIngredient("Flour", "11-001");
-        int breadId = insertIngredient("Bread", "11-002");
-        int milkId = insertIngredient("Milk", "12-005");
-        int onionId = insertIngredient("Onion", "13-020");
-
-        insertMealPlanEntry(planId, mealId, 0);
-        // Insert in reverse order to ensure sort is not relying on insertion order
-        insertMealIngredient(mealId, onionId, 1.0, "whole");
-        insertMealIngredient(mealId, milkId, 200.0, "ml");
-        insertMealIngredient(mealId, flourId, 100.0, "g");
-        insertMealIngredient(mealId, breadId, 2.0, "slices");
-
-        List<ShoppingItem> result = service.buildList(planId);
-
-        assertEquals(4, result.size());
-
-        // Bakery & Grains comes before Dairy & Eggs, which comes before Vegetables & Beans
-        List<String> categories = result.stream().map(ShoppingItem::category).toList();
-        assertTrue(categories.indexOf("Bakery & Grains") < categories.indexOf("Dairy & Eggs"),
-                "Bakery & Grains should appear before Dairy & Eggs");
-        assertTrue(categories.indexOf("Dairy & Eggs") < categories.indexOf("Vegetables & Beans"),
-                "Dairy & Eggs should appear before Vegetables & Beans");
-
-        // Within Bakery & Grains: Bread before Flour (alphabetical)
-        List<String> names = result.stream().map(ShoppingItem::name).toList();
-        assertTrue(names.indexOf("Bread") < names.indexOf("Flour"),
-                "Bread should appear before Flour within the same category");
+        assertNull(item.foodCode());
     }
 }

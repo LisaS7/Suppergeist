@@ -1,9 +1,11 @@
 package com.example.suppergeist.ui;
 
 import com.example.suppergeist.database.DatabaseManager;
+import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.repository.*;
 import com.example.suppergeist.service.MealPlanService;
+import com.example.suppergeist.service.ShoppingListService;
 import com.example.suppergeist.service.UserPreferencesService;
 import com.example.suppergeist.service.WeeklyMealViewModel;
 import javafx.fxml.FXML;
@@ -22,6 +24,7 @@ import java.util.logging.Logger;
 public class MainController {
     private MealPlanService mealPlanService;
     @Setter private UserPreferencesService userPreferencesService;
+    private ShoppingListService shoppingListService;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private User user;
@@ -29,6 +32,7 @@ public class MainController {
     // UI Elements
     @FXML private GridPane mealPlanGrid;
     @FXML private PreferencesSidebarController preferencesSidebarController;
+    @FXML private ShoppingListController shoppingListController;
 
     @FXML
     private void togglePrefs() {
@@ -85,6 +89,7 @@ public class MainController {
         MealRepository mealRepository = new MealRepository(dbManager);
         MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
         MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
+        MealIngredientRepository mealIngredientRepository = new MealIngredientRepository(dbManager);
 
         // Sidebar
         preferencesSidebarController.setUserPreferencesService(userPreferencesService);
@@ -98,11 +103,18 @@ public class MainController {
         });
 
         mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
+        shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
 
         try {
             preferencesSidebarController.setFormValues(this.user);
             refreshMealPlanGrid();
             log.info("Loaded " + weeklyMeals.size() + " meals");
+            
+            if (!weeklyMeals.isEmpty()) {
+                int planId = weeklyMeals.getFirst().mealPlanId();
+                List<ShoppingItem> shoppingList = shoppingListService.buildList(planId);
+                shoppingListController.refresh(shoppingList);
+            }
 
         } catch (SQLException e) {
             log.log(Level.SEVERE, "Failed to load meals", e);
