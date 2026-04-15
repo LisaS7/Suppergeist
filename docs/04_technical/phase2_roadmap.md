@@ -215,7 +215,7 @@ Both methods implemented:
 
 ---
 
-## Task 9 — `ShoppingListService` 🔄
+## Task 9 — `ShoppingListService` ✅
 
 *(Depends on Task 8)*
 
@@ -231,9 +231,7 @@ public class ShoppingListService {
 
 `ShoppingListServiceTest` covers: empty plan, single ingredient, name and unit carry-through, quantity aggregation across two and three meals, distinct ingredients, non-existent plan ID.
 
-**Remaining:**
-
-- Category derivation from `foodCode` prefix (currently always `""`):
+**As built:** `buildList` aggregates, derives category via a private `deriveCategory(String foodCode)` method (splits on `-`, switches on prefix), and sorts by category then name before returning. Null and unrecognised food codes map to `"General"`. Category is a presentation concern — not stored in the DB.
 
 | Prefix(es) | Category            |
 |-----------|---------------------|
@@ -245,12 +243,6 @@ public class ShoppingListService {
 | `18`, `19`| Meat                |
 | `17`, `50`| Food Cupboard       |
 | null / other | General          |
-
-Prefixes form loose but supermarket-aligned clusters — good enough for UX grouping; refinement deferred. Category is a presentation concern — not stored in the DB.
-
-- Sort by category then name (currently insertion order).
-
-**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients are consolidated; category is derived from food code prefix; items are sorted by category then name.
 
 ---
 
@@ -338,6 +330,6 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] Saving preferences refreshes the grid immediately without restart
 - [x] Controllers hold no direct repository references; `UserPreferencesService` mediates all preference and ingredient access; dietary constraints use `@FXML`-wired fields; text-search listener registered once; minor UI polish applied
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
-- [~] `ShoppingListService` aggregates ingredients by ID and sums quantities (category derivation and sort not yet implemented)
+- [x] `ShoppingListService` aggregates ingredients by ID and sums quantities; derives category from food code prefix; sorts by category then name
 - [ ] Shopping list panel renders and copy-to-clipboard works
 - [ ] `MainController` holds no repository references; `MealPlanService` injected from `SuppergeistApplication`
