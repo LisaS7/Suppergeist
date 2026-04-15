@@ -1,6 +1,7 @@
 package com.example.suppergeist.service;
 
 import com.example.suppergeist.model.MealPlanEntry;
+import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.repository.MealIngredientRepository;
 import com.example.suppergeist.repository.MealIngredientRow;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
@@ -9,10 +10,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ShoppingListService {
-    record ShoppingItem(String name, Double totalQuantity, String unit, String category) {
-    }
 
     private final MealPlanEntryRepository mealPlanEntryRepository;
     private final MealIngredientRepository mealIngredientRepository;
@@ -23,25 +23,24 @@ public class ShoppingListService {
     }
 
     public List<ShoppingItem> buildList(int mealPlanId) throws SQLException {
-        List<MealPlanEntry> entries = mealPlanEntryRepository.getEntriesByMealPlanId(mealPlanId);
-
-        HashMap<Integer, ShoppingItem> ingredientList = new HashMap<>();
-        for (MealPlanEntry entry : entries) {
+        List<MealPlanEntry> mealPlanEntries = mealPlanEntryRepository.getEntriesByMealPlanId(mealPlanId);
+        Map<String, ShoppingItem> ingredients = new HashMap<>();
+        for (MealPlanEntry entry : mealPlanEntries) {
             int mealId = entry.getMealId();
-            List<MealIngredientRow> mealIngredients = mealIngredientRepository.getIngredientsWithNameForMeal(mealId);
-            for (MealIngredientRow row : mealIngredients) {
-                int id = row.ingredient().getId();
-                double current = ingredientList.containsKey(id) ? ingredientList.get(id).totalQuantity() : 0.0;
+            List<MealIngredientRow> rows = mealIngredientRepository.getIngredientsWithNameForMeal(mealId);
+            for (MealIngredientRow row : rows) {
+                String key = row.ingredient().getId() + "|" + row.unit();
 
-                ShoppingItem shoppingItem = new ShoppingItem(
-                        row.ingredient().getName(),
-                        current + row.quantity(),
-                        row.unit(),
-                        ""
-                );
-                ingredientList.put(id, shoppingItem);
+                // merge: on first encounter, store newShoppingItem directly; on repeat, add quantities together
+                ShoppingItem newShoppingItem = new ShoppingItem(row.ingredient().getName(), row.quantity(), row.unit(), "");
+                ingredients.merge(key, newShoppingItem, (oldItem, newItem) -> new ShoppingItem(
+                        oldItem.name(),
+                        oldItem.totalQuantity() + newItem.totalQuantity(),
+                        oldItem.unit(),
+                        oldItem.category()
+                ));
             }
         }
-        return new ArrayList<>(ingredientList.values());
+        return new ArrayList<>(ingredients.values());
     }
 }

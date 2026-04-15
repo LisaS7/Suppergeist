@@ -166,7 +166,7 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 
 ---
 
-## Task 7b — Preferences sidebar architectural cleanup ⬜
+## Task 7b — Preferences sidebar architectural cleanup ✅
 
 *(Stems from architecture review of Task 7 — address before Phase 3 begins)*
 
@@ -186,7 +186,13 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 5. Add a `StringConverter` to `weekStartDayChoiceBox` so it renders `Monday` rather than `MONDAY`.
 6. Tag the hardcoded `getUser(1)` call in `MainController` with a `// TODO: resolve when multi-user support is added`.
 
-**Done when:** no controller holds a direct repository reference; `UserPreferencesService` mediates all user preference and ingredient access; dietary constraint save/load uses `@FXML`-wired fields; the text-search listener is registered once in `initialize()`; minor UI polish applied.
+**As built:**
+- `UserPreferencesService` owns `UserRepository` and `IngredientRepository`; constructed in `SuppergeistApplication.init()` and injected into `MainController` via `fxmlLoader.getController()` + `@Setter`; `MainController` passes it to the sidebar
+- `MainController.initialize()` removed; data loading moved to `setup()` (called from `SuppergeistApplication.start()` after injection) to respect JavaFX lifecycle — `initialize()` runs during `fxmlLoader.load()`, before injection is possible
+- `SuppergeistApplication` has a `showFatalError(Exception)` private helper used by both the `initError` path and the `setup()` failure path; `initError` field retained so the alert is shown on the JavaFX application thread (not the launcher thread where `init()` runs)
+- Dietary constraint checkboxes wired as `@FXML` fields (`vegetarianCheckbox`, `veganCheckbox`, `glutenFreeCheckbox`, `dairyFreeCheckbox`); save/load paths use direct field access with string literals
+- `avoidFoodCodesSearch` listener moved to `initialize()` — registered once, reads `this.filteredIngredients` at fire time (safe because `setFormValues` always runs before any keystroke)
+- `promptText="Search ingredients…"` on search field; `StringConverter` on `weekStartDayChoiceBox` renders `Monday` not `MONDAY`; `// TODO` on hardcoded `getUser(1)`
 
 > **Follow-up (not in scope for 7b):** `MainController.initialize()` still constructs its own `DatabaseManager`, `MealRepository`, `MealPlanRepository`, `MealPlanEntryRepository`, and `MealPlanService` directly. These should move to `SuppergeistApplication` and be injected via setter (the same pattern used for `UserPreferencesService`). Deferred until `MealPlanService` gains more responsibilities that make the wiring worth touching.
 
@@ -221,13 +227,12 @@ public class ShoppingListService {
 }
 ```
 
-**What's built:** `buildList` aggregates ingredients across all meals in a plan, deduplicating by ingredient ID and summing quantities. `ShoppingItem` is a package-private record inside `ShoppingListService`: `name`, `totalQuantity` (Double), `unit` (String), `category` (String). Food code is accessed via `MealIngredientRow.ingredient().getFoodCode()` — no flat field needed.
+**What's built:** `buildList` aggregates ingredients across all meals in a plan, deduplicating by `ingredientId|unit` key and summing quantities within the same unit. Uses `Map<String, ShoppingItem>` declared against the interface; accumulation uses `Map.merge` (one hash lookup, no dummy object). `ShoppingItem` is a public record in `com.example.suppergeist.model`: `name`, `totalQuantity` (double), `unit` (String), `category` (String). Food code is accessed via `MealIngredientRow.ingredient().getFoodCode()` — no flat field needed.
 
-`ShoppingListServiceTest` covers: empty plan, single ingredient, name/unit carry-through, quantity aggregation across two and three meals, distinct ingredients, non-existent plan ID.
+`ShoppingListServiceTest` covers: empty plan, single ingredient, name and unit carry-through, quantity aggregation across two and three meals, distinct ingredients, non-existent plan ID.
 
 **Remaining:**
 
-- Mixed-unit handling: when the same ingredient appears with different units across meals, quantities should be concatenated as `"200 g, 3 tbsp"` rather than summed. Currently quantities are summed regardless of unit, and the unit from the first row is used.
 - Category derivation from `foodCode` prefix (currently always `""`):
 
 | Prefix(es) | Category            |
@@ -245,11 +250,7 @@ Prefixes form loose but supermarket-aligned clusters — good enough for UX grou
 
 - Sort by category then name (currently insertion order).
 
-> **Phase 3 note:** `NutritionService` will need numeric quantities and ingredient IDs — keeping `totalQuantity` as
-> a `Double` (rather than collapsing into a display string) preserves this. When mixed-unit concatenation is
-> implemented, the numeric quantity and unit should remain accessible separately for nutrition calculation.
-
-**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients are consolidated; category is derived from food code prefix; items are sorted by category then name; mixed units are concatenated rather than summed.
+**Done when:** `ShoppingListService.buildList()` returns a non-empty list for the seeded plan; duplicate ingredients are consolidated; category is derived from food code prefix; items are sorted by category then name.
 
 ---
 
@@ -267,7 +268,21 @@ reviewed.
 - "Copy to clipboard" button — plain text, one item per line
 - Refresh triggered when a new plan is loaded
 
-**Done when:** shopping list panel renders for the seeded plan; copy-to-clipboard produces readable plain text.
+**Also in scope:** move the food code → category mapping out of `ShoppingListService` and into the shopping list controller. It's a presentation concern that currently lives in the service only because no controller existed yet.
+
+**Done when:** shopping list panel renders for the seeded plan; copy-to-clipboard produces readable plain text; category mapping lives in the controller.
+
+---
+
+## Task 11 — Inject `MealPlanService` and repositories into `MainController` ⬜
+
+*(Standalone refactor — no feature dependencies)*
+
+`MainController.initialize()` currently constructs `DatabaseManager`, `MealRepository`, `MealPlanRepository`, `MealPlanEntryRepository`, and `MealPlanService` directly. This violates the same "UI never touches the database" rule addressed in Task 7b for the preferences path.
+
+Move construction to `SuppergeistApplication` and inject via setter (the same pattern used for `UserPreferencesService`). `MainController.setup()` then receives a pre-built `MealPlanService` rather than assembling its own.
+
+**Done when:** `MainController` holds no repository references and constructs no services; all wiring lives in `SuppergeistApplication`.
 
 ---
 
@@ -321,7 +336,8 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] Preferences sidebar reads/writes preferences; survives restart (all fields including avoid-ingredients)
 - [x] Weekly grid layout uses `weekStartDay` from loaded preferences
 - [x] Saving preferences refreshes the grid immediately without restart
-- [ ] Controllers hold no direct repository references; `UserPreferencesService` mediates all preference and ingredient access; dietary constraints use `@FXML`-wired fields; text-search listener registered once; minor UI polish applied
+- [x] Controllers hold no direct repository references; `UserPreferencesService` mediates all preference and ingredient access; dietary constraints use `@FXML`-wired fields; text-search listener registered once; minor UI polish applied
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
-- [~] `ShoppingListService` aggregates ingredients by ID and sums quantities (category derivation, mixed-unit handling, and sort not yet implemented)
+- [~] `ShoppingListService` aggregates ingredients by ID and sums quantities (category derivation and sort not yet implemented)
 - [ ] Shopping list panel renders and copy-to-clipboard works
+- [ ] `MainController` holds no repository references; `MealPlanService` injected from `SuppergeistApplication`
