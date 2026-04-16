@@ -8,13 +8,13 @@
      xmlns:fx="http://javafx.com/fxml"
      fx:controller="com.example.suppergeist.ui.ShoppingListController">
     <content>
-        <VBox>
-            <ScrollPane>
+        <VBox styleClass="shopping-list">
+            <ScrollPane styleClass="shopping-list-scroll" fitToWidth="true">
                 <content>
-                    <VBox fx:id="shoppingListBox"></VBox>
+                    <VBox fx:id="shoppingListBox" styleClass="shopping-list-items"></VBox>
                 </content>
             </ScrollPane>
-            <Button fx:id="copyListButton" text="Copy To Clipboard" onAction="#copyToClipboard"></Button>
+            <Button fx:id="copyListButton" text="Copy To Clipboard" onAction="#copyToClipboard"/>
         </VBox>
     </content>
 </Tab>

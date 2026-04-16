@@ -345,3 +345,311 @@ GridPane > Label {
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
+
+
+/* ── Sidebar form controls ──────────────────────────────── */
+
+/*
+   Dietary checkboxes live inside a nested <VBox>, so the child
+   combinator used on .sidebar > CheckBox doesn't reach them.
+   A descendant selector on the intermediate VBox picks them up
+   without accidentally styling any other CheckBox deeper in the tree.
+*/
+.sidebar VBox > CheckBox {
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+}
+
+.sidebar VBox > CheckBox .box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.sidebar VBox > CheckBox:selected .box {
+    -fx-background-color: #B5C9B1;
+}
+
+.sidebar VBox > CheckBox:selected .mark {
+    -fx-background-color: #1E1B18;
+}
+
+/* Remove Modena's default focus ring; ink border IS the focus indicator */
+.sidebar VBox > CheckBox:focused .box {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+}
+
+
+/* TextField ─────────────────────────────────────────────── */
+
+.sidebar .text-field {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #1E1B18;
+    -fx-prompt-text-fill: #3D3830;
+    -fx-font-size: 12px;
+    -fx-padding: 6 8 6 8;
+}
+
+.sidebar .text-field:focused {
+    /* Keep the ink border as the sole focus cue; suppress Modena highlight */
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2.5;
+}
+
+
+/* ListView ──────────────────────────────────────────────── */
+
+.sidebar .list-view {
+    -fx-background-color: #F5F0E8;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-size: 12px;
+    -fx-pref-height: 140;
+}
+
+/*
+   Modena renders the focus ring by stacking a tinted background
+   behind the cream fill on .list-view:focused. Reset both layers
+   to cream so no blue glow appears.
+*/
+.sidebar .list-view:focused {
+    -fx-background-color: #F5F0E8;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2.5;
+}
+
+/* The inner viewport must also be cream, not Modena's default white */
+.sidebar .list-view .viewport {
+    -fx-background-color: #F5F0E8;
+}
+
+.sidebar .list-view .list-cell {
+    -fx-background-color: #F5F0E8;
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+    -fx-padding: 5 8 5 8;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+/* Alternating rows — subtle cream/white rhythm, no colour distraction */
+.sidebar .list-view .list-cell:odd {
+    -fx-background-color: #FFFFFF;
+}
+
+.sidebar .list-view .list-cell:selected {
+    -fx-background-color: #F2E07A;
+    -fx-text-fill: #1E1B18;
+}
+
+.sidebar .list-view .list-cell:selected:focused {
+    -fx-background-color: #F2E07A;
+    -fx-text-fill: #1E1B18;
+}
+
+.sidebar .list-view .list-cell:hover {
+    -fx-background-color: #EFE8F0;
+}
+
+
+/* Spinner ───────────────────────────────────────────────── */
+
+.sidebar .spinner {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+/* The editable text field inside the spinner */
+.sidebar .spinner .text-field {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent;   /* outer .spinner border provides the frame */
+    -fx-border-width: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+    -fx-padding: 5 6 5 6;
+    -fx-alignment: CENTER;
+}
+
+.sidebar .spinner .text-field:focused {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+/* Shared style for both arrow buttons */
+.sidebar .spinner .increment-arrow-button,
+.sidebar .spinner .decrement-arrow-button {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 4 8 4 8;
+    -fx-cursor: HAND;
+}
+
+.sidebar .spinner .increment-arrow-button {
+    -fx-border-width: 0 0 0 2;   /* left border divides it from the text field */
+}
+
+.sidebar .spinner .decrement-arrow-button {
+    -fx-border-width: 0 0 0 2;   /* left border divides it from the text field */
+}
+
+.sidebar .spinner .increment-arrow-button:hover,
+.sidebar .spinner .decrement-arrow-button:hover {
+    -fx-background-color: #F2E07A;
+}
+
+.sidebar .spinner .increment-arrow-button:pressed,
+.sidebar .spinner .decrement-arrow-button:pressed {
+    -fx-background-color: #B5C9B1;
+}
+
+/* The arrow glyphs themselves — keep them ink-coloured */
+.sidebar .spinner .increment-arrow-button .increment-arrow,
+.sidebar .spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: #1E1B18;
+}
+
+
+/* ChoiceBox ─────────────────────────────────────────────── */
+
+.sidebar .choice-box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 12px;
+    -fx-cursor: HAND;
+}
+
+.sidebar .choice-box:focused {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2.5;
+}
+
+.sidebar .choice-box:hover {
+    -fx-background-color: #F2E07A;
+}
+
+/* The label that shows the selected value */
+.sidebar .choice-box .label {
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+}
+
+/* The small dropdown arrow glyph */
+.sidebar .choice-box .open-button .arrow {
+    -fx-background-color: #1E1B18;
+}
+
+/*
+   Dropdown popup — JavaFX renders this as a ContextMenu with class
+   .choice-box-popup. Scoping to that class avoids touching any other
+   context menus in the app.
+*/
+.choice-box-popup .menu-item {
+    -fx-background-color: #F5F0E8;
+    -fx-padding: 5 12 5 12;
+}
+
+.choice-box-popup .menu-item .label {
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+}
+
+.choice-box-popup .menu-item:focused,
+.choice-box-popup .menu-item:hover {
+    -fx-background-color: #F2E07A;
+}
+
+.choice-box-popup .menu-item:focused .label,
+.choice-box-popup .menu-item:hover .label {
+    -fx-text-fill: #1E1B18;
+}
+
+
+/* ── Shopping List ──────────────────────────────────────── */
+
+.shopping-list {
+    -fx-padding: 16;
+    -fx-spacing: 12;
+    -fx-background-color: #F5F0E8;
+}
+
+.shopping-list-scroll {
+    -fx-background-color: #F5F0E8;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+/* Suppress Modena's default grey background insets */
+.shopping-list-scroll > .viewport {
+    -fx-background-color: #F5F0E8;
+}
+
+.shopping-list-scroll:focused {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2.5;
+}
+
+.shopping-list-items {
+    -fx-padding: 8 12 8 12;
+    -fx-spacing: 4;
+}
+
+/* Category header labels */
+.shopping-list-items > .label {
+    -fx-font-size: 12px;
+    -fx-font-weight: BOLD;
+    -fx-text-fill: #1E1B18;
+    -fx-padding: 10 0 4 0;
+    -fx-border-color: transparent transparent #1E1B18 transparent;
+    -fx-border-width: 0 0 1.5 0;
+}
+
+/* Item checkboxes — consistent with sidebar checkbox style */
+.shopping-list-items > .check-box {
+    -fx-text-fill: #1E1B18;
+    -fx-font-size: 12px;
+    -fx-padding: 3 0 3 8;
+}
+
+.shopping-list-items > .check-box .box {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+.shopping-list-items > .check-box:selected .box {
+    -fx-background-color: #B5C9B1;
+}
+
+.shopping-list-items > .check-box:selected .mark {
+    -fx-background-color: #1E1B18;
+}
+
+.shopping-list-items > .check-box:focused .box {
+    -fx-border-color: #1E1B18;
+    -fx-border-width: 2;
+}
