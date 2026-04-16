@@ -6,11 +6,12 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class Ingredient {
-    private Integer id;
-    private String name;
-    private String foodCode;
+    private final Integer id;
+    private final String name;
+    private final String foodCode;
 
     public Ingredient(String name, String foodCode) {
+        this.id = null;
         this.name = name;
         this.foodCode = foodCode;
     }
