@@ -2,6 +2,7 @@ package com.example.suppergeist.repository;
 
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.MealIngredient;
+import com.example.suppergeist.model.MealIngredientRow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

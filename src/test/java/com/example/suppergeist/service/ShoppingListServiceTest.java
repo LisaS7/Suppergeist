@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -107,13 +108,18 @@ class ShoppingListServiceTest {
         }
     }
 
+    /** Flattens all items across all categories into a single list. */
+    private List<ShoppingItem> allItems(LinkedHashMap<String, List<ShoppingItem>> result) {
+        return result.values().stream().flatMap(List::stream).toList();
+    }
+
     // --- tests ---
 
     @Test
-    void buildList_returnsEmptyList_whenPlanHasNoEntries() throws SQLException {
+    void buildList_returnsEmptyMap_whenPlanHasNoEntries() throws SQLException {
         int planId = insertMealPlan();
 
-        List<ShoppingItem> result = service.buildList(planId);
+        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
 
         assertTrue(result.isEmpty());
     }
@@ -126,9 +132,9 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        List<ShoppingItem> result = service.buildList(planId);
+        List<ShoppingItem> items = allItems(service.buildList(planId));
 
-        assertEquals(1, result.size());
+        assertEquals(1, items.size());
     }
 
     @Test
@@ -139,7 +145,7 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        ShoppingItem item = service.buildList(planId).get(0);
+        ShoppingItem item = allItems(service.buildList(planId)).get(0);
 
         assertEquals("Spaghetti", item.name());
         assertEquals("g", item.unit());
@@ -153,7 +159,7 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        ShoppingItem item = service.buildList(planId).get(0);
+        ShoppingItem item = allItems(service.buildList(planId)).get(0);
 
         assertEquals(200.0, item.totalQuantity());
     }
@@ -169,10 +175,10 @@ class ShoppingListServiceTest {
         insertMealIngredient(meal1, ingredientId, 200.0, "g");
         insertMealIngredient(meal2, ingredientId, 150.0, "g");
 
-        List<ShoppingItem> result = service.buildList(planId);
+        List<ShoppingItem> items = allItems(service.buildList(planId));
 
-        assertEquals(1, result.size());
-        assertEquals(350.0, result.get(0).totalQuantity());
+        assertEquals(1, items.size());
+        assertEquals(350.0, items.get(0).totalQuantity());
     }
 
     @Test
@@ -185,9 +191,9 @@ class ShoppingListServiceTest {
         insertMealIngredient(mealId, ing1, 100.0, "g");
         insertMealIngredient(mealId, ing2, 50.0, "g");
 
-        List<ShoppingItem> result = service.buildList(planId);
+        List<ShoppingItem> items = allItems(service.buildList(planId));
 
-        assertEquals(2, result.size());
+        assertEquals(2, items.size());
     }
 
     @Test
@@ -204,15 +210,15 @@ class ShoppingListServiceTest {
         insertMealIngredient(meal2, ingredientId, 15.0, "ml");
         insertMealIngredient(meal3, ingredientId, 20.0, "ml");
 
-        List<ShoppingItem> result = service.buildList(planId);
+        List<ShoppingItem> items = allItems(service.buildList(planId));
 
-        assertEquals(1, result.size());
-        assertEquals(45.0, result.get(0).totalQuantity());
+        assertEquals(1, items.size());
+        assertEquals(45.0, items.get(0).totalQuantity());
     }
 
     @Test
-    void buildList_returnsEmptyList_forNonExistentPlanId() throws SQLException {
-        List<ShoppingItem> result = service.buildList(9999);
+    void buildList_returnsEmptyMap_forNonExistentPlanId() throws SQLException {
+        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(9999);
 
         assertTrue(result.isEmpty());
     }
@@ -227,7 +233,7 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 2.0, "whole");
 
-        ShoppingItem item = service.buildList(planId).get(0);
+        ShoppingItem item = allItems(service.buildList(planId)).get(0);
 
         assertEquals("12-001", item.foodCode());
     }
@@ -240,8 +246,87 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 50.0, "g");
 
-        ShoppingItem item = service.buildList(planId).get(0);
+        ShoppingItem item = allItems(service.buildList(planId)).get(0);
 
         assertNull(item.foodCode());
+    }
+
+    // --- categorisation ---
+
+    @Test
+    void buildList_groupsItemByFoodCode_intoDairyCategory() throws SQLException {
+        int planId = insertMealPlan();
+        int mealId = insertMeal("Omelette");
+        int ingredientId = insertIngredient("Egg", "12-001");
+        insertMealPlanEntry(planId, mealId, 0);
+        insertMealIngredient(mealId, ingredientId, 2.0, "whole");
+
+        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+
+        assertTrue(result.containsKey("Dairy & Eggs"));
+        assertEquals("Egg", result.get("Dairy & Eggs").get(0).name());
+    }
+
+    @Test
+    void buildList_groupsItemWithNullFoodCode_intoGeneralCategory() throws SQLException {
+        int planId = insertMealPlan();
+        int mealId = insertMeal("Mystery Dish");
+        int ingredientId = insertIngredient("Unknown ingredient", null);
+        insertMealPlanEntry(planId, mealId, 0);
+        insertMealIngredient(mealId, ingredientId, 50.0, "g");
+
+        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+
+        assertTrue(result.containsKey("General"));
+    }
+
+    @Test
+    void buildList_separatesItemsAcrossCategories_whenFoodCodesdiffer() throws SQLException {
+        int planId = insertMealPlan();
+        int mealId = insertMeal("Salad");
+        int egg = insertIngredient("Egg", "12-001");       // Dairy & Eggs
+        int lettuce = insertIngredient("Lettuce", "13-001"); // Vegetables & Beans
+        insertMealPlanEntry(planId, mealId, 0);
+        insertMealIngredient(mealId, egg, 2.0, "whole");
+        insertMealIngredient(mealId, lettuce, 100.0, "g");
+
+        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+
+        assertEquals(2, result.size());
+        assertTrue(result.containsKey("Dairy & Eggs"));
+        assertTrue(result.containsKey("Vegetables & Beans"));
+    }
+
+    @Test
+    void buildList_returnsCategoriesInAlphabeticalOrder() throws SQLException {
+        int planId = insertMealPlan();
+        int mealId = insertMeal("Mixed Meal");
+        int egg = insertIngredient("Egg", "12-001");         // Dairy & Eggs
+        int bread = insertIngredient("Bread", "11-001");     // Bakery & Grains
+        int carrot = insertIngredient("Carrot", "13-001");   // Vegetables & Beans
+        insertMealPlanEntry(planId, mealId, 0);
+        insertMealIngredient(mealId, egg, 2.0, "whole");
+        insertMealIngredient(mealId, bread, 1.0, "slice");
+        insertMealIngredient(mealId, carrot, 100.0, "g");
+
+        List<String> categories = service.buildList(planId).keySet().stream().toList();
+
+        assertEquals(List.of("Bakery & Grains", "Dairy & Eggs", "Vegetables & Beans"), categories);
+    }
+
+    @Test
+    void buildList_returnsItemsWithinCategoryInAlphabeticalOrder() throws SQLException {
+        int planId = insertMealPlan();
+        int mealId = insertMeal("Veggie Stew");
+        int zucchini = insertIngredient("Zucchini", "13-010");
+        int aubergine = insertIngredient("Aubergine", "13-020");
+        insertMealPlanEntry(planId, mealId, 0);
+        insertMealIngredient(mealId, zucchini, 100.0, "g");
+        insertMealIngredient(mealId, aubergine, 150.0, "g");
+
+        List<ShoppingItem> items = service.buildList(planId).get("Vegetables & Beans");
+
+        assertEquals("Aubergine", items.get(0).name());
+        assertEquals("Zucchini", items.get(1).name());
     }
 }

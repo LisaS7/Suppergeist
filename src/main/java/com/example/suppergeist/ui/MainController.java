@@ -26,7 +26,7 @@ public class MainController {
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
     private User user;
-    private LocalDate currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    private LocalDate currentWeekStart;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
 
@@ -43,7 +43,7 @@ public class MainController {
     private void refreshMealPlanGrid() throws SQLException {
         mealPlanGrid.getChildren().clear();
         DayOfWeek weekStart = DayOfWeek.of(user.getWeekStartDay());
-        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
+        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), user.getWeekStartDay(), currentWeekStart);
 
         Set<LocalDate> labelledDates = new HashSet<>();
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
@@ -85,6 +85,7 @@ public class MainController {
 
         // TODO: resolve if multi-user support is added
         this.user = userPreferencesService.loadUser(1);
+        this.currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.of(user.getWeekStartDay())));
 
         // Sidebar
         preferencesSidebarController.setUserPreferencesService(userPreferencesService);
@@ -104,7 +105,7 @@ public class MainController {
 
             if (!weeklyMeals.isEmpty()) {
                 int planId = weeklyMeals.getFirst().mealPlanId();
-                List<ShoppingItem> shoppingList = shoppingListService.buildList(planId);
+                LinkedHashMap<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
                 shoppingListController.refresh(shoppingList);
             }
 

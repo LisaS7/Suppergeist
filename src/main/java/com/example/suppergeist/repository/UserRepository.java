@@ -62,8 +62,7 @@ public class UserRepository {
 
                     return new User(id, name, dietaryConstraints, avoidFoodCodes, servingsPerMeal, showCalories, showNutritionalInfo, weekStartDay);
                 } else {
-                    log.warning("No user found for id: " + id + " Returning default user.");
-                    return new User(id, "Default User", Set.of(), Set.of(), 2, true, true, 1);
+                    throw new SQLException("No user found with id: " + id);
                 }
             }
         }

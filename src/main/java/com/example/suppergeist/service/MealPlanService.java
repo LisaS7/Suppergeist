@@ -1,12 +1,9 @@
 package com.example.suppergeist.service;
 
-import com.example.suppergeist.model.Meal;
 import com.example.suppergeist.model.MealPlan;
-import com.example.suppergeist.model.MealPlanEntry;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
-import com.example.suppergeist.repository.MealPlanEntryRow;
+import com.example.suppergeist.model.MealPlanEntryRow;
 import com.example.suppergeist.repository.MealPlanRepository;
-import com.example.suppergeist.repository.MealRepository;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
@@ -32,8 +29,8 @@ public class MealPlanService {
         return date.format(dayLabelFormatter);
     }
 
-    public List<WeeklyMealViewModel> getWeeklyMeals(int userId, LocalDate referenceDate) throws SQLException {
-        LocalDate startDate = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    public List<WeeklyMealViewModel> getWeeklyMeals(int userId, int weekStartDay, LocalDate referenceDate) throws SQLException {
+        LocalDate startDate = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.of(weekStartDay)));
         Optional<MealPlan> mealPlan = mealPlanRepository.getMealPlanByUserAndStartDate(userId, startDate);
         if (mealPlan.isEmpty()) {
             return Collections.emptyList();

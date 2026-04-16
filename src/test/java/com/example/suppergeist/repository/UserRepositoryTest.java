@@ -56,10 +56,8 @@ class UserRepositoryTest {
     }
 
     @Test
-    void getUser_returnsSyntheticDefaultWhenNotFound() throws SQLException {
-        User user = repository.getUser(999);
-        assertEquals(999, user.getId());
-        assertEquals("Default User", user.getName());
+    void getUser_throwsSQLException_whenUserNotFound() {
+        assertThrows(SQLException.class, () -> repository.getUser(999));
     }
 
     @Test

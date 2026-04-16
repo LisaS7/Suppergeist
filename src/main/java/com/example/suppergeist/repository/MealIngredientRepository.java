@@ -3,6 +3,7 @@ package com.example.suppergeist.repository;
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.Ingredient;
 import com.example.suppergeist.model.MealIngredient;
+import com.example.suppergeist.model.MealIngredientRow;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

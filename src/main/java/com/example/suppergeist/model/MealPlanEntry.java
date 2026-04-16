@@ -6,13 +6,14 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class MealPlanEntry {
-    private Integer id;
-    private int mealPlanId;
-    private int mealId;
-    private int dayOffset;
-    private String mealType;
+    private final Integer id;
+    private final int mealPlanId;
+    private final int mealId;
+    private final int dayOffset;
+    private final String mealType;
 
     public MealPlanEntry(int mealPlanId, int mealId, int dayOffset, String mealType) {
+        this.id = null;
         this.mealPlanId = mealPlanId;
         this.mealId = mealId;
         this.dayOffset = dayOffset;
