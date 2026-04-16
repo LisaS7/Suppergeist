@@ -25,6 +25,13 @@ from pathlib import Path
 DEFAULT_DB = Path.home() / ".suppergeist" / "app.db"
 WEEK_START = "2026-04-06"
 
+
+def open_db(db_path: Path) -> sqlite3.Connection:
+    conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
+
+
 MEALS = [
     "Spaghetti Bolognese",
     "Chicken and Vegetable Stir-Fry",
@@ -72,7 +79,7 @@ MEAL_INGREDIENTS = {
         ("%parmesan%", 30.0, "g"),
     ],
     "Black Bean Tacos": [
-        ("%black-eyed beans%", 200.0, "g"),
+        ("%black-eyed beans%", 200.0, "g"),  # closest CoFID match to black beans
         ("%peppers%raw%", 120.0, "g"),
         ("%onions%raw%", 80.0, "g"),
         ("%tortilla%", 2.0, "wraps"),
@@ -113,7 +120,7 @@ def clear(conn: sqlite3.Connection) -> None:
 
     with conn:
         entry_placeholders = ",".join("?" * len(meal_ids))
-        params: list = list(meal_ids)
+        params = list(meal_ids)
         conn.execute(
             f"DELETE FROM meal_ingredients WHERE meal_id IN ({entry_placeholders})",
             params,
@@ -134,24 +141,16 @@ def clear(conn: sqlite3.Connection) -> None:
     print("Cleared seed data: meal_ingredients, meal_plan_entries, meal_plans, meals.")
 
 
-def seed(db_path: Path) -> None:
-    conn = sqlite3.connect(db_path)
-    conn.execute("PRAGMA foreign_keys = ON")
-
+def seed(conn: sqlite3.Connection) -> None:
     with conn:
         # --- meals ---
         meal_ids = []
         for name in MEALS:
-            cur = conn.execute(
-                "INSERT OR IGNORE INTO meals (name) VALUES (?)", (name,)
-            )
-            if cur.lastrowid:
-                meal_ids.append(cur.lastrowid)
-            else:
-                row = conn.execute(
-                    "SELECT id FROM meals WHERE name = ?", (name,)
-                ).fetchone()
-                meal_ids.append(row[0])
+            conn.execute("INSERT OR IGNORE INTO meals (name) VALUES (?)", (name,))
+            row = conn.execute(
+                "SELECT id FROM meals WHERE name = ?", (name,)
+            ).fetchone()
+            meal_ids.append(row[0])
 
         # --- meal plan ---
         user_row = conn.execute("SELECT id FROM users LIMIT 1").fetchone()
@@ -201,10 +200,9 @@ def seed(db_path: Path) -> None:
                 )
                 ingredients_inserted += 1
 
-    conn.close()
     print(
-        f"Seeded {db_path}: {len(MEALS)} meals, 1 plan, {len(MEALS)} entries, "
-        f"{ingredients_inserted} ingredient rows ({ingredients_skipped} skipped — no match in ingredients table)."
+        f"Seeded: {len(MEALS)} meals, 1 plan, {len(MEALS)} entries, "
+        f"{ingredients_inserted} ingredient links ({ingredients_skipped} skipped — no match in ingredients table)."
     )
 
 
@@ -220,19 +218,17 @@ def main() -> None:
         print(f"ERROR: {args.db} not found. Launch the app once to initialise the database.")
         raise SystemExit(1)
 
-    if args.clear:
-        conn = sqlite3.connect(args.db)
-        conn.execute("PRAGMA foreign_keys = ON")
-        clear(conn)
+    conn = open_db(args.db)
+    try:
+        if args.clear:
+            clear(conn)
+        elif args.reset:
+            clear(conn)
+            seed(conn)
+        else:
+            seed(conn)
+    finally:
         conn.close()
-    elif args.reset:
-        conn = sqlite3.connect(args.db)
-        conn.execute("PRAGMA foreign_keys = ON")
-        clear(conn)
-        conn.close()
-        seed(args.db)
-    else:
-        seed(args.db)
 
 
 if __name__ == "__main__":
