@@ -24,8 +24,7 @@ public class ShoppingListController {
         List<String> categories = this.categorisedList.keySet().stream().toList();
         for (String category : categories) {
             stringBuilder.append(category).append("\n");
-            List<ShoppingItem> sortedItems = this.categorisedList.get(category).stream().sorted(Comparator.comparing(ShoppingItem::name)).toList();
-            for (ShoppingItem item : sortedItems) {
+            for (ShoppingItem item : this.categorisedList.get(category)) {
                 String itemString = item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit();
                 stringBuilder.append(itemString).append("\n");
             }
@@ -49,8 +48,7 @@ public class ShoppingListController {
         this.categorisedList = shoppingList;
         shoppingListBox.getChildren().clear();
 
-        List<String> categories = this.categorisedList.keySet().stream().sorted().toList();
-        for (String category : categories) {
+        for (String category : this.categorisedList.keySet()) {
             Label header = new Label(category);
             shoppingListBox.getChildren().add(header);
 
