@@ -4,6 +4,7 @@
 
 <?import javafx.scene.layout.VBox?>
 <Tab text="Shopping List"
+     closable="false"
      xmlns="http://javafx.com/javafx"
      xmlns:fx="http://javafx.com/fxml"
      fx:controller="com.example.suppergeist.ui.ShoppingListController">

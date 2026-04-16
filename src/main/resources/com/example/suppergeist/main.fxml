@@ -17,7 +17,7 @@
     <center>
         <TabPane>
             <tabs>
-                <Tab text="Meal Plan">
+                <Tab text="Meal Plan" closable="false">
                     <content>
                         <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
                     </content>

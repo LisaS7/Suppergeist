@@ -5,19 +5,43 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.VBox;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class ShoppingListController {
+    private List<ShoppingItem> shoppingList;
+
+    // UI
     @FXML private VBox shoppingListBox;
     @FXML private Button copyListButton;
 
     @FXML
     private void copyToClipboard() {
+        LinkedHashMap<String, List<ShoppingItem>> itemMap = new LinkedHashMap<>();
+        for (ShoppingItem item : this.shoppingList) {
+            String category = deriveCategory(item.foodCode());
+            itemMap.computeIfAbsent(category, k -> new ArrayList<>()).add(item);
+        }
+
+        StringBuilder stringBuilder = new StringBuilder();
+        List<String> categories = itemMap.keySet().stream().sorted().toList();
+        for (String category : categories) {
+            stringBuilder.append(category).append("\n");
+            List<ShoppingItem> sortedItems = itemMap.get(category).stream().sorted(Comparator.comparing(ShoppingItem::name)).toList();
+            for (ShoppingItem item : sortedItems) {
+                String itemString = item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit();
+                stringBuilder.append(itemString).append("\n");
+            }
+            stringBuilder.append("\n");
+        }
+        String text = stringBuilder.toString();
+
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        Clipboard.getSystemClipboard().setContent(content);
     }
 
 
@@ -46,6 +70,7 @@ public class ShoppingListController {
     }
 
     public void refresh(List<ShoppingItem> shoppingList) {
+        this.shoppingList = shoppingList;
         HashMap<String, ArrayList<ShoppingItem>> groupedItems = new HashMap<>();
         for (ShoppingItem item : shoppingList) {
             String category = deriveCategory(item.foodCode());

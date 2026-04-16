@@ -246,7 +246,7 @@ public class ShoppingListService {
 
 ---
 
-## Task 10 — Shopping list UI panel ⬜
+## Task 10 — Shopping list UI panel ✅
 
 *(Depends on Task 9)*
 
@@ -262,7 +262,17 @@ reviewed.
 
 **Also in scope:** move the food code → category mapping out of `ShoppingListService` and into the shopping list controller. It's a presentation concern that currently lives in the service only because no controller existed yet.
 
-**Done when:** shopping list panel renders for the seeded plan; copy-to-clipboard produces readable plain text; category mapping lives in the controller.
+**As built:**
+- Main view centre replaced with a `TabPane` — meal plan and shopping list are separate tabs
+- `ShoppingListController` + `shopping-list.fxml` define the tab content
+- `ShoppingItem` swapped `category: String` for `foodCode: String`; category derivation moved to `ShoppingListController.deriveCategory()` (removed from `ShoppingListService`)
+- `refresh(List<ShoppingItem>)` groups by category, sorts categories alphabetically, sorts items by name within each category, and renders a `Label` header + `CheckBox` per item into `shoppingListBox`
+- `MainController.setup()` calls `shoppingListController.refresh(shoppingList)` after loading the meal plan
+- `copyToClipboard()` is wired to the button but not yet implemented (empty stub)
+
+**Remaining:**
+- Copy-to-clipboard produces readable plain text
+- Tabs must not be closable — currently the user can close a tab with no way to reopen it short of relaunching the app; set `closable="false"` on both tabs in `main.fxml`
 
 ---
 
@@ -331,5 +341,5 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] Controllers hold no direct repository references; `UserPreferencesService` mediates all preference and ingredient access; dietary constraints use `@FXML`-wired fields; text-search listener registered once; minor UI polish applied
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
 - [x] `ShoppingListService` aggregates ingredients by ID and sums quantities; derives category from food code prefix; sorts by category then name
-- [ ] Shopping list panel renders and copy-to-clipboard works
+- [x] Shopping list panel renders; copy-to-clipboard implemented; both tabs non-closable
 - [ ] `MainController` holds no repository references; `MealPlanService` injected from `SuppergeistApplication`
