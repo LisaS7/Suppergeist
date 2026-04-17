@@ -18,11 +18,29 @@ public class IngredientRepository {
         this.dbManager = dbManager;
     }
 
+    private static Double nullableDouble(ResultSet rs, String col) throws SQLException {
+        double val = rs.getDouble(col);
+        return rs.wasNull() ? null : val;
+    }
+
     private Ingredient mapRowToIngredient(ResultSet rs) throws SQLException {
-        int ingredientId = rs.getInt("id");
-        String name = rs.getString("name");
-        String foodCode = rs.getString("food_code");
-        return new Ingredient(ingredientId, name, foodCode);
+        return new Ingredient(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("food_code"),
+                nullableDouble(rs, "energy_kcal"),
+                nullableDouble(rs, "protein_g"),
+                nullableDouble(rs, "fat_g"),
+                nullableDouble(rs, "carbohydrate_g"),
+                nullableDouble(rs, "total_sugars_g"),
+                nullableDouble(rs, "fibre_g"),
+                nullableDouble(rs, "vitamin_a_µg"),
+                nullableDouble(rs, "vitamin_c_mg"),
+                nullableDouble(rs, "vitamin_d_µg"),
+                nullableDouble(rs, "vitamin_e_mg"),
+                nullableDouble(rs, "vitamin_b12_µg"),
+                nullableDouble(rs, "folate_µg")
+        );
     }
 
     public Optional<Ingredient> getIngredientById(int id) throws SQLException {
@@ -44,7 +62,7 @@ public class IngredientRepository {
     }
 
     public List<Ingredient> getAllIngredients() throws SQLException {
-        String sql = "SELECT * FROM ingredients";
+        String sql = "SELECT id, name, food_code FROM ingredients";
 
         try (
                 Connection conn = dbManager.getConnection();

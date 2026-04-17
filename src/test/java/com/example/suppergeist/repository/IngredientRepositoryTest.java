@@ -36,7 +36,15 @@ class IngredientRepositoryTest {
                     energy_kcal     REAL,
                     protein_g       REAL,
                     fat_g           REAL,
-                    carbohydrate_g  REAL
+                    carbohydrate_g  REAL,
+                    total_sugars_g  REAL,
+                    fibre_g         REAL,
+                    vitamin_a_µg    REAL,
+                    vitamin_c_mg    REAL,
+                    vitamin_d_µg    REAL,
+                    vitamin_e_mg    REAL,
+                    vitamin_b12_µg  REAL,
+                    folate_µg       REAL
                 )
             """);
         }
@@ -123,6 +131,39 @@ class IngredientRepositoryTest {
         Ingredient ingredient = results.get(0);
         assertEquals("Oats", ingredient.getName());
         assertEquals("62-801", ingredient.getFoodCode());
+    }
+
+    @Test
+    void getIngredientById_mapsNutritionFields_whenPresent() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute(
+                "INSERT INTO ingredients (name, food_code, energy_kcal, protein_g, fat_g, carbohydrate_g) " +
+                "VALUES ('Almonds', '11-002', 579.0, 21.2, 49.9, 21.6)"
+            );
+        }
+
+        Optional<Ingredient> result = repository.getIngredientById(1);
+
+        assertTrue(result.isPresent());
+        assertEquals(579.0, result.get().getEnergyKcal());
+        assertEquals(21.2, result.get().getProteinG());
+        assertEquals(49.9, result.get().getFatG());
+        assertEquals(21.6, result.get().getCarbohydrateG());
+    }
+
+    @Test
+    void getIngredientById_returnsNullNutritionFields_whenAbsent() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute(
+                "INSERT INTO ingredients (name, food_code) VALUES ('Unknown Herb', NULL)"
+            );
+        }
+
+        Optional<Ingredient> result = repository.getIngredientById(1);
+
+        assertTrue(result.isPresent());
+        assertNull(result.get().getEnergyKcal());
+        assertNull(result.get().getProteinG());
     }
 
     @Test

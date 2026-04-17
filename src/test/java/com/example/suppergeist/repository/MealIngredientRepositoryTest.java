@@ -59,6 +59,21 @@ class MealIngredientRepositoryTest {
         }
     }
 
+    private int insertIngredientWithNutrition(String name, double kcal, double proteinG, double fatG, double carbG) throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            var stmt = conn.prepareStatement(
+                    "INSERT INTO ingredients (name, energy_kcal, protein_g, fat_g, carbohydrate_g) VALUES (?, ?, ?, ?, ?)",
+                    java.sql.PreparedStatement.RETURN_GENERATED_KEYS);
+            stmt.setString(1, name);
+            stmt.setDouble(2, kcal);
+            stmt.setDouble(3, proteinG);
+            stmt.setDouble(4, fatG);
+            stmt.setDouble(5, carbG);
+            stmt.executeUpdate();
+            return stmt.getGeneratedKeys().getInt(1);
+        }
+    }
+
     private void insertMealIngredient(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             var stmt = conn.prepareStatement(
@@ -187,6 +202,32 @@ class MealIngredientRepositoryTest {
         assertEquals("Aubergine", result.get(0).ingredient().getName());
         assertEquals("Mushroom", result.get(1).ingredient().getName());
         assertEquals("Zucchini", result.get(2).ingredient().getName());
+    }
+
+    @Test
+    void getIngredientsWithNameForMeal_mapsNutritionFields_whenPresent() throws SQLException {
+        int mealId = insertMeal("Pasta");
+        int ingredientId = insertIngredientWithNutrition("Spaghetti", 371.0, 13.0, 1.5, 74.0);
+        insertMealIngredient(mealId, ingredientId, 200.0, "g");
+
+        MealIngredientRow result = repository.getIngredientsWithNameForMeal(mealId).get(0);
+
+        assertEquals(371.0, result.ingredient().getEnergyKcal());
+        assertEquals(13.0, result.ingredient().getProteinG());
+        assertEquals(1.5, result.ingredient().getFatG());
+        assertEquals(74.0, result.ingredient().getCarbohydrateG());
+    }
+
+    @Test
+    void getIngredientsWithNameForMeal_returnsNullNutritionFields_whenAbsent() throws SQLException {
+        int mealId = insertMeal("Pasta");
+        int ingredientId = insertIngredient("Mystery Herb");
+        insertMealIngredient(mealId, ingredientId, 5.0, "g");
+
+        MealIngredientRow result = repository.getIngredientsWithNameForMeal(mealId).get(0);
+
+        assertNull(result.ingredient().getEnergyKcal());
+        assertNull(result.ingredient().getProteinG());
     }
 
     @Test
