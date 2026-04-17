@@ -19,8 +19,8 @@
 
 .root {
     -fx-background-color: #b8cad3;
-    -fx-font-family: "IM Fell English";
-    -fx-font-size: 15px;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 18px;
 }
 
 
@@ -261,6 +261,25 @@ GridPane > Label {
     /* JavaFX default focus ring removed; our border IS the focus indicator */
 }
 
+/* Primary action button — full-width, heavier padding, larger text */
+.button-primary {
+    -fx-font-size: 16px;
+    -fx-padding: 12 16 12 16;
+    -fx-border-width: 3;
+    -fx-background-color: #4f6c7b;
+    -fx-text-fill: #dce8ed;
+}
+
+.button-primary:hover {
+    -fx-background-color: #1d3a49;
+    -fx-text-fill: #dce8ed;
+}
+
+.button-primary:pressed {
+    -fx-background-color: #051d29;
+    -fx-text-fill: #dce8ed;
+}
+
 /* Header prefs button: slightly more prominent */
 .header .button {
     -fx-background-color: #dce8ed;
@@ -319,7 +338,7 @@ GridPane > Label {
 .tab-pane .tab .tab-label {
     -fx-text-fill: #051d29;
     -fx-font-weight: BOLD;
-    -fx-font-size: 16px;
+    -fx-font-size: 20px;
 }
 
 /* Hover state — fog fill; border stays abyss */
@@ -498,9 +517,10 @@ GridPane > Label {
     -fx-border-color: transparent; /* outer .spinner border provides the frame */
     -fx-border-width: 0;
     -fx-background-radius: 0;
+    -fx-background-insets: 0;
     -fx-text-fill: #051d29;
-    -fx-font-size: 14px;
-    -fx-padding: 5 6 5 6;
+    -fx-font-size: 18px;
+    -fx-padding: 0 6 5 6;
     -fx-alignment: CENTER;
 }
 

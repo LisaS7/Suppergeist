@@ -94,7 +94,7 @@ public class SuppergeistApplication extends Application {
 
         // Font
         Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/UnifrakturMaguntia-Regular.ttf"), 22);
-        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/IMFellEnglish-Regular.ttf"), 22);
+        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Quintessential-Regular.ttf"), 22);
 
         // CSS
         var css = SuppergeistApplication.class.getResource("style.css");

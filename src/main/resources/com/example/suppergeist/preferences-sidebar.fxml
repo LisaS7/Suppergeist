@@ -37,6 +37,6 @@
     <ChoiceBox fx:id="weekStartDayChoiceBox"/>
 
     <Separator/>
-    <Button text="Save" onAction="#savePreferences"/>
+    <Button text="Save" onAction="#savePreferences" styleClass="button-primary" maxWidth="Infinity"/>
 </VBox>
 
