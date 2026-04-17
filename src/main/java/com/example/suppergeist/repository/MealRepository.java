@@ -20,7 +20,7 @@ public class MealRepository {
         String mealName = rs.getString("name");
         return new Meal(mealId, mealName);
     }
-
+    
     public Optional<Meal> getMealById(int id) throws SQLException {
         String sql = "SELECT * FROM meals WHERE id = ?";
 

@@ -4,6 +4,7 @@ import com.example.suppergeist.model.Meal;
 import com.example.suppergeist.model.MealPlan;
 import com.example.suppergeist.model.MealPlanEntry;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
+import com.example.suppergeist.repository.MealPlanEntryRow;
 import com.example.suppergeist.repository.MealPlanRepository;
 import com.example.suppergeist.repository.MealRepository;
 
@@ -18,13 +19,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class MealPlanService {
-    private final MealRepository mealRepository;
     private final MealPlanRepository mealPlanRepository;
     private final MealPlanEntryRepository mealPlanEntryRepository;
     private static final DateTimeFormatter dayLabelFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
 
-    public MealPlanService(MealRepository mealRepository, MealPlanRepository mealPlanRepository, MealPlanEntryRepository mealPlanEntryRepository) {
-        this.mealRepository = mealRepository;
+    public MealPlanService(MealPlanRepository mealPlanRepository, MealPlanEntryRepository mealPlanEntryRepository) {
         this.mealPlanRepository = mealPlanRepository;
         this.mealPlanEntryRepository = mealPlanEntryRepository;
     }
@@ -41,23 +40,16 @@ public class MealPlanService {
         }
 
         MealPlan plan = mealPlan.get();
-        List<MealPlanEntry> entries = mealPlanEntryRepository.getEntriesByMealPlanId(plan.getId());
+        List<MealPlanEntryRow> entries = mealPlanEntryRepository.getMealPlanEntryRows(plan.getId());
         List<WeeklyMealViewModel> weeklyMeals = new ArrayList<>();
 
-        for (MealPlanEntry entry : entries) {
-            Optional<Meal> meal = mealRepository.getMealById(entry.getMealId());
-            if (meal.isEmpty()) {
-                continue;
-            }
-            Meal resolvedMeal = meal.get();
-
-            LocalDate mealDate = startDate.plusDays(entry.getDayOffset());
+        for (MealPlanEntryRow entry : entries) {
+            LocalDate mealDate = startDate.plusDays(entry.dayOffset());
             String dayLabel = formatDayLabel(mealDate);
 
-            WeeklyMealViewModel vm = new WeeklyMealViewModel(entry.getMealPlanId(), mealDate, dayLabel, entry.getMealType(), resolvedMeal.getName());
+            WeeklyMealViewModel vm = new WeeklyMealViewModel(entry.mealPlanId(), mealDate, dayLabel, entry.mealType(), entry.mealName());
             weeklyMeals.add(vm);
         }
-
         return weeklyMeals;
     }
 }

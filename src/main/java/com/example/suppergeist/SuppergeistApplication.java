@@ -51,13 +51,12 @@ public class SuppergeistApplication extends Application {
             userRepository.ensureDefaultUserExists();
 
             IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
-            MealRepository mealRepository = new MealRepository(dbManager);
             MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
             MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
             MealIngredientRepository mealIngredientRepository = new MealIngredientRepository(dbManager);
 
             this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
-            this.mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
+            this.mealPlanService = new MealPlanService(mealPlanRepository, mealPlanEntryRepository);
             this.shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
         } catch (SQLException | IOException e) {
             log.log(Level.SEVERE, "Application startup failed", e);

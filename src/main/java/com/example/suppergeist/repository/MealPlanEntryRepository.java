@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MealPlanEntryRepository {
+
     private final DatabaseManager dbManager;
 
     public MealPlanEntryRepository(DatabaseManager dbManager) {
@@ -44,6 +45,24 @@ public class MealPlanEntryRepository {
                     entries.add(entry);
                 }
                 return entries;
+            }
+        }
+    }
+
+    public List<MealPlanEntryRow> getMealPlanEntryRows(int mealPlanId) throws SQLException {
+        String sql = "SELECT * FROM meal_plan_entries mpe JOIN meals m ON m.id=mpe.meal_id WHERE mpe.meal_plan_id = ?";
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)
+        ) {
+            stmt.setInt(1, mealPlanId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<MealPlanEntryRow> rows = new ArrayList<>();
+                while (rs.next()) {
+                    MealPlanEntryRow row = new MealPlanEntryRow(mealPlanId, rs.getInt("day_offset"), rs.getString("meal_type"), rs.getString("name"));
+                    rows.add(row);
+                }
+                return rows;
             }
         }
 
