@@ -75,41 +75,59 @@ Replace the `"-- kcal"` placeholder on each meal card with the computed value wh
 - If `showNutritionalInfo` is true, also show protein / carbs / fat under the kcal line
 - If `showCalories` is false, hide the kcal label entirely (and the macro line if present)
 
-**Optional (stretch):**
+**Totals:**
 
-- Daily total row at the bottom of each column: sum of kcal for that day's meals
+- Daily total row at the bottom of each column: sum of kcal for that day's meals (only shown when `showCalories` is true)
 - Weekly total in the footer / summary area
 
 > Do not block the UI thread computing nutrition for 7 meals. Call `NutritionService` once per meal during
 > grid population, which already runs after the DB load.
 
-**Done when:** meals with matched ingredients show real kcal values; toggling `showCalories` off hides the figures;
-`"-- kcal"` still appears for unmatched meals.
+**Done when:** meals with matched ingredients show real kcal values; toggling `showCalories` off hides the figures
+and totals; `"-- kcal"` still appears for unmatched meals; daily and weekly totals are visible.
 
 ---
 
-## Task 4 — Shopping list polish ✅
-
-Completed ahead of Phase 3 — implemented in Phase 2 Tasks 9 and 10. See the Phase 2 roadmap for the full spec and as-built notes.
-
----
-
-## Task 5 — Validation & feedback layer ⬜
+## Task 4 — Validation & feedback layer ⬜
 
 *(Depends on Tasks 2 and 3)*
 
-The app currently says nothing when data is absent. Add lightweight feedback for the nutrition-related failure
-states. Generation-related states (no saved plan, generation failure) are handled in Phase 4.
+Add lightweight, non-intrusive feedback for nutrition-related failure states. Generation-related states (no saved
+plan, generation failure) are handled in Phase 4.
 
-| Situation                                              | User-visible feedback                                         |
-|--------------------------------------------------------|---------------------------------------------------------------|
-| Meal has ingredients but none matched to the DB        | Meal card shows `"-- kcal (no data)"` instead of `"-- kcal"` |
-| Meal has no ingredients at all                         | Meal card shows `"No ingredients recorded"`                   |
-| Shopping list is empty (no plan for the current week)  | Shopping list panel shows `"No plan loaded"`                  |
+**kcal label:** always shows `"-- kcal"` when nutrition data is absent — no sub-variants on the label itself.
+
+**`!` indicator:** a small `!` label on the meal card, visible only when nutrition data could not be computed.
+Uses a JavaFX `Tooltip` (native, no extra dependencies) to show the specific reason on hover:
+
+| Situation                                       | Tooltip text                        |
+|-------------------------------------------------|-------------------------------------|
+| Meal has ingredients but none matched to the DB | `"No nutrition data for this meal"` |
+| Meal has no ingredients at all                  | `"No ingredients recorded"`         |
 
 These are display-layer changes; no schema or service changes required.
 
-**Done when:** each scenario above shows the correct message rather than a blank or misleading state.
+**Done when:** meals missing nutrition data show `"-- kcal"` and a `!` indicator; hovering the indicator shows
+the correct reason; meals with matched data show no indicator.
+
+---
+
+## Task 5 — Empty state messages ⬜
+
+*(Depends on Task 1)*
+
+When the user navigates to a week with no saved plan, the grid and shopping list are silently blank. Add simple
+messages so the empty state is clearly intentional rather than a loading failure.
+
+| Location             | Message                    | Condition                              |
+|----------------------|----------------------------|----------------------------------------|
+| Meal grid            | `"No plan for this week"`  | Week has no `MealPlan` in the DB       |
+| Shopping list panel  | `"No plan loaded"`         | Current week has no plan               |
+
+Display-layer changes only; no service or schema changes required.
+
+**Done when:** navigating to an empty week shows the message in the grid; the shopping list panel shows its
+message when no plan exists for the current week.
 
 ---
 
@@ -127,6 +145,8 @@ Revisit post-submission if needed.
 
 - [x] Hardcoded reference date replaced with current-week calculation; *(prev/next navigation still needed)*
 - [ ] Prev/Next week buttons and week range label working in the UI
+- [ ] Empty week state shows `"No plan for this week"` in the grid; shopping list shows `"No plan loaded"`
 - [ ] `NutritionService` computes estimates from stored ingredient data
 - [ ] Meal cards show real kcal figures where data exists; `showCalories` toggle is functional
-- [ ] Validation messages appear for no-ingredients and no-nutrition-data states
+- [ ] Daily and weekly kcal totals visible when `showCalories` is on
+- [ ] `!` indicator with tooltip appears on meal cards missing nutrition data

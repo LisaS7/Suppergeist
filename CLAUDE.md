@@ -71,14 +71,15 @@ No layer skipping. UI never touches the database; services never touch the UI.
 
 ### Service Layer Classes (built)
 - `MealPlanService` — loads the current week's meal plan entries from the DB and assembles `WeeklyMealViewModel` records for the UI
-- `AppSeedService` — seeds the `ingredients` table from the bundled CoFID CSV on first launch
-- `WeeklyMealViewModel` — record passed from `MealPlanService` to the UI (date, dayLabel, mealType, mealName)
+- `AppSeedService` — seeds the `ingredients` table from the bundled CoFID CSV on first launch; also seeds 7 hardcoded meals with ingredients and 3 weeks of meal plans for user 1 (dev data)
+- `ShoppingListService` — builds an aggregated shopping list from meal plan entries; groups items by category using food code prefixes; returns `LinkedHashMap<String, List<ShoppingItem>>`
+- `UserPreferencesService` — thin wrapper around `UserRepository` and `IngredientRepository`; loads the user record, saves preferences, and retrieves the full ingredient list for the preferences sidebar
+- `WeeklyMealViewModel` — record passed from `MealPlanService` to the UI (mealPlanId, date, dayLabel, mealType, mealName)
 
 ### Service Layer Classes (planned — not yet built)
 - `OllamaClient` — thin HTTP wrapper; returns raw response strings; calls are blocking (run off the JavaFX thread via `Task<MealPlan>`)
 - `PromptBuilder` — constructs structured prompts (with explicit JSON output format) from user preferences
 - `MealPlanParser` — parses Ollama's response into typed models; throws `ParseException` on failure; never trusts raw LLM output
-- `ShoppingListService` — derives and groups an ingredient list from a meal plan
 
 ### Data Layer Classes
 - `UserRepository` — CRUD for user record including all preference fields (`app.db`)
@@ -86,6 +87,7 @@ No layer skipping. UI never touches the database; services never touch the UI.
 - `MealPlanRepository` — CRUD for meal plans (`app.db`)
 - `MealPlanEntryRepository` — CRUD for meal plan entries (join between plans and meals) (`app.db`)
 - `IngredientRepository` — queries on the ingredients/CoFID data (`app.db`)
+- `MealIngredientRepository` — queries meal–ingredient joins; used by `ShoppingListService` to retrieve ingredients per meal (`app.db`)
 
 ### Concurrency
 Ollama calls will run in a JavaFX `Task<MealPlan>`, results returned via `Platform.runLater`. The UI shows a progress indicator and remains interactive during generation.
@@ -94,9 +96,9 @@ Ollama calls will run in a JavaFX `Task<MealPlan>`, results returned via `Platfo
 
 ```
 com.example.suppergeist
-├── ui/                  ← controllers (MainController, PreferencesSidebarController)
+├── ui/                  ← controllers (MainController, PreferencesSidebarController, ShoppingListController)
 ├── service/             ← business logic, AI integration (flat for now; ai/ and plan/ subpackages planned)
-├── repository/          ← SQLite repositories + DatabaseManager, Schema
+├── repository/          ← SQLite repositories
 ├── database/            ← DatabaseManager, Schema
 └── model/               ← domain models (see below)
 ```
@@ -114,7 +116,8 @@ MealPlanEntry  (join between MealPlan and Meal)
 ├── mealPlanId: int
 ├── mealId: int
 ├── dayOffset: int  (0–6, days from plan startDate)
-└── mealType: String  (e.g. "dinner")
+├── mealType: String  (e.g. "dinner")
+└── mealName: String
 
 Meal
 ├── id: Integer
@@ -138,6 +141,17 @@ NutritionalEstimate
 ├── proteinG: double
 ├── carbsG: double
 └── fatG: double
+
+ShoppingItem  (used by ShoppingListService / ShoppingListController)
+├── name: String
+├── totalQuantity: double
+├── unit: String
+└── foodCode: String
+
+MealIngredientRow  (internal to ShoppingListService — ingredient + quantity resolved together)
+├── ingredient: Ingredient
+├── quantity: double
+└── unit: String
 
 User  (carries all preference fields directly — no separate UserPreferences model)
 ├── id: Integer
@@ -188,6 +202,7 @@ The app has moved past initial scaffolding. What's working:
 - **User setup**: `UserRepository.ensureDefaultUserExists()` runs at startup to guarantee a user record
 - **Meal plan loading**: `MealPlanService.getWeeklyMeals()` reads from DB and returns view models to the UI
 - **Main view**: `MainController` renders a weekly meal grid from the DB; date range currently hardcoded while Ollama generation is not yet wired up
-- **Preferences sidebar**: `PreferencesSidebarController` + `preferences-sidebar.fxml` (in progress)
+- **Preferences sidebar**: `PreferencesSidebarController` + `preferences-sidebar.fxml` — fully implemented; saves/loads dietary constraints, avoided ingredients (searchable list), servings per meal, and display toggles (`showCalories`, `showNutritionalInfo`)
+- **Shopping list**: `ShoppingListController` + `ShoppingListService` — fully implemented; groups ingredients by category, renders with checkboxes, supports copy-to-clipboard
 
 Ollama AI integration (`OllamaClient`, `PromptBuilder`, `MealPlanParser`) has not been started yet.
