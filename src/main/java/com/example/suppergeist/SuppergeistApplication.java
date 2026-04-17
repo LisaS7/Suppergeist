@@ -10,6 +10,7 @@ import com.example.suppergeist.ui.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -89,8 +90,13 @@ public class SuppergeistApplication extends Application {
             return;
         }
 
-        Scene scene = new Scene(fxmlLoader.getRoot(), 1200, 900);
+        Scene scene = new Scene(fxmlLoader.getRoot(), 1500, 1200);
 
+        // Font
+        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/UnifrakturMaguntia-Regular.ttf"), 22);
+        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/IMFellEnglish-Regular.ttf"), 22);
+
+        // CSS
         var css = SuppergeistApplication.class.getResource("style.css");
         if (css != null) {
             scene.getStylesheets().add(css.toExternalForm());

@@ -72,6 +72,7 @@ public class MainController {
 
             // Calories placeholder #TODO
             Label calorieLabel = new Label("-- kcal");
+            calorieLabel.getStyleClass().add("meal-kcal");
 
             card.getChildren().addAll(nameLabel, calorieLabel);
 

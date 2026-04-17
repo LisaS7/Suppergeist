@@ -1,28 +1,26 @@
 /* ============================================================
-   Suppergeist — Pastel Retro / Neobrutalist Theme
+   Suppergeist — "Tide" Theme
    JavaFX CSS (all properties -fx- prefixed)
    ============================================================
 
    Palette
    -------
-   --cream:       #F5F0E8   (root background)
-   --sage:        #B5C9B1   (header band)
-   --butter:      #F2E07A   (meal card fill)
-   --rose:        #E8B4B8   (sidebar band)
-   --lavender:    #C9C0DA   (footer band)
-   --ink:         #1E1B18   (borders + primary text)
-   --ink-soft:    #3D3830   (secondary text)
-   --shadow-col:  #1E1B18   (hard offset shadow layer)
-   --white:       #FFFFFF
+   --fog:       #b8cad3   (184,202,211)  root background — cool blue-grey
+   --deep-sea:  #1d3a49   (29,58,73)     header + footer bands
+   --slate:     #4f6c7b   (79,108,123)   tab strip, medium accent
+   --abyss:     #051d29   (5,29,41)      borders + primary text
+   --mist:      #9c98b4   (156,152,180)  sidebar — muted purple
+   --foam:      #dce8ed   (derived)      button/field backgrounds, light text on dark
+   --current:   #88a9b7   (derived)      empty cards, unselected tabs
    ============================================================ */
 
 
 /* ── Root / BorderPane ────────────────────────────────────── */
 
 .root {
-    -fx-background-color: #F5F0E8;
-    -fx-font-family: "System";
-    -fx-font-size: 13px;
+    -fx-background-color: #b8cad3;
+    -fx-font-family: "IM Fell English";
+    -fx-font-size: 15px;
 }
 
 
@@ -46,7 +44,7 @@ GridPane {
 }
 
 Label {
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
 }
 
 Separator {
@@ -54,7 +52,7 @@ Separator {
 }
 
 Separator .line {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 1.5;
 }
 
@@ -62,19 +60,20 @@ Separator .line {
 /* ── Header ──────────────────────────────────────────────── */
 
 .header {
-    -fx-background-color: #B5C9B1;
-    -fx-border-color: #1E1B18;
-    -fx-border-width: 0 0 3 0;
-    -fx-padding: 14 20 14 20;
+    -fx-background-color: #1d3a49;
+    -fx-border-color: #051d29;
+    -fx-border-width: 0 1 3 1;
+    -fx-padding: 20 20 20 20;
     -fx-spacing: 12;
     -fx-alignment: CENTER_LEFT;
 }
 
 /* App title — the first Label inside .header gets larger treatment */
 .header > Label {
-    -fx-font-size: 22px;
-    -fx-font-weight: BOLD;
-    -fx-text-fill: #1E1B18;
+    -fx-font-size: 48px;
+    -fx-font-family: "UnifrakturMaguntia";
+    -fx-font-weight: NORMAL;
+    -fx-text-fill: #dce8ed;
 }
 
 
@@ -83,48 +82,36 @@ Separator .line {
 .main-content {
     -fx-padding: 20 20 20 20;
     -fx-spacing: 14;
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
 }
 
 /* Section heading inside main-content */
 .main-content > Label {
-    -fx-font-size: 16px;
+    -fx-font-size: 18px;
     -fx-font-weight: BOLD;
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
     -fx-padding: 0 0 4 0;
 }
 
 
 /* ── Meal Card ───────────────────────────────────────────── */
 /*
-   Neobrutalist hard offset shadow achieved with a two-layer
-   -fx-background-color stack:
-     layer 0 (bottom): ink color shifted 4px right and 4px down  →  background-insets: -4 -4 4 4 (negative insets push the layer out behind-right)
-     Wait — JavaFX -fx-background-insets works differently:
-       insets are (top right bottom left) and clip inward.
-       To fake an offset shadow, we instead use a *border* trick:
-       We paint the card background over a solid ink background with
-       a vertical+horizontal shift via padding offset.
-
-   Simplest reliable approach for JavaFX:
-     -fx-background-color: #1E1B18, #F2E07A
-     -fx-background-insets: 4 -4 -4 4, 0
-     — first (ink) layer bleeds out right+down by 4px
-     — second (butter) layer sits flush at 0
-
-   This produces a solid hard shadow at bottom-right.
+   Shadow via -fx-effect: dropshadow(gaussian, colour, radius, spread, dx, dy)
+   Deep sea bleed — radius 6, spread 0.4, offset 2x2 for summoned cards.
+   Empty cards use a lighter version (radius 4, spread 0.2) to feel less present.
 */
 
+/* Summoned meal card — foam fill, soft shadow */
 .meal-card {
-    /* Hard offset shadow layer (ink), then card fill layer (butter) */
-    -fx-background-color: #1E1B18, #F2E07A;
-    -fx-background-insets: 4 -4 -4 4, 0;
-    -fx-background-radius: 0, 0;
+    -fx-background-color: #dce8ed;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
 
-    /* Solid border on the card face */
-    -fx-border-color: #1E1B18;
-    -fx-border-width: 2.5;
+    -fx-border-color: #051d29;
+    -fx-border-width: 2.5 1.5 3 2.5;
     -fx-border-radius: 0;
+
+    -fx-effect: dropshadow(gaussian, #1d3a49, 6, 0.4, 2, 2);
 
     -fx-padding: 12 14 12 14;
     -fx-min-width: 120;
@@ -133,16 +120,53 @@ Separator .line {
 }
 
 .meal-card > Label {
-    -fx-font-size: 12px;
-    -fx-text-fill: #1E1B18;
+    -fx-font-size: 16px;
+    -fx-text-fill: #051d29;
+    -fx-wrap-text: true;
+}
+
+.meal-kcal {
+    -fx-font-size: 13px;
+    -fx-text-fill: #4f6c7b;
+    -fx-font-style: italic;
+}
+
+/*
+   Empty/pending meal card — current fill.
+   Apply this class to slots that have not yet been summoned.
+   The shadow and border are identical to .meal-card; only the
+   fill and text treatment differ to read as "not yet here."
+*/
+.meal-card-empty {
+    -fx-background-color: #88a9b7;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+
+    -fx-border-color: #051d29;
+    -fx-border-width: 2.5 1.5 3 2.5;
+    -fx-border-style: dashed;
+    -fx-border-radius: 0;
+
+    -fx-effect: dropshadow(gaussian, #1d3a49, 4, 0.2, 2, 2);
+
+    -fx-padding: 12 14 12 14;
+    -fx-min-width: 120;
+    -fx-min-height: 80;
+    -fx-pref-width: 150;
+}
+
+.meal-card-empty > Label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #1d3a49;
+    -fx-font-style: italic;
     -fx-wrap-text: true;
 }
 
 /* Day-of-week labels in the GridPane header row */
 GridPane > Label {
-    -fx-font-size: 11px;
+    -fx-font-size: 13px;
     -fx-font-weight: BOLD;
-    -fx-text-fill: #3D3830;
+    -fx-text-fill: #1d3a49;
     -fx-padding: 0 0 4 2;
 }
 
@@ -150,8 +174,8 @@ GridPane > Label {
 /* ── Sidebar ─────────────────────────────────────────────── */
 
 .sidebar {
-    -fx-background-color: #EFE8F0;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #9c98b4;
+    -fx-border-color: #051d29;
     -fx-border-width: 0 0 0 3;
     -fx-padding: 20 16 20 16;
     -fx-spacing: 10;
@@ -160,39 +184,39 @@ GridPane > Label {
 }
 
 .sidebar > Label {
-    -fx-font-size: 14px;
+    -fx-font-size: 16px;
     -fx-font-weight: BOLD;
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
     -fx-padding: 0 0 4 0;
 }
 
 .sidebar > CheckBox {
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
 }
 
 .sidebar > CheckBox .box {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
 }
 
 .sidebar > CheckBox:selected .box {
-    -fx-background-color: #B5C9B1;
+    -fx-background-color: #051d29;
 }
 
 .sidebar > CheckBox:selected .mark {
-    -fx-background-color: #1E1B18;
+    -fx-background-color: #dce8ed;
 }
 
 
 /* ── Footer ──────────────────────────────────────────────── */
 
 .footer {
-    -fx-background-color: #C9C0DA;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #1d3a49;
+    -fx-border-color: #051d29;
     -fx-border-width: 3 0 0 0;
     -fx-padding: 10 20 10 20;
     -fx-spacing: 12;
@@ -200,51 +224,51 @@ GridPane > Label {
 }
 
 .footer > Label {
-    -fx-font-size: 11px;
-    -fx-text-fill: #3D3830;
+    -fx-font-size: 13px;
+    -fx-text-fill: #dce8ed;
 }
 
 
 /* ── Buttons ─────────────────────────────────────────────── */
 
 .button {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
     -fx-font-weight: BOLD;
     -fx-padding: 7 16 7 16;
     -fx-cursor: HAND;
 }
 
 .button:hover {
-    -fx-background-color: #F2E07A;
+    -fx-background-color: #b8cad3;
 }
 
 .button:pressed {
-    -fx-background-color: #B5C9B1;
+    -fx-background-color: #051d29;
     /* Simulate the card pressing down by shifting the label slightly */
     -fx-translate-x: 1;
     -fx-translate-y: 1;
 }
 
 .button:focused {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2.5;
     /* JavaFX default focus ring removed; our border IS the focus indicator */
 }
 
 /* Header prefs button: slightly more prominent */
 .header .button {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: #dce8ed;
     -fx-padding: 6 14 6 14;
 }
 
 .header .button:hover {
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
 }
 
 
@@ -262,83 +286,80 @@ GridPane > Label {
                .tab-close-button
        .tab-content-area          ← the pane below the strip
 
-   Goal: sage strip → cream tabs with ink border → selected tab butter
-   fill, no bottom border, so it reads as one block with the content area.
+   Goal: slate strip → current tabs with abyss border → selected tab
+   fog fill, no bottom border, so it reads as one block with
+   the content area.
 */
 
-/* Strip background — sage, matching the header band */
+/* Strip background — slate */
 .tab-pane .tab-header-area {
     -fx-padding: 0;
 }
 
 .tab-pane .tab-header-background {
-    -fx-background-color: #B5C9B1;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #4f6c7b;
+    -fx-border-color: #051d29;
     -fx-border-width: 0 0 2.5 0;
     -fx-background-radius: 0;
     -fx-border-radius: 0;
 }
 
-/* Individual tab — cream fill, full ink border, bold label */
+/* Individual tab — current fill, full abyss border, bold label */
 .tab-pane .tab {
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #88a9b7;
     -fx-background-radius: 0;
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2 2 2.5 2;
     -fx-border-radius: 0;
     -fx-padding: 6 16 6 16;
     -fx-cursor: HAND;
-    /* Sit the tab slightly above the strip bottom border */
     -fx-background-insets: 0;
 }
 
 .tab-pane .tab .tab-label {
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
     -fx-font-weight: BOLD;
-    -fx-font-size: 12px;
+    -fx-font-size: 16px;
 }
 
-/* Hover state — cream lightened; border stays ink */
+/* Hover state — fog fill; border stays abyss */
 .tab-pane .tab:hover {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: #b8cad3;
 }
 
 /*
    Selected tab:
-   - Butter fill to call out the active tab
+   - Fog fill to merge with the content area below
    - Bottom border removed (width → 0) so the tab visually merges
-     with the cream content area beneath it
-   - The strip's 2.5px bottom border sits behind the tab node;
-     removing the tab's own bottom border lets them share the edge
+     with the fog content area beneath it
 */
 .tab-pane .tab:selected {
-    -fx-background-color: #F2E07A;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #b8cad3;
+    -fx-border-color: #051d29;
     -fx-border-width: 2 2 0 2;
 }
 
 .tab-pane .tab:selected .tab-label {
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
 }
 
-/* Content area — cream fill, ink border on all sides minus top
-   (the tab strip / selected tab already provides the top boundary) */
+/* Content area — fog fill, abyss border on all sides minus top */
 .tab-pane .tab-content-area {
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
     -fx-background-radius: 0;
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 0 2.5 2.5 2.5;
     -fx-border-radius: 0;
 }
 
-/* Neutralise Modena's focus ring — our ink border is the indicator */
+/* Neutralise Modena's focus ring — our abyss border is the indicator */
 .tab-pane .tab:focused {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2 2 0 2;
 }
 
 .tab-pane:focused .tab-header-background {
-    -fx-background-color: #B5C9B1;
+    -fx-background-color: #4f6c7b;
 }
 
 .tab-pane .tab .focus-indicator {
@@ -356,29 +377,29 @@ GridPane > Label {
    without accidentally styling any other CheckBox deeper in the tree.
 */
 .sidebar VBox > CheckBox {
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
 }
 
 .sidebar VBox > CheckBox .box {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
 }
 
 .sidebar VBox > CheckBox:selected .box {
-    -fx-background-color: #B5C9B1;
+    -fx-background-color: #051d29;
 }
 
 .sidebar VBox > CheckBox:selected .mark {
-    -fx-background-color: #1E1B18;
+    -fx-background-color: #dce8ed;
 }
 
-/* Remove Modena's default focus ring; ink border IS the focus indicator */
+/* Remove Modena's default focus ring; abyss border IS the focus indicator */
 .sidebar VBox > CheckBox:focused .box {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
 }
 
@@ -386,21 +407,21 @@ GridPane > Label {
 /* TextField ─────────────────────────────────────────────── */
 
 .sidebar .text-field {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
-    -fx-text-fill: #1E1B18;
-    -fx-prompt-text-fill: #3D3830;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-prompt-text-fill: #1d3a49;
+    -fx-font-size: 14px;
     -fx-padding: 6 8 6 8;
 }
 
 .sidebar .text-field:focused {
-    /* Keep the ink border as the sole focus cue; suppress Modena highlight */
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    /* Keep the abyss border as the sole focus cue; suppress Modena highlight */
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2.5;
 }
 
@@ -408,64 +429,64 @@ GridPane > Label {
 /* ListView ──────────────────────────────────────────────── */
 
 .sidebar .list-view {
-    -fx-background-color: #F5F0E8;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #b8cad3;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
-    -fx-font-size: 12px;
+    -fx-font-size: 14px;
     -fx-pref-height: 140;
 }
 
 /*
    Modena renders the focus ring by stacking a tinted background
-   behind the cream fill on .list-view:focused. Reset both layers
-   to cream so no blue glow appears.
+   behind the fog fill on .list-view:focused. Reset both layers
+   to fog so no blue glow appears.
 */
 .sidebar .list-view:focused {
-    -fx-background-color: #F5F0E8;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #b8cad3;
+    -fx-border-color: #051d29;
     -fx-border-width: 2.5;
 }
 
-/* The inner viewport must also be cream, not Modena's default white */
+/* The inner viewport must also be fog, not Modena's default white */
 .sidebar .list-view .viewport {
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
 }
 
 .sidebar .list-view .list-cell {
-    -fx-background-color: #F5F0E8;
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-background-color: #b8cad3;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
     -fx-padding: 5 8 5 8;
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
 
-/* Alternating rows — subtle cream/white rhythm, no colour distraction */
+/* Alternating rows — subtle fog/foam rhythm, no colour distraction */
 .sidebar .list-view .list-cell:odd {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: #dce8ed;
 }
 
 .sidebar .list-view .list-cell:selected {
-    -fx-background-color: #F2E07A;
-    -fx-text-fill: #1E1B18;
+    -fx-background-color: #4f6c7b;
+    -fx-text-fill: #dce8ed;
 }
 
 .sidebar .list-view .list-cell:selected:focused {
-    -fx-background-color: #F2E07A;
-    -fx-text-fill: #1E1B18;
+    -fx-background-color: #4f6c7b;
+    -fx-text-fill: #dce8ed;
 }
 
 .sidebar .list-view .list-cell:hover {
-    -fx-background-color: #EFE8F0;
+    -fx-background-color: #88a9b7;
 }
 
 
 /* Spinner ───────────────────────────────────────────────── */
 
 .sidebar .spinner {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
@@ -473,18 +494,18 @@ GridPane > Label {
 
 /* The editable text field inside the spinner */
 .sidebar .spinner .text-field {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: transparent;   /* outer .spinner border provides the frame */
+    -fx-background-color: #dce8ed;
+    -fx-border-color: transparent; /* outer .spinner border provides the frame */
     -fx-border-width: 0;
     -fx-background-radius: 0;
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
     -fx-padding: 5 6 5 6;
     -fx-alignment: CENTER;
 }
 
 .sidebar .spinner .text-field:focused {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: #dce8ed;
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
@@ -492,8 +513,8 @@ GridPane > Label {
 /* Shared style for both arrow buttons */
 .sidebar .spinner .increment-arrow-button,
 .sidebar .spinner .decrement-arrow-button {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
     -fx-padding: 4 8 4 8;
@@ -501,61 +522,61 @@ GridPane > Label {
 }
 
 .sidebar .spinner .increment-arrow-button {
-    -fx-border-width: 0 0 0 2;   /* left border divides it from the text field */
+    -fx-border-width: 0 0 0 2; /* left border divides it from the text field */
 }
 
 .sidebar .spinner .decrement-arrow-button {
-    -fx-border-width: 0 0 0 2;   /* left border divides it from the text field */
+    -fx-border-width: 0 0 0 2; /* left border divides it from the text field */
 }
 
 .sidebar .spinner .increment-arrow-button:hover,
 .sidebar .spinner .decrement-arrow-button:hover {
-    -fx-background-color: #F2E07A;
+    -fx-background-color: #b8cad3;
 }
 
 .sidebar .spinner .increment-arrow-button:pressed,
 .sidebar .spinner .decrement-arrow-button:pressed {
-    -fx-background-color: #B5C9B1;
+    -fx-background-color: #051d29;
 }
 
-/* The arrow glyphs themselves — keep them ink-coloured */
+/* The arrow glyphs themselves — keep them abyss-coloured */
 .sidebar .spinner .increment-arrow-button .increment-arrow,
 .sidebar .spinner .decrement-arrow-button .decrement-arrow {
-    -fx-background-color: #1E1B18;
+    -fx-background-color: #051d29;
 }
 
 
 /* ChoiceBox ─────────────────────────────────────────────── */
 
 .sidebar .choice-box {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
     -fx-padding: 4 8 4 8;
-    -fx-font-size: 12px;
+    -fx-font-size: 14px;
     -fx-cursor: HAND;
 }
 
 .sidebar .choice-box:focused {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2.5;
 }
 
 .sidebar .choice-box:hover {
-    -fx-background-color: #F2E07A;
+    -fx-background-color: #b8cad3;
 }
 
 /* The label that shows the selected value */
 .sidebar .choice-box .label {
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
 }
 
 /* The small dropdown arrow glyph */
 .sidebar .choice-box .open-button .arrow {
-    -fx-background-color: #1E1B18;
+    -fx-background-color: #051d29;
 }
 
 /*
@@ -564,23 +585,23 @@ GridPane > Label {
    context menus in the app.
 */
 .choice-box-popup .menu-item {
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
     -fx-padding: 5 12 5 12;
 }
 
 .choice-box-popup .menu-item .label {
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
 }
 
 .choice-box-popup .menu-item:focused,
 .choice-box-popup .menu-item:hover {
-    -fx-background-color: #F2E07A;
+    -fx-background-color: #dce8ed;
 }
 
 .choice-box-popup .menu-item:focused .label,
 .choice-box-popup .menu-item:hover .label {
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
 }
 
 
@@ -589,12 +610,12 @@ GridPane > Label {
 .shopping-list {
     -fx-padding: 16;
     -fx-spacing: 12;
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
 }
 
 .shopping-list-scroll {
-    -fx-background-color: #F5F0E8;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #b8cad3;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
@@ -603,11 +624,11 @@ GridPane > Label {
 
 /* Suppress Modena's default grey background insets */
 .shopping-list-scroll > .viewport {
-    -fx-background-color: #F5F0E8;
+    -fx-background-color: #b8cad3;
 }
 
 .shopping-list-scroll:focused {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2.5;
 }
 
@@ -618,38 +639,38 @@ GridPane > Label {
 
 /* Category header labels */
 .shopping-list-items > .label {
-    -fx-font-size: 12px;
+    -fx-font-size: 14px;
     -fx-font-weight: BOLD;
-    -fx-text-fill: #1E1B18;
+    -fx-text-fill: #051d29;
     -fx-padding: 10 0 4 0;
-    -fx-border-color: transparent transparent #1E1B18 transparent;
+    -fx-border-color: transparent transparent #051d29 transparent;
     -fx-border-width: 0 0 1.5 0;
 }
 
 /* Item checkboxes — consistent with sidebar checkbox style */
 .shopping-list-items > .check-box {
-    -fx-text-fill: #1E1B18;
-    -fx-font-size: 12px;
+    -fx-text-fill: #051d29;
+    -fx-font-size: 14px;
     -fx-padding: 3 0 3 8;
 }
 
 .shopping-list-items > .check-box .box {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: #1E1B18;
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
     -fx-border-radius: 0;
     -fx-background-radius: 0;
 }
 
 .shopping-list-items > .check-box:selected .box {
-    -fx-background-color: #B5C9B1;
+    -fx-background-color: #051d29;
 }
 
 .shopping-list-items > .check-box:selected .mark {
-    -fx-background-color: #1E1B18;
+    -fx-background-color: #dce8ed;
 }
 
 .shopping-list-items > .check-box:focused .box {
-    -fx-border-color: #1E1B18;
+    -fx-border-color: #051d29;
     -fx-border-width: 2;
 }
