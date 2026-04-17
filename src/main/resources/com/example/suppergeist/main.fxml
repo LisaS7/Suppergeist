@@ -11,7 +11,9 @@
     <top>
         <HBox spacing="10" styleClass="header">
             <ImageView fitHeight="105" preserveRatio="true" blendMode="LIGHTEN">
-                <image><Image url="@ghost_chef.png"/></image>
+                <image>
+                    <Image url="@ghost_chef.png"/>
+                </image>
             </ImageView>
             <Label text="Suppergeist"/>
             <Region HBox.hgrow="ALWAYS"/>
@@ -23,7 +25,14 @@
             <tabs>
                 <Tab text="Meal Plan" closable="false">
                     <content>
-                        <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
+                        <VBox>
+                            <HBox>
+                                <Button onAction="#goToPreviousWeek">Prev</Button>
+                                <Label fx:id="weekLabel"></Label>
+                                <Button onAction="#goToNextWeek">Next</Button>
+                            </HBox>
+                            <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
+                        </VBox>
                     </content>
                 </Tab>
                 <fx:include fx:id="shoppingList" source="shopping-list.fxml"/>

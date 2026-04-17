@@ -17,6 +17,7 @@ import lombok.Setter;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.logging.Level;
@@ -26,19 +27,27 @@ public class MainController {
     @Setter private MealPlanService mealPlanService;
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
+
     private User user;
     private LocalDate currentWeekStart;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
 
     // UI Elements
     @FXML private GridPane mealPlanGrid;
+    @FXML private Label weekLabel;
+
     @FXML private PreferencesSidebarController preferencesSidebarController;
     @FXML private ShoppingListController shoppingListController;
 
     @FXML
     private void togglePrefs() {
         preferencesSidebarController.toggleVisibility();
+    }
+
+    private void updateWeekLabel() {
+        this.weekLabel.setText(this.currentWeekStart.format(formatter) + " - " + this.currentWeekStart.plusDays(6).format(formatter));
     }
 
     private void refreshMealPlanGrid() throws SQLException {
@@ -88,6 +97,7 @@ public class MainController {
         // TODO: resolve if multi-user support is added
         this.user = userPreferencesService.loadUser(1);
         this.currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        updateWeekLabel();
 
         // Sidebar
         preferencesSidebarController.setUserPreferencesService(userPreferencesService);
@@ -114,5 +124,19 @@ public class MainController {
             LinkedHashMap<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
             shoppingListController.refresh(shoppingList);
         }
+    }
+
+    @FXML
+    private void goToPreviousWeek() throws SQLException {
+        this.currentWeekStart = currentWeekStart.minusDays(7);
+        updateWeekLabel();
+        refreshMealPlanGrid();
+    }
+
+    @FXML
+    private void goToNextWeek() throws SQLException {
+        this.currentWeekStart = currentWeekStart.plusDays(7);
+        updateWeekLabel();
+        refreshMealPlanGrid();
     }
 }
