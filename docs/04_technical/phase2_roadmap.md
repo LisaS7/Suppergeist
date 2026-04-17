@@ -14,8 +14,8 @@ These tasks belong to Phase 2 but were built ahead of schedule:
 | Task                    | What was built                                                                                               |
 |-------------------------|--------------------------------------------------------------------------------------------------------------|
 | `WeeklyMealViewModel`   | Record in `com.example.suppergeist.service` — `date`, `dayLabel`, `mealType`, `mealName`                     |
-| `MealPlanService`       | Coordinates three repositories; `dayLabel` formatted as `"Monday 6 Apr"`; week-start ordering is a display concern handled by `MainController`, not the service |
-| `MainController` wiring | Constructs repositories + service in `initialize()`; calls `getWeeklyMeals(1, 2026-04-06)`; uses loaded `weekStartDay` to order grid columns |
+| `MealPlanService`       | Coordinates three repositories; `dayLabel` formatted as `"Monday 6 Apr"`; week always starts Monday (hardcoded in service) |
+| `MainController` wiring | Constructs repositories + service in `initialize()`; calls `getWeeklyMeals(1, 2026-04-06)`; week always starts Monday (hardcoded) |
 | Data-driven weekly grid | Day labels and meal cards added dynamically; day label deduplication via `Set<LocalDate>`                    |
 
 Remaining gap from this work: calorie labels show `"-- kcal"` placeholder — pending `NutritionService` (Phase 3).
@@ -183,8 +183,7 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 **Minor UI polish** *(can be batched in one pass)*
 
 4. Add `promptText="Search ingredients…"` to `avoidFoodCodesSearch` in the FXML.
-5. Add a `StringConverter` to `weekStartDayChoiceBox` so it renders `Monday` rather than `MONDAY`.
-6. Tag the hardcoded `getUser(1)` call in `MainController` with a `// TODO: resolve when multi-user support is added`.
+5. Tag the hardcoded `getUser(1)` call in `MainController` with a `// TODO: resolve when multi-user support is added`.
 
 **As built:**
 - `UserPreferencesService` owns `UserRepository` and `IngredientRepository`; constructed in `SuppergeistApplication.init()` and injected into `MainController` via `fxmlLoader.getController()` + `@Setter`; `MainController` passes it to the sidebar
@@ -192,7 +191,7 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 - `SuppergeistApplication` has a `showFatalError(Exception)` private helper used by both the `initError` path and the `setup()` failure path; `initError` field retained so the alert is shown on the JavaFX application thread (not the launcher thread where `init()` runs)
 - Dietary constraint checkboxes wired as `@FXML` fields (`vegetarianCheckbox`, `veganCheckbox`, `glutenFreeCheckbox`, `dairyFreeCheckbox`); save/load paths use direct field access with string literals
 - `avoidFoodCodesSearch` listener moved to `initialize()` — registered once, reads `this.filteredIngredients` at fire time (safe because `setFormValues` always runs before any keystroke)
-- `promptText="Search ingredients…"` on search field; `StringConverter` on `weekStartDayChoiceBox` renders `Monday` not `MONDAY`; `// TODO` on hardcoded `getUser(1)`
+- `promptText="Search ingredients…"` on search field; `// TODO` on hardcoded `getUser(1)`
 
 > **Follow-up (not in scope for 7b):** `MainController.initialize()` still constructs its own `DatabaseManager`, `MealRepository`, `MealPlanRepository`, `MealPlanEntryRepository`, and `MealPlanService` directly. These should move to `SuppergeistApplication` and be injected via setter (the same pattern used for `UserPreferencesService`). Deferred until `MealPlanService` gains more responsibilities that make the wiring worth touching.
 
@@ -332,7 +331,7 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `AppSeedService` seeds `ingredients` and ensures default user on first run; skips on subsequent launches
 - [x] `UserRepository` round-trips user preferences correctly
 - [x] Preferences sidebar reads/writes preferences; survives restart (all fields including avoid-ingredients)
-- [x] Weekly grid layout uses `weekStartDay` from loaded preferences
+- [x] Weekly grid layout hardcodes Monday as week start
 - [x] Saving preferences refreshes the grid immediately without restart
 - [x] Controllers hold no direct repository references; `UserPreferencesService` mediates all preference and ingredient access; dietary constraints use `@FXML`-wired fields; text-search listener registered once; minor UI polish applied
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data

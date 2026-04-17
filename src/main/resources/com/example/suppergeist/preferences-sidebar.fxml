@@ -33,10 +33,6 @@
     <CheckBox fx:id="showNutritionalInfoCheckbox" text="Show nutritional info"/>
 
     <Separator/>
-    <Label text="Week starts on"/>
-    <ChoiceBox fx:id="weekStartDayChoiceBox"/>
-
-    <Separator/>
     <Button text="Save" onAction="#savePreferences" styleClass="button-primary" maxWidth="Infinity"/>
 </VBox>
 

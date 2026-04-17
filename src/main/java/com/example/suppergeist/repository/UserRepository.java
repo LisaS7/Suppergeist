@@ -32,7 +32,7 @@ public class UserRepository {
 
     public User getUser(int id) throws SQLException {
         try (Connection conn = dbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT id, name, dietary_constraints, avoid_food_codes, servings_per_meal, show_calories, show_nutritional_info, week_start_day FROM users WHERE id = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, name, dietary_constraints, avoid_food_codes, servings_per_meal, show_calories, show_nutritional_info FROM users WHERE id = ?")) {
             stmt.setInt(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -43,14 +43,13 @@ public class UserRepository {
                     int servingsPerMeal = rs.getInt("servings_per_meal");
                     boolean showCalories = rs.getBoolean("show_calories");
                     boolean showNutritionalInfo = rs.getBoolean("show_nutritional_info");
-                    int weekStartDay = rs.getInt("week_start_day");
 
                     Set<String> dietaryConstraints = dietaryConstraintsRaw.isBlank() ? Set.of() :
                             Arrays.stream(dietaryConstraintsRaw.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
                     Set<String> avoidFoodCodes = avoidFoodCodesRaw.isBlank() ? Set.of() :
                             Arrays.stream(avoidFoodCodesRaw.split(",")).map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toSet());
 
-                    return new User(id, name, dietaryConstraints, avoidFoodCodes, servingsPerMeal, showCalories, showNutritionalInfo, weekStartDay);
+                    return new User(id, name, dietaryConstraints, avoidFoodCodes, servingsPerMeal, showCalories, showNutritionalInfo);
                 } else {
                     throw new SQLException("No user found with id: " + id);
                 }
@@ -59,7 +58,7 @@ public class UserRepository {
     }
 
     public void savePreferences(User user) throws SQLException {
-        String sql = "UPDATE users SET dietary_constraints = ?, avoid_food_codes = ?, servings_per_meal = ?, show_calories = ?, show_nutritional_info = ?, week_start_day = ? WHERE id = ?";
+        String sql = "UPDATE users SET dietary_constraints = ?, avoid_food_codes = ?, servings_per_meal = ?, show_calories = ?, show_nutritional_info = ? WHERE id = ?";
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             String dietaryConstraints = String.join(",", user.getDietaryConstraints());
@@ -70,8 +69,7 @@ public class UserRepository {
             stmt.setInt(3, user.getServingsPerMeal());
             stmt.setBoolean(4, user.isShowCalories());
             stmt.setBoolean(5, user.isShowNutritionalInfo());
-            stmt.setInt(6, user.getWeekStartDay());
-            stmt.setInt(7, user.getId());
+            stmt.setInt(6, user.getId());
 
             int rowsUpdated = stmt.executeUpdate();
 

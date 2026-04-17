@@ -146,8 +146,7 @@ User  (carries all preference fields directly — no separate UserPreferences mo
 ├── avoidFoodCodes: Set<String>      (CoFID food codes to exclude)
 ├── servingsPerMeal: int
 ├── showCalories: boolean
-├── showNutritionalInfo: boolean
-└── weekStartDay: int  (1 = Monday … 7 = Sunday, ISO-8601)
+└── showNutritionalInfo: boolean
 ```
 
 ## Feature Scope (MVP)

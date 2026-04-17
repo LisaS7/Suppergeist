@@ -13,9 +13,8 @@ public class User {
     private final int servingsPerMeal;
     private final boolean showCalories;
     private final boolean showNutritionalInfo;
-    private final int weekStartDay;
 
-    public User(Integer id, String name, Set<String> dietaryConstraints, Set<String> avoidFoodCodes, int servingsPerMeal, boolean showCalories, boolean showNutritionalInfo, int weekStartDay) {
+    public User(Integer id, String name, Set<String> dietaryConstraints, Set<String> avoidFoodCodes, int servingsPerMeal, boolean showCalories, boolean showNutritionalInfo) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("User name must not be null or blank");
         }
@@ -26,7 +25,6 @@ public class User {
 
         this.showCalories = showCalories;
         this.showNutritionalInfo = showNutritionalInfo;
-        this.weekStartDay = weekStartDay;
         this.id = id;
         this.name = name;
         this.dietaryConstraints = dietaryConstraints == null ? Set.of() : Set.copyOf(dietaryConstraints);
@@ -35,7 +33,7 @@ public class User {
     }
 
     public User(String name) {
-        this(null, name, Set.of(), Set.of(), 2, true, true, 1);
+        this(null, name, Set.of(), Set.of(), 2, true, true);
     }
 
 }

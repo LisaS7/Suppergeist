@@ -9,15 +9,11 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import lombok.Setter;
 
 import java.sql.SQLException;
-import java.time.DayOfWeek;
-import java.time.format.TextStyle;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -41,7 +37,6 @@ public class PreferencesSidebarController {
     @FXML private Spinner<Integer> servingsPerMealSpinner;
     @FXML private CheckBox showCaloriesCheckbox;
     @FXML private CheckBox showNutritionalInfoCheckbox;
-    @FXML private ChoiceBox<DayOfWeek> weekStartDayChoiceBox;
 
     @FXML
     public void initialize() {
@@ -57,19 +52,6 @@ public class PreferencesSidebarController {
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10, 2)
         );
 
-        // ChoiceBox: week start day
-        this.weekStartDayChoiceBox.getItems().addAll(DayOfWeek.values());
-        weekStartDayChoiceBox.setConverter(new StringConverter<DayOfWeek>() {
-            @Override
-            public String toString(DayOfWeek day) {
-                return day == null ? "" : day.getDisplayName(TextStyle.FULL, Locale.getDefault());
-            }
-
-            @Override
-            public DayOfWeek fromString(String s) {
-                return null;
-            }
-        });
     }
 
     public void toggleVisibility() {
@@ -111,8 +93,6 @@ public class PreferencesSidebarController {
 
         this.showCaloriesCheckbox.setSelected(user.isShowCalories());
         this.showNutritionalInfoCheckbox.setSelected(user.isShowNutritionalInfo());
-
-        this.weekStartDayChoiceBox.setValue(DayOfWeek.of(user.getWeekStartDay()));
     }
 
     public void savePreferences() {
@@ -150,8 +130,7 @@ public class PreferencesSidebarController {
                 selectedFoodCodes,
                 this.servingsPerMealSpinner.getValue(),
                 this.showCaloriesCheckbox.isSelected(),
-                this.showNutritionalInfoCheckbox.isSelected(),
-                this.weekStartDayChoiceBox.getValue().getValue()
+                this.showNutritionalInfoCheckbox.isSelected()
         );
 
         try {

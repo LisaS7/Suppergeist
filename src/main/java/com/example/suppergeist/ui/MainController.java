@@ -43,8 +43,8 @@ public class MainController {
 
     private void refreshMealPlanGrid() throws SQLException {
         mealPlanGrid.getChildren().clear();
-        DayOfWeek weekStart = DayOfWeek.of(user.getWeekStartDay());
-        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), user.getWeekStartDay(), currentWeekStart);
+        DayOfWeek weekStart = DayOfWeek.MONDAY;
+        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
 
         Set<LocalDate> labelledDates = new HashSet<>();
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
@@ -87,7 +87,7 @@ public class MainController {
 
         // TODO: resolve if multi-user support is added
         this.user = userPreferencesService.loadUser(1);
-        this.currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.of(user.getWeekStartDay())));
+        this.currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
         // Sidebar
         preferencesSidebarController.setUserPreferencesService(userPreferencesService);
