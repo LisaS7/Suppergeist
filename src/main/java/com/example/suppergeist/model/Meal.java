@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public class Meal {
-    private Integer id;
-    private String name;
+    private final Integer id;
+    private final String name;
 
     public Meal(Integer id, String name) {
         if (name == null || name.isBlank()) {

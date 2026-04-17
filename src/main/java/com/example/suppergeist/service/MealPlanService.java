@@ -40,7 +40,7 @@ public class MealPlanService {
         }
 
         MealPlan plan = mealPlan.get();
-        List<MealPlanEntryRow> entries = mealPlanEntryRepository.getMealPlanEntryRows(plan.getId());
+        List<MealPlanEntryRow> entries = mealPlanEntryRepository.getMealPlanEntryRows(plan.id());
         List<WeeklyMealViewModel> weeklyMeals = new ArrayList<>();
 
         for (MealPlanEntryRow entry : entries) {

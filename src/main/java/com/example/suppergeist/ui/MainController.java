@@ -1,6 +1,5 @@
 package com.example.suppergeist.ui;
 
-import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.repository.*;
@@ -17,6 +16,7 @@ import lombok.Setter;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,9 +25,10 @@ public class MainController {
     @Setter private MealPlanService mealPlanService;
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
+    private User user;
+    private LocalDate currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
-    private User user;
 
     // UI Elements
     @FXML private GridPane mealPlanGrid;
@@ -42,7 +43,7 @@ public class MainController {
     private void refreshMealPlanGrid() throws SQLException {
         mealPlanGrid.getChildren().clear();
         DayOfWeek weekStart = DayOfWeek.of(user.getWeekStartDay());
-        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), LocalDate.of(2026, 4, 6));
+        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
 
         Set<LocalDate> labelledDates = new HashSet<>();
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();

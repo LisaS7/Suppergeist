@@ -39,7 +39,6 @@ class MealPlanServiceTest {
         }
 
         service = new MealPlanService(
-                new MealRepository(dbManager),
                 new MealPlanRepository(dbManager),
                 new MealPlanEntryRepository(dbManager)
         );

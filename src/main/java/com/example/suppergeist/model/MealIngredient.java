@@ -4,11 +4,11 @@ import lombok.Getter;
 
 @Getter
 public class MealIngredient {
-    private Integer id;
-    private int mealId;
-    private int ingredientId;
-    private double quantity;
-    private String unit;
+    private final Integer id;
+    private final int mealId;
+    private final int ingredientId;
+    private final double quantity;
+    private final String unit;
 
     public MealIngredient(Integer id, int mealId, int ingredientId, double quantity, String unit) {
         if (!(quantity > 0)) {

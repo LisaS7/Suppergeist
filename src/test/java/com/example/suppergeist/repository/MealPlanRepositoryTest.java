@@ -103,9 +103,9 @@ class MealPlanRepositoryTest {
 
         assertTrue(result.isPresent());
         MealPlan plan = result.get();
-        assertEquals(1, plan.getId());
-        assertEquals(42, plan.getUserId());
-        assertEquals(LocalDate.of(2026, 4, 7), plan.getStartDate());
+        assertEquals(1, plan.id());
+        assertEquals(42, plan.userId());
+        assertEquals(LocalDate.of(2026, 4, 7), plan.startDate());
     }
 
     @Test
@@ -117,7 +117,7 @@ class MealPlanRepositoryTest {
         Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
 
         assertTrue(result.isPresent());
-        assertEquals(1, result.get().getUserId());
-        assertEquals(LocalDate.of(2026, 3, 31), result.get().getStartDate());
+        assertEquals(1, result.get().userId());
+        assertEquals(LocalDate.of(2026, 3, 31), result.get().startDate());
     }
 }
