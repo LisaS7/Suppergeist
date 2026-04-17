@@ -26,9 +26,11 @@
                 <Tab text="Meal Plan" closable="false">
                     <content>
                         <VBox>
-                            <HBox>
+                            <HBox spacing="10">
                                 <Button onAction="#goToPreviousWeek">Prev</Button>
+                                <Region HBox.hgrow="ALWAYS"/>
                                 <Label fx:id="weekLabel"></Label>
+                                <Region HBox.hgrow="ALWAYS"/>
                                 <Button onAction="#goToNextWeek">Next</Button>
                             </HBox>
                             <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
