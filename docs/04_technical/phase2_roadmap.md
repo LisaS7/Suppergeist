@@ -276,15 +276,11 @@ reviewed.
 
 ---
 
-## Task 11 — Inject `MealPlanService` and repositories into `MainController` ⬜
+## Task 11 — Inject `MealPlanService` and repositories into `MainController` ✅
 
 *(Standalone refactor — no feature dependencies)*
 
-`MainController.initialize()` currently constructs `DatabaseManager`, `MealRepository`, `MealPlanRepository`, `MealPlanEntryRepository`, and `MealPlanService` directly. This violates the same "UI never touches the database" rule addressed in Task 7b for the preferences path.
-
-Move construction to `SuppergeistApplication` and inject via setter (the same pattern used for `UserPreferencesService`). `MainController.setup()` then receives a pre-built `MealPlanService` rather than assembling its own.
-
-**Done when:** `MainController` holds no repository references and constructs no services; all wiring lives in `SuppergeistApplication`.
+`SuppergeistApplication.init()` constructs one `DatabaseManager`, all five repositories, and all three services (`UserPreferencesService`, `MealPlanService`, `ShoppingListService`). `start()` injects all three into `MainController` via `@Setter`-annotated fields before calling `setup()`. `MainController.setup()` contains no construction — it uses only what was injected.
 
 ---
 
@@ -342,4 +338,4 @@ the app inherits clean, unambiguous data. There is no runtime `NutrientRepositor
 - [x] `MealIngredientRepository` returns correct rows and joined names for seeded data
 - [x] `ShoppingListService` aggregates ingredients by ID and sums quantities; derives category from food code prefix; sorts by category then name
 - [x] Shopping list panel renders; copy-to-clipboard implemented; both tabs non-closable
-- [ ] `MainController` holds no repository references; `MealPlanService` injected from `SuppergeistApplication`
+- [x] `MainController` holds no repository references; `MealPlanService` injected from `SuppergeistApplication`

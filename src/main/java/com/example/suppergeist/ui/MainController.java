@@ -22,9 +22,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MainController {
-    private MealPlanService mealPlanService;
+    @Setter private MealPlanService mealPlanService;
     @Setter private UserPreferencesService userPreferencesService;
-    private ShoppingListService shoppingListService;
+    @Setter private ShoppingListService shoppingListService;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private User user;
@@ -81,15 +81,9 @@ public class MainController {
 
     public void setup() throws SQLException {
         log.info("Initializing MainController");
-        DatabaseManager dbManager = new DatabaseManager();
 
         // TODO: resolve if multi-user support is added
         this.user = userPreferencesService.loadUser(1);
-
-        MealRepository mealRepository = new MealRepository(dbManager);
-        MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
-        MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
-        MealIngredientRepository mealIngredientRepository = new MealIngredientRepository(dbManager);
 
         // Sidebar
         preferencesSidebarController.setUserPreferencesService(userPreferencesService);
@@ -102,14 +96,11 @@ public class MainController {
             }
         });
 
-        mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
-        shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
-
         try {
             preferencesSidebarController.setFormValues(this.user);
             refreshMealPlanGrid();
             log.info("Loaded " + weeklyMeals.size() + " meals");
-            
+
             if (!weeklyMeals.isEmpty()) {
                 int planId = weeklyMeals.getFirst().mealPlanId();
                 List<ShoppingItem> shoppingList = shoppingListService.buildList(planId);

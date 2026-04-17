@@ -1,9 +1,10 @@
 package com.example.suppergeist;
 
 import com.example.suppergeist.database.DatabaseManager;
-import com.example.suppergeist.repository.IngredientRepository;
-import com.example.suppergeist.repository.UserRepository;
+import com.example.suppergeist.repository.*;
 import com.example.suppergeist.service.AppSeedService;
+import com.example.suppergeist.service.MealPlanService;
+import com.example.suppergeist.service.ShoppingListService;
 import com.example.suppergeist.service.UserPreferencesService;
 import com.example.suppergeist.ui.MainController;
 import javafx.application.Application;
@@ -21,6 +22,8 @@ import java.util.logging.Logger;
 
 public class SuppergeistApplication extends Application {
     private UserPreferencesService userPreferencesService;
+    private MealPlanService mealPlanService;
+    private ShoppingListService shoppingListService;
     private Exception initError;
     private static final Logger log = Logger.getLogger(SuppergeistApplication.class.getName());
 
@@ -45,10 +48,17 @@ public class SuppergeistApplication extends Application {
             appSeedService.seedIfEmpty();
 
             UserRepository userRepository = new UserRepository(dbManager);
-            IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
             userRepository.ensureDefaultUserExists();
 
+            IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
+            MealRepository mealRepository = new MealRepository(dbManager);
+            MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
+            MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
+            MealIngredientRepository mealIngredientRepository = new MealIngredientRepository(dbManager);
+
             this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
+            this.mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
+            this.shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
         } catch (SQLException | IOException e) {
             log.log(Level.SEVERE, "Application startup failed", e);
             this.initError = e;
@@ -69,6 +79,8 @@ public class SuppergeistApplication extends Application {
         // Controller
         MainController controller = fxmlLoader.getController();
         controller.setUserPreferencesService(userPreferencesService);
+        controller.setMealPlanService(mealPlanService);
+        controller.setShoppingListService(shoppingListService);
 
         try {
             controller.setup();
