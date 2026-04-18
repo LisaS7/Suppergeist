@@ -44,11 +44,12 @@ public class SuppergeistApplication extends Application {
             DatabaseManager dbManager = new DatabaseManager();
             dbManager.init();
 
-            AppSeedService appSeedService = new AppSeedService(dbManager);
-            appSeedService.seedIfEmpty();
-
             UserRepository userRepository = new UserRepository(dbManager);
             userRepository.ensureDefaultUserExists();
+
+            AppSeedService appSeedService = new AppSeedService(dbManager);
+            appSeedService.seedIfEmpty();
+            appSeedService.seedMealPlansIfEmpty();
 
             IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
             MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);

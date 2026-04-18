@@ -101,7 +101,7 @@ public class PreferencesSidebarController {
         avoidFoodCodesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         for (Ingredient ingredient : allIngredients) {
-            if (user.getAvoidFoodCodes().contains(ingredient.getFoodCode())) {
+            if (ingredient.getFoodCode() != null && user.getAvoidFoodCodes().contains(ingredient.getFoodCode())) {
                 avoidFoodCodesListView.getSelectionModel().select(ingredient);
             }
         }
