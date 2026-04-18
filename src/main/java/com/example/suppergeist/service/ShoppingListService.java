@@ -38,7 +38,7 @@ public class ShoppingListService {
     }
 
     public LinkedHashMap<String, List<ShoppingItem>> buildList(int mealPlanId) throws SQLException {
-        List<MealPlanEntry> mealPlanEntries = mealPlanEntryRepository.getEntriesByMealPlanId(mealPlanId);
+        List<MealPlanEntry> mealPlanEntries = mealPlanEntryRepository.getMealPlanEntries(mealPlanId);
         Map<String, ShoppingItem> ingredients = new HashMap<>();
         for (MealPlanEntry entry : mealPlanEntries) {
             int mealId = entry.getMealId();
@@ -66,7 +66,7 @@ public class ShoppingListService {
         for (List<ShoppingItem> items : grouped.values()) {
             items.sort(Comparator.comparing(ShoppingItem::name));
         }
-        
+
         LinkedHashMap<String, List<ShoppingItem>> sorted = new LinkedHashMap<>();
         grouped.keySet().stream().sorted().forEach(key -> sorted.put(key, grouped.get(key)));
         return sorted;

@@ -11,12 +11,14 @@ public class MealPlanEntry {
     private final int mealId;
     private final int dayOffset;
     private final String mealType;
+    private final String mealName;
 
-    public MealPlanEntry(int mealPlanId, int mealId, int dayOffset, String mealType) {
+    public MealPlanEntry(int mealPlanId, int mealId, int dayOffset, String mealType, String mealName) {
         this.id = null;
         this.mealPlanId = mealPlanId;
         this.mealId = mealId;
         this.dayOffset = dayOffset;
         this.mealType = mealType;
+        this.mealName = mealName;
     }
 }

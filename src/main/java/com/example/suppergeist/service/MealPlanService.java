@@ -1,8 +1,8 @@
 package com.example.suppergeist.service;
 
 import com.example.suppergeist.model.MealPlan;
+import com.example.suppergeist.model.MealPlanEntry;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
-import com.example.suppergeist.model.MealPlanEntryRow;
 import com.example.suppergeist.repository.MealPlanRepository;
 
 import java.sql.SQLException;
@@ -37,14 +37,14 @@ public class MealPlanService {
         }
 
         MealPlan plan = mealPlan.get();
-        List<MealPlanEntryRow> entries = mealPlanEntryRepository.getMealPlanEntryRows(plan.id());
+        List<MealPlanEntry> entries = mealPlanEntryRepository.getMealPlanEntries(plan.id());
         List<WeeklyMealViewModel> weeklyMeals = new ArrayList<>();
 
-        for (MealPlanEntryRow entry : entries) {
-            LocalDate mealDate = startDate.plusDays(entry.dayOffset());
+        for (MealPlanEntry entry : entries) {
+            LocalDate mealDate = startDate.plusDays(entry.getDayOffset());
             String dayLabel = formatDayLabel(mealDate);
 
-            WeeklyMealViewModel vm = new WeeklyMealViewModel(entry.mealPlanId(), mealDate, dayLabel, entry.mealType(), entry.mealName());
+            WeeklyMealViewModel vm = new WeeklyMealViewModel(entry.getMealPlanId(), mealDate, dayLabel, entry.getMealType(), entry.getMealName());
             weeklyMeals.add(vm);
         }
         return weeklyMeals;

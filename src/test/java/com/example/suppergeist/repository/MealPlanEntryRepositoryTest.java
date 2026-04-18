@@ -66,72 +66,72 @@ class MealPlanEntryRepositoryTest {
     }
 
     @Test
-    void getEntriesByMealPlanId_returnsEmptyList_whenTableIsEmpty() throws SQLException {
-        List<MealPlanEntry> result = repository.getEntriesByMealPlanId(1);
+    void getMealPlanEntries_returnsEmptyList_whenTableIsEmpty() throws SQLException {
+        List<MealPlanEntry> result = repository.getMealPlanEntries(1);
 
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void getEntriesByMealPlanId_returnsEmptyList_whenNoEntriesForPlan() throws SQLException {
+    void getMealPlanEntries_returnsEmptyList_whenNoEntriesForPlan() throws SQLException {
         insertEntry(2, 10, 0, "dinner");
 
-        List<MealPlanEntry> result = repository.getEntriesByMealPlanId(1);
+        List<MealPlanEntry> result = repository.getMealPlanEntries(1);
 
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void getEntriesByMealPlanId_returnsEntries_whenMatchingPlanExists() throws SQLException {
+    void getMealPlanEntries_returnsEntries_whenMatchingPlanExists() throws SQLException {
         insertEntry(1, 10, 0, "dinner");
 
-        List<MealPlanEntry> result = repository.getEntriesByMealPlanId(1);
+        List<MealPlanEntry> result = repository.getMealPlanEntries(1);
 
         assertEquals(1, result.size());
     }
 
     @Test
-    void getEntriesByMealPlanId_mapsFieldsCorrectly() throws SQLException {
+    void getMealPlanEntries_mapsFieldsCorrectly() throws SQLException {
         insertEntry(1, 42, 3, "lunch");
 
-        MealPlanEntry entry = repository.getEntriesByMealPlanId(1).get(0);
+        MealPlanEntry entry = repository.getMealPlanEntries(1).get(0);
 
         assertEquals(1, entry.getMealPlanId());
         assertEquals(42, entry.getMealId());
         assertEquals(3, entry.getDayOffset());
         assertEquals("lunch", entry.getMealType());
-        assertNotNull(entry.getId());
+        assertEquals("Test Meal E", entry.getMealName());
     }
 
     @Test
-    void getEntriesByMealPlanId_excludesEntriesFromOtherPlans() throws SQLException {
+    void getMealPlanEntries_excludesEntriesFromOtherPlans() throws SQLException {
         insertEntry(1, 10, 0, "dinner");
         insertEntry(2, 20, 1, "lunch");
 
-        List<MealPlanEntry> result = repository.getEntriesByMealPlanId(1);
+        List<MealPlanEntry> result = repository.getMealPlanEntries(1);
 
         assertEquals(1, result.size());
         assertEquals(1, result.get(0).getMealPlanId());
     }
 
     @Test
-    void getEntriesByMealPlanId_returnsAllEntriesForPlan() throws SQLException {
+    void getMealPlanEntries_returnsAllEntriesForPlan() throws SQLException {
         insertEntry(1, 10, 0, "breakfast");
         insertEntry(1, 11, 1, "dinner");
         insertEntry(1, 12, 2, "lunch");
 
-        List<MealPlanEntry> result = repository.getEntriesByMealPlanId(1);
+        List<MealPlanEntry> result = repository.getMealPlanEntries(1);
 
         assertEquals(3, result.size());
     }
 
     @Test
-    void getEntriesByMealPlanId_returnsEntriesOrderedByDayOffsetThenMealType() throws SQLException {
+    void getMealPlanEntries_returnsEntriesOrderedByDayOffsetThenMealType() throws SQLException {
         insertEntry(1, 10, 2, "lunch");
         insertEntry(1, 11, 0, "dinner");
         insertEntry(1, 12, 0, "breakfast");
 
-        List<MealPlanEntry> result = repository.getEntriesByMealPlanId(1);
+        List<MealPlanEntry> result = repository.getMealPlanEntries(1);
 
         assertEquals(3, result.size());
         assertEquals(0, result.get(0).getDayOffset());
