@@ -23,6 +23,16 @@ public class DatabaseManager {
     }
 
     public Connection getConnection() throws SQLException {
+        String url = "jdbc:sqlite:" + dbPath.toAbsolutePath();
+        Connection conn = DriverManager.getConnection(url);
+
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = ON");
+        }
+        return conn;
+    }
+
+    public void init() throws SQLException {
         try {
             Files.createDirectories(this.dbPath.getParent());
         } catch (IOException e) {
@@ -30,17 +40,6 @@ public class DatabaseManager {
             throw new SQLException("Failed to create database directory", e);
         }
 
-        String url = "jdbc:sqlite:" + dbPath.toAbsolutePath();
-        Connection conn = DriverManager.getConnection(url);
-
-        try (Statement stmt = conn.createStatement()) {
-            stmt.execute("PRAGMA foreign_keys = ON");
-        }
-        
-        return conn;
-    }
-
-    public void init() throws SQLException {
         List<String> statements = List.of(
                 Schema.CREATE_USERS,
                 Schema.CREATE_MEALS,
