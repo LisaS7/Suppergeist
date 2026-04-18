@@ -8,6 +8,7 @@ import com.example.suppergeist.service.ShoppingListService;
 import com.example.suppergeist.service.UserPreferencesService;
 import com.example.suppergeist.service.WeeklyMealViewModel;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
@@ -95,23 +96,22 @@ public class MainController {
                 refreshMealPlanGrid();
             } catch (SQLException e) {
                 log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Refresh Error");
+                alert.setHeaderText("Meal plan refresh failed");
+                alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
+                alert.showAndWait();
             }
         });
 
-        try {
-            preferencesSidebarController.setFormValues(this.user);
-            refreshMealPlanGrid();
-            log.info("Loaded " + weeklyMeals.size() + " meals");
+        preferencesSidebarController.setFormValues(this.user);
+        refreshMealPlanGrid();
+        log.info("Loaded " + weeklyMeals.size() + " meals");
 
-            if (!weeklyMeals.isEmpty()) {
-                int planId = weeklyMeals.getFirst().mealPlanId();
-                LinkedHashMap<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
-                shoppingListController.refresh(shoppingList);
-            }
-
-        } catch (SQLException e) {
-            log.log(Level.SEVERE, "Failed to load meals", e);
+        if (!weeklyMeals.isEmpty()) {
+            int planId = weeklyMeals.getFirst().mealPlanId();
+            LinkedHashMap<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
+            shoppingListController.refresh(shoppingList);
         }
-
     }
 }
