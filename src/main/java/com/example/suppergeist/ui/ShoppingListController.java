@@ -51,9 +51,8 @@ public class ShoppingListController {
         for (String category : this.categorisedList.keySet()) {
             Label header = new Label(category);
             shoppingListBox.getChildren().add(header);
-
-            List<ShoppingItem> sortedItems = this.categorisedList.get(category).stream().sorted(Comparator.comparing(ShoppingItem::name)).toList();
-            for (ShoppingItem item : sortedItems) {
+            
+            for (ShoppingItem item : this.categorisedList.get(category)) {
                 CheckBox box = new CheckBox(item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit());
                 shoppingListBox.getChildren().add(box);
             }
