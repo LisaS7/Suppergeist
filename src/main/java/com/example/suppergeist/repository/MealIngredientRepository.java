@@ -48,7 +48,7 @@ public class MealIngredientRepository {
         return rs.wasNull() ? null : val;
     }
 
-    public List<MealIngredientRow> getIngredientsWithNameForMeal(int mealId) throws SQLException {
+    public List<MealIngredientRow> getIngredientsWithNutritionForMeal(int mealId) throws SQLException {
         String sql = """
                 SELECT mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
                        i.energy_kcal, i.protein_g, i.fat_g, i.carbohydrate_g,

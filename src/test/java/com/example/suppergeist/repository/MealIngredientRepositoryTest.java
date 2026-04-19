@@ -167,7 +167,7 @@ class MealIngredientRepositoryTest {
     void getIngredientsWithNameForMeal_returnsEmptyList_whenNoIngredients() throws SQLException {
         int mealId = insertMeal("Pasta");
 
-        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(mealId);
 
         assertTrue(result.isEmpty());
     }
@@ -178,7 +178,7 @@ class MealIngredientRepositoryTest {
         int ingredientId = insertIngredient("Spaghetti");
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(mealId);
 
         assertEquals(1, result.size());
         assertEquals("Spaghetti", result.get(0).ingredient().getName());
@@ -188,7 +188,7 @@ class MealIngredientRepositoryTest {
     }
 
     @Test
-    void getIngredientsWithNameForMeal_returnsResultsOrderedByName() throws SQLException {
+    void getIngredientsWithNameForMeal_returnsResultsOrderedByNutrition() throws SQLException {
         int mealId = insertMeal("Stir Fry");
         int ingZ = insertIngredient("Zucchini");
         int ingA = insertIngredient("Aubergine");
@@ -197,7 +197,7 @@ class MealIngredientRepositoryTest {
         insertMealIngredient(mealId, ingA, 50.0, "g");
         insertMealIngredient(mealId, ingM, 80.0, "g");
 
-        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(mealId);
+        List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(mealId);
 
         assertEquals("Aubergine", result.get(0).ingredient().getName());
         assertEquals("Mushroom", result.get(1).ingredient().getName());
@@ -205,12 +205,12 @@ class MealIngredientRepositoryTest {
     }
 
     @Test
-    void getIngredientsWithNameForMeal_mapsNutritionFields_whenPresent() throws SQLException {
+    void getIngredientsWithNutritionForMeal_mapsNutritionFields_whenPresent() throws SQLException {
         int mealId = insertMeal("Pasta");
         int ingredientId = insertIngredientWithNutrition("Spaghetti", 371.0, 13.0, 1.5, 74.0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
-        MealIngredientRow result = repository.getIngredientsWithNameForMeal(mealId).get(0);
+        MealIngredientRow result = repository.getIngredientsWithNutritionForMeal(mealId).get(0);
 
         assertEquals(371.0, result.ingredient().getEnergyKcal());
         assertEquals(13.0, result.ingredient().getProteinG());
@@ -219,12 +219,12 @@ class MealIngredientRepositoryTest {
     }
 
     @Test
-    void getIngredientsWithNameForMeal_returnsNullNutritionFields_whenAbsent() throws SQLException {
+    void getIngredientsWithNutritionForMeal_returnsNullNutritionFields_whenAbsent() throws SQLException {
         int mealId = insertMeal("Pasta");
         int ingredientId = insertIngredient("Mystery Herb");
         insertMealIngredient(mealId, ingredientId, 5.0, "g");
 
-        MealIngredientRow result = repository.getIngredientsWithNameForMeal(mealId).get(0);
+        MealIngredientRow result = repository.getIngredientsWithNutritionForMeal(mealId).get(0);
 
         assertNull(result.ingredient().getEnergyKcal());
         assertNull(result.ingredient().getProteinG());
@@ -237,7 +237,7 @@ class MealIngredientRepositoryTest {
         int ingredientId = insertIngredient("Lentils");
         insertMealIngredient(meal2, ingredientId, 200.0, "g");
 
-        List<MealIngredientRow> result = repository.getIngredientsWithNameForMeal(meal1);
+        List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(meal1);
 
         assertTrue(result.isEmpty());
     }
