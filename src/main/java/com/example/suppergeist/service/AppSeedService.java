@@ -44,62 +44,59 @@ public class AppSeedService {
                 }
             }
 
-            // Each entry: meal name → ingredients as [name, quantity, unit]
+            // Each entry: meal name → ingredients as [CoFID name, quantity, unit]
+            // Names must match exactly what is in the ingredients table (seeded from CoFID CSV).
             List<Map.Entry<String, List<Object[]>>> meals = List.of(
                     Map.entry("Spaghetti Bolognese", List.of(
-                            new Object[]{"Spaghetti", 200.0, "g"},
-                            new Object[]{"Minced beef", 300.0, "g"},
-                            new Object[]{"Tinned tomatoes", 400.0, "g"},
-                            new Object[]{"Onions", 100.0, "g"},
-                            new Object[]{"Garlic", 10.0, "g"}
+                            new Object[]{"Pasta, white, dried, raw", 200.0, "g"},
+                            new Object[]{"Beef, mince, raw", 300.0, "g"},
+                            new Object[]{"Tomatoes, canned, whole contents", 400.0, "g"},
+                            new Object[]{"Onions, raw", 100.0, "g"},
+                            new Object[]{"Garlic, raw", 10.0, "g"}
                     )),
                     Map.entry("Grilled Salmon with Roasted Vegetables", List.of(
-                            new Object[]{"Salmon", 200.0, "g"},
-                            new Object[]{"Broccoli", 150.0, "g"},
-                            new Object[]{"Olive oil", 15.0, "ml"},
-                            new Object[]{"Lemon juice", 20.0, "ml"}
+                            new Object[]{"Salmon, farmed, flesh only, raw", 200.0, "g"},
+                            new Object[]{"Broccoli, green, raw", 150.0, "g"},
+                            new Object[]{"Oil, vegetable, average", 15.0, "g"},
+                            new Object[]{"Lemon juice, fresh", 20.0, "g"}
                     )),
                     Map.entry("Chicken Tikka Masala", List.of(
-                            new Object[]{"Chicken breast", 300.0, "g"},
-                            new Object[]{"Yogurt", 100.0, "g"},
-                            new Object[]{"Tinned tomatoes", 400.0, "g"},
-                            new Object[]{"Onions", 100.0, "g"},
-                            new Object[]{"Garam masala", 10.0, "g"}
+                            new Object[]{"Chicken, breast, grilled without skin, meat only", 300.0, "g"},
+                            new Object[]{"Yogurt, Greek style, plain", 100.0, "g"},
+                            new Object[]{"Tomatoes, canned, whole contents", 400.0, "g"},
+                            new Object[]{"Onions, raw", 100.0, "g"}
                     )),
                     Map.entry("Mushroom Risotto", List.of(
-                            new Object[]{"Risotto rice", 200.0, "g"},
-                            new Object[]{"Mushrooms", 250.0, "g"},
-                            new Object[]{"Parmesan cheese", 50.0, "g"},
-                            new Object[]{"Vegetable stock", 500.0, "ml"},
-                            new Object[]{"Onions", 100.0, "g"}
+                            new Object[]{"Rice, white, basmati, boiled in unsalted water", 200.0, "g"},
+                            new Object[]{"Mushrooms, white, raw", 250.0, "g"},
+                            new Object[]{"Cheese, Parmesan, fresh", 50.0, "g"},
+                            new Object[]{"Onions, raw", 100.0, "g"}
                     )),
                     Map.entry("Fish and Chips", List.of(
-                            new Object[]{"Cod fillet", 200.0, "g"},
-                            new Object[]{"Potatoes", 400.0, "g"},
-                            new Object[]{"Plain flour", 100.0, "g"},
-                            new Object[]{"Sunflower oil", 50.0, "ml"}
+                            new Object[]{"Cod, flesh only, raw", 200.0, "g"},
+                            new Object[]{"Potatoes, old, raw, flesh only", 400.0, "g"},
+                            new Object[]{"Flour, wheat, white, plain, soft", 100.0, "g"},
+                            new Object[]{"Oil, sunflower", 50.0, "g"}
                     )),
                     Map.entry("Beef Tacos", List.of(
-                            new Object[]{"Minced beef", 300.0, "g"},
-                            new Object[]{"Flour tortillas", 4.0, "unit"},
-                            new Object[]{"Cheddar cheese", 80.0, "g"},
-                            new Object[]{"Tomatoes", 150.0, "g"},
-                            new Object[]{"Soured cream", 60.0, "g"}
+                            new Object[]{"Beef, mince, raw", 300.0, "g"},
+                            new Object[]{"Tortilla, wheat, soft", 120.0, "g"},
+                            new Object[]{"Cheese, Cheddar, English", 80.0, "g"},
+                            new Object[]{"Tomatoes, standard, raw", 150.0, "g"},
+                            new Object[]{"Cream, fresh, single", 60.0, "g"}
                     )),
                     Map.entry("Vegetable Stir-Fry", List.of(
-                            new Object[]{"Egg noodles", 200.0, "g"},
-                            new Object[]{"Broccoli", 150.0, "g"},
-                            new Object[]{"Soy sauce", 30.0, "ml"},
-                            new Object[]{"Sesame oil", 15.0, "ml"},
-                            new Object[]{"Garlic", 10.0, "g"}
+                            new Object[]{"Noodles, egg, fine, dried, boiled in unsalted water", 200.0, "g"},
+                            new Object[]{"Broccoli, green, raw", 150.0, "g"},
+                            new Object[]{"Soy sauce, light and dark varieties", 30.0, "g"},
+                            new Object[]{"Oil, vegetable, average", 15.0, "g"},
+                            new Object[]{"Garlic, raw", 10.0, "g"}
                     ))
             );
 
             List<Integer> mealIds = new ArrayList<>();
             try (PreparedStatement mealInsert = conn.prepareStatement(
                     "INSERT INTO meals (name) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
-                 PreparedStatement ingredientUpsert = conn.prepareStatement(
-                    "INSERT OR IGNORE INTO ingredients (name) VALUES (?)");
                  PreparedStatement ingredientLookup = conn.prepareStatement(
                     "SELECT id FROM ingredients WHERE name = ?");
                  PreparedStatement linkInsert = conn.prepareStatement(
@@ -120,21 +117,18 @@ public class AppSeedService {
                         double qty = (double) ing[1];
                         String unit = (String) ing[2];
 
-                        ingredientUpsert.setString(1, ingName);
-                        ingredientUpsert.executeUpdate();
-
                         ingredientLookup.setString(1, ingName);
-                        int ingredientId;
                         try (ResultSet rs2 = ingredientLookup.executeQuery()) {
-                            rs2.next();
-                            ingredientId = rs2.getInt(1);
+                            if (!rs2.next()) {
+                                log.warning("Seed ingredient not found in CoFID data, skipping: " + ingName);
+                                continue;
+                            }
+                            linkInsert.setInt(1, mealId);
+                            linkInsert.setInt(2, rs2.getInt(1));
+                            linkInsert.setDouble(3, qty);
+                            linkInsert.setString(4, unit);
+                            linkInsert.addBatch();
                         }
-
-                        linkInsert.setInt(1, mealId);
-                        linkInsert.setInt(2, ingredientId);
-                        linkInsert.setDouble(3, qty);
-                        linkInsert.setString(4, unit);
-                        linkInsert.addBatch();
                     }
                     linkInsert.executeBatch();
                 }
