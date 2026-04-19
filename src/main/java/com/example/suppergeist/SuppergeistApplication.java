@@ -29,6 +29,7 @@ public class SuppergeistApplication extends Application {
     private static final Logger log = Logger.getLogger(SuppergeistApplication.class.getName());
 
     private void showFatalError(Exception error) {
+        log.log(Level.SEVERE, "Application startup failed", error);
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Startup Error");
         alert.setHeaderText("Application startup failed");
@@ -93,7 +94,7 @@ public class SuppergeistApplication extends Application {
         Scene scene = new Scene(fxmlLoader.getRoot(), 1500, 1200);
 
         // Font
-        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/UnifrakturMaguntia-Regular.ttf"), 22);
+        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Kings-Regular.ttf"), 22);
         Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Quintessential-Regular.ttf"), 22);
 
         // CSS
