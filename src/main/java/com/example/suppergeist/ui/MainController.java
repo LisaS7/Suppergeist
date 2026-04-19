@@ -9,6 +9,7 @@ import javafx.animation.RotateTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -85,24 +86,61 @@ public class MainController {
     }
 
     private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate) {
+        // FRONT
         VBox front = new VBox();
         front.getStyleClass().add("meal-card");
+        // Meal name
         Label nameLabel = new Label(meal.mealName());
-        Label calorieLabel = new Label(estimate != null ? estimate.cal() + " kcal" : "-- kcal");
-        calorieLabel.getStyleClass().add("meal-kcal");
-        front.getChildren().addAll(nameLabel, calorieLabel);
+        front.getChildren().add(nameLabel);
+        // Calories
+        if (user.isShowCalories()) {
+            Label calorieLabel = new Label(estimate != null ? estimate.cal() + " kcal" : "-- kcal");
+            calorieLabel.getStyleClass().add("meal-kcal");
+            front.getChildren().add(calorieLabel);
+        }
 
-        VBox back = new VBox();
+        // BACK
+        GridPane back = new GridPane();
         back.getStyleClass().add("meal-card-back");
+        back.setHgap(10);
         back.setVisible(false);
+        if (this.user.isShowNutritionalInfo() && estimate != null) {
+            Separator sep = new Separator();
+            GridPane.setColumnSpan(sep, 2);
+            back.add(sep, 0, 5);
 
+            back.add(new Label("Protein:"), 0, 0);
+            back.add(new Label("Carbs:"), 0, 1);
+            back.add(new Label("Fat:"), 0, 2);
+            back.add(new Label("Sugar:"), 0, 3);
+            back.add(new Label("Fibre:"), 0, 4);
+            back.add(new Label("Vitamin A:"), 0, 6);
+            back.add(new Label("Vitamin C:"), 0, 7);
+            back.add(new Label("Vitamin D:"), 0, 8);
+            back.add(new Label("Vitamin E:"), 0, 9);
+            back.add(new Label("Vitamin B12:"), 0, 10);
+            back.add(new Label("Folate:"), 0, 11);
+            back.add(new Label(Math.round(estimate.proteinG()) + "g"), 1, 0);
+            back.add(new Label(Math.round(estimate.carbsG()) + "g"), 1, 1);
+            back.add(new Label(Math.round(estimate.fatG()) + "g"), 1, 2);
+            back.add(new Label(Math.round(estimate.totalSugarsG()) + "g"), 1, 3);
+            back.add(new Label(Math.round(estimate.fibreG()) + "g"), 1, 4);
+            back.add(new Label(Math.round(estimate.vitaminAMcg()) + "mcg"), 1, 6);
+            back.add(new Label(Math.round(estimate.vitaminCMg()) + "mg"), 1, 7);
+            back.add(new Label(Math.round(estimate.vitaminDMcg()) + "mcg"), 1, 8);
+            back.add(new Label(Math.round(estimate.vitaminEMg()) + "mg"), 1, 9);
+            back.add(new Label(Math.round(estimate.vitaminB12Mcg()) + "mcg"), 1, 10);
+            back.add(new Label(Math.round(estimate.folateMcg()) + "mcg"), 1, 11);
+        }
+
+        // ARRANGE
         StackPane card = new StackPane(front, back);
         boolean[] flipped = {false};
         card.setOnMouseClicked(e -> flipCard(card, front, back, flipped));
         return card;
     }
 
-    private void flipCard(StackPane card, VBox front, VBox back, boolean[] flipped) {
+    private void flipCard(StackPane card, VBox front, GridPane back, boolean[] flipped) {
         RotateTransition firstHalf = new RotateTransition(Duration.millis(150), card);
         firstHalf.setAxis(Rotate.Y_AXIS);
         firstHalf.setFromAngle(0);
