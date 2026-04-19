@@ -8,15 +8,15 @@ Status markers: ✅ Done · 🔄 In Progress · ⬜ Not Started
 
 ---
 
-## Task 1 — Active week / plan navigation 🔄
+## Task 1 — Active week / plan navigation ✅
 
 The UI currently uses a fixed reference date (`2026-04-06`). Replace it with a "current week" calculation and add
 navigation controls so the user can move between weeks without touching code.
 
 **UI changes:**
 
-- Header area above the meal grid shows the week range (e.g. `"7 Apr – 13 Apr 2026"`) ⬜
-- Prev / Next arrow buttons on either side step the display back or forward by one week ⬜
+- Header area above the meal grid shows the week range (e.g. `"7 Apr – 13 Apr 2026"`) ✅
+- Prev / Next arrow buttons on either side step the display back or forward by one week ✅
 - The loaded week derives from `LocalDate.now()` on startup; prev/next adjust a `currentWeekStart` field in
   `MainController` ✅ (`LocalDate.now()` with `TemporalAdjusters` is already in place)
 
@@ -29,7 +29,7 @@ navigation controls so the user can move between weeks without touching code.
   retrieved from the DB, only which `startDate` is passed in
 
 **Done when:** the user can click Prev/Next to move between weeks; the date label updates; empty weeks show an empty
-grid; the hardcoded reference date is gone from `MainController`. *(Reference date already replaced — remaining work is the Prev/Next buttons and week range label.)*
+grid; the hardcoded reference date is gone from `MainController`.
 
 ---
 
@@ -143,8 +143,8 @@ Revisit post-submission if needed.
 
 ## Phase 3 Completion Criteria
 
-- [x] Hardcoded reference date replaced with current-week calculation; *(prev/next navigation still needed)*
-- [ ] Prev/Next week buttons and week range label working in the UI
+- [x] Hardcoded reference date replaced with current-week calculation
+- [x] Prev/Next week buttons and week range label working in the UI
 - [ ] Empty week state shows `"No plan for this week"` in the grid; shopping list shows `"No plan loaded"`
 - [ ] `NutritionService` computes estimates from stored ingredient data
 - [ ] Meal cards show real kcal figures where data exists; `showCalories` toggle is functional

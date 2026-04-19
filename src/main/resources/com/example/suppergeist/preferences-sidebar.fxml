@@ -5,12 +5,12 @@
 
 
 <VBox fx:id="root"
-      spacing="10"
+      spacing="15"
       styleClass="sidebar"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.example.suppergeist.ui.PreferencesSidebarController">
-    <Label text="Preferences"/>
+    <Label text="Preferences" styleClass="sidebar-heading"/>
 
     <Separator/>
     <VBox>

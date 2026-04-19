@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.image.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
@@ -10,14 +11,22 @@
             prefHeight="400.0" prefWidth="600.0">
     <top>
         <HBox spacing="10" styleClass="header">
-            <ImageView fitHeight="105" preserveRatio="true" blendMode="LIGHTEN">
+            <ImageView fitHeight="180" preserveRatio="true" blendMode="LIGHTEN">
                 <image>
                     <Image url="@ghost_chef.png"/>
                 </image>
             </ImageView>
             <Label text="Suppergeist"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button text="Prefs" onAction="#togglePrefs"/>
+            <Button onAction="#togglePrefs">
+                <graphic>
+                    <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">
+                        <image>
+                            <Image url="@settings.png"/>
+                        </image>
+                    </ImageView>
+                </graphic>
+            </Button>
         </HBox>
     </top>
     <center>
@@ -26,12 +35,15 @@
                 <Tab text="Meal Plan" closable="false">
                     <content>
                         <VBox>
-                            <HBox spacing="10">
-                                <Button onAction="#goToPreviousWeek">Prev</Button>
+                            <HBox spacing="20" VBox.vgrow="NEVER">
+                                <VBox.margin>
+                                    <Insets top="10" right="10" bottom="0" left="10"/>
+                                </VBox.margin>
+                                <Button onAction="#goToPreviousWeek" styleClass="week-nav-button">⟸</Button>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Label fx:id="weekLabel"></Label>
                                 <Region HBox.hgrow="ALWAYS"/>
-                                <Button onAction="#goToNextWeek">Next</Button>
+                                <Button onAction="#goToNextWeek" styleClass="week-nav-button">⟹</Button>
                             </HBox>
                             <GridPane fx:id="mealPlanGrid" hgap="10" vgap="10"/>
                         </VBox>

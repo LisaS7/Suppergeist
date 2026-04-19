@@ -71,8 +71,12 @@ public class IngredientRepository {
         ) {
             List<Ingredient> results = new ArrayList<>();
             while (rs.next()) {
-                Ingredient ingredient = mapRowToIngredient(rs);
-                results.add(ingredient);
+                results.add(new Ingredient(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("food_code"),
+                        null, null, null, null, null, null, null, null, null, null, null, null
+                ));
             }
             return results;
         }
