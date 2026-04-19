@@ -9,8 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class MealIngredientRepository {
@@ -48,23 +47,29 @@ public class MealIngredientRepository {
         return rs.wasNull() ? null : val;
     }
 
-    public List<MealIngredientRow> getIngredientsWithNutritionForMeal(int mealId) throws SQLException {
+    public Map<Integer, List<MealIngredientRow>> getIngredientsWithNutritionForMeals(List<Integer> mealIds) throws SQLException {
+        String placeholders = String.join(", ", Collections.nCopies(mealIds.size(), "?"));
         String sql = """
-                SELECT mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
+                SELECT  mi.meal_id, mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
                        i.energy_kcal, i.protein_g, i.fat_g, i.carbohydrate_g,
                        i.total_sugars_g, i.fibre_g, i.vitamin_a_µg, i.vitamin_c_mg,
                        i.vitamin_d_µg, i.vitamin_e_mg, i.vitamin_b12_µg, i.folate_µg
                 FROM meal_ingredients mi
                 JOIN ingredients i ON mi.ingredient_id = i.id
-                WHERE mi.meal_id = ?
+                WHERE mi.meal_id IN (""" + placeholders + """
+                )
                 ORDER BY i.name
                 """;
+
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, mealId);
+            for (int i = 0; i < mealIds.size(); i++) {
+                stmt.setInt(i + 1, mealIds.get(i));
+            }
             try (ResultSet rs = stmt.executeQuery()) {
-                List<MealIngredientRow> results = new ArrayList<>();
+                Map<Integer, List<MealIngredientRow>> results = new HashMap<>();
                 while (rs.next()) {
+                    int mealId = rs.getInt("meal_id");
                     Ingredient ingredient = new Ingredient(
                             rs.getInt("ingredient_id"),
                             rs.getString("name"),
@@ -82,7 +87,8 @@ public class MealIngredientRepository {
                             nullableDouble(rs, "vitamin_b12_µg"),
                             nullableDouble(rs, "folate_µg")
                     );
-                    results.add(new MealIngredientRow(ingredient, rs.getDouble("quantity"), rs.getString("unit")));
+                    MealIngredientRow row = new MealIngredientRow(ingredient, rs.getDouble("quantity"), rs.getString("unit"));
+                    results.computeIfAbsent(mealId, k -> new ArrayList<>()).add(row);
                 }
                 return results;
             }

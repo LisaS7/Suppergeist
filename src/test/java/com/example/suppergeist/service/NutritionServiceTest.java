@@ -50,7 +50,7 @@ class NutritionServiceTest {
     }
 
     private int insertIngredientWithNutrition(Connection conn, String name,
-            double kcal, double protein, double fat, double carbs) throws SQLException {
+                                              double kcal, double protein, double fat, double carbs) throws SQLException {
         try (PreparedStatement stmt = conn.prepareStatement(
                 "INSERT INTO ingredients (name, energy_kcal, protein_g, fat_g, carbohydrate_g) VALUES (?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
@@ -97,7 +97,7 @@ class NutritionServiceTest {
             int ingId = insertIngredientWithNutrition(conn, "Test Ingredient", 100.0, 10.0, 5.0, 20.0);
             linkIngredient(conn, mealId, ingId, 200.0);
 
-            NutritionalEstimate result = nutritionService.estimateForMeal(mealId);
+            NutritionalEstimate result = nutritionService.estimateForMeals(mealId);
 
             assertNotNull(result);
             assertEquals(200, result.cal());          // (200/100) * 100
@@ -108,7 +108,7 @@ class NutritionServiceTest {
     }
 
     @Test
-    void estimateForMeal_sumsContributionsAcrossMultipleIngredients() throws SQLException {
+    void estimateForMeals_sumsContributionsAcrossMultipleIngredients() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "Multi-Ingredient Meal");
             int ing1 = insertIngredientWithNutrition(conn, "Ingredient A", 200.0, 0.0, 0.0, 0.0);
@@ -116,7 +116,7 @@ class NutritionServiceTest {
             linkIngredient(conn, mealId, ing1, 100.0); // contributes 200 kcal
             linkIngredient(conn, mealId, ing2, 100.0); // contributes 100 kcal
 
-            NutritionalEstimate result = nutritionService.estimateForMeal(mealId);
+            NutritionalEstimate result = nutritionService.estimateForMeals(mealId);
 
             assertNotNull(result);
             assertEquals(300, result.cal());
@@ -124,22 +124,22 @@ class NutritionServiceTest {
     }
 
     @Test
-    void estimateForMeal_returnsNullWhenNoIngredientHasKcalData() throws SQLException {
+    void estimateForMeals_returnsNullWhenNoIngredientHasKcalData() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "No Nutrition Meal");
             int ingId = insertIngredientNoNutrition(conn, "Unknown Ingredient");
             linkIngredient(conn, mealId, ingId, 100.0);
 
-            assertNull(nutritionService.estimateForMeal(mealId));
+            assertNull(nutritionService.estimateForMeals(mealId));
         }
     }
 
     @Test
-    void estimateForMeal_returnsNullWhenMealHasNoIngredients() throws SQLException {
+    void estimateForMeal_returnsNullWhenMealsHasNoIngredients() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "Empty Meal");
 
-            assertNull(nutritionService.estimateForMeal(mealId));
+            assertNull(nutritionService.estimateForMeals(mealId));
         }
     }
 }

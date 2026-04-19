@@ -3,7 +3,6 @@ package com.example.suppergeist.ui;
 import com.example.suppergeist.model.NutritionalEstimate;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
-import com.example.suppergeist.repository.*;
 import com.example.suppergeist.service.*;
 import javafx.animation.RotateTransition;
 import javafx.fxml.FXML;
@@ -59,7 +58,7 @@ public class MainController {
         this.weekLabel.setText(this.currentWeekStart.format(formatter) + " - " + this.currentWeekStart.plusDays(6).format(formatter));
     }
 
-    private void populateMealCards(Map<LocalDate, Integer> nextRowForDate, Map<LocalDate, Integer> calorieTotals) throws SQLException {
+    private void populateMealCards(Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate) {
         Set<LocalDate> labelledDates = new HashSet<>();
         for (WeeklyMealViewModel meal : weeklyMeals) {
             // Day label
@@ -70,11 +69,7 @@ public class MainController {
                 labelledDates.add(meal.date());
             }
 
-            NutritionalEstimate estimate = nutritionService.estimateForMeal(meal.mealId());
-            if (estimate != null) {
-                calorieTotals.put(meal.date(), calorieTotals.getOrDefault(meal.date(), 0) + estimate.cal());
-            }
-
+            NutritionalEstimate estimate = estimates.get(meal.mealId());
             StackPane card = buildMealCard(meal, estimate);
             int row = nextRowForDate.getOrDefault(meal.date(), 1);
             nextRowForDate.put(meal.date(), row + 1);
@@ -96,12 +91,13 @@ public class MainController {
         mealPlanGrid.setVgap(12);
 
         weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
+        List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
+        Map<Integer, NutritionalEstimate> estimates = nutritionService.estimatesForMeals(mealIds);
 
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
-        Map<LocalDate, Integer> calorieTotals = new HashMap<>();
+        Map<LocalDate, Integer> calorieTotals = nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
 
-        populateMealCards(nextRowForDate, calorieTotals);
-
+        populateMealCards(estimates, nextRowForDate);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
         }
