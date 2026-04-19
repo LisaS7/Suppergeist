@@ -97,7 +97,7 @@ Separator .line {
     -fx-padding: 12 14 12 14;
     -fx-min-width: 120;
     -fx-min-height: 80;
-    -fx-pref-width: 150;
+    -fx-pref-width: 180;
 }
 
 .meal-card > Label {
@@ -576,7 +576,6 @@ GridPane > Label {
 .sidebar .spinner .decrement-arrow-button .decrement-arrow {
     -fx-background-color: #051d29;
 }
-
 
 
 /* ── Shopping List ──────────────────────────────────────── */

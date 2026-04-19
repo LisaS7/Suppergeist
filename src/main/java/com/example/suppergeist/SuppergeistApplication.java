@@ -91,7 +91,7 @@ public class SuppergeistApplication extends Application {
             return;
         }
 
-        Scene scene = new Scene(fxmlLoader.getRoot(), 1500, 1200);
+        Scene scene = new Scene(fxmlLoader.getRoot(), 1800, 1200);
 
         // Font
         Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Kings-Regular.ttf"), 22);

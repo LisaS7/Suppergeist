@@ -34,6 +34,7 @@ public class MainController {
 
     private User user;
     private LocalDate currentWeekStart;
+    private static final DayOfWeek weekStartDay = DayOfWeek.MONDAY;
     private List<WeeklyMealViewModel> weeklyMeals;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
@@ -50,26 +51,19 @@ public class MainController {
         preferencesSidebarController.toggleVisibility();
     }
 
+    private int columnFor(LocalDate date) {
+        return date.getDayOfWeek().getValue() - weekStartDay.getValue();
+    }
+
     private void updateWeekLabel() {
         this.weekLabel.setText(this.currentWeekStart.format(formatter) + " - " + this.currentWeekStart.plusDays(6).format(formatter));
     }
 
-    private void refreshMealPlanGrid() throws SQLException {
-        mealPlanGrid.getChildren().clear();
-        DayOfWeek weekStart = DayOfWeek.MONDAY;
-        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
-
+    private void populateMealCards(Map<LocalDate, Integer> nextRowForDate, Map<LocalDate, Integer> calorieTotals) throws SQLException {
         Set<LocalDate> labelledDates = new HashSet<>();
-        Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
-
         for (WeeklyMealViewModel meal : weeklyMeals) {
-
             // Day label
-            int column = meal.date().getDayOfWeek().getValue() - weekStart.getValue();
-            if (column < 0) {
-                column += 7;
-            }
-
+            int column = columnFor(meal.date());
             if (!labelledDates.contains(meal.date())) {
                 Label dayLabel = new Label(meal.dayLabel());
                 mealPlanGrid.add(dayLabel, column, 0);
@@ -77,11 +71,39 @@ public class MainController {
             }
 
             NutritionalEstimate estimate = nutritionService.estimateForMeal(meal.mealId());
-            StackPane card = buildMealCard(meal, estimate);
+            if (estimate != null) {
+                calorieTotals.put(meal.date(), calorieTotals.getOrDefault(meal.date(), 0) + estimate.cal());
+            }
 
+            StackPane card = buildMealCard(meal, estimate);
             int row = nextRowForDate.getOrDefault(meal.date(), 1);
             nextRowForDate.put(meal.date(), row + 1);
+
             mealPlanGrid.add(card, column, row);
+        }
+    }
+
+    private void appendCalorieTotals(Map<LocalDate, Integer> nextRowForDate, Map<LocalDate, Integer> calorieTotals) {
+        for (Map.Entry<LocalDate, Integer> entry : calorieTotals.entrySet()) {
+            int column = columnFor(entry.getKey());
+            mealPlanGrid.add(new Label("Total Calories: " + entry.getValue()), column, nextRowForDate.get(entry.getKey()));
+        }
+    }
+
+    private void refreshMealPlanGrid() throws SQLException {
+        mealPlanGrid.getChildren().clear();
+        mealPlanGrid.setHgap(32);
+        mealPlanGrid.setVgap(12);
+
+        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
+
+        Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
+        Map<LocalDate, Integer> calorieTotals = new HashMap<>();
+
+        populateMealCards(nextRowForDate, calorieTotals);
+
+        if (this.user.isShowCalories()) {
+            appendCalorieTotals(nextRowForDate, calorieTotals);
         }
     }
 
