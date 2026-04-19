@@ -42,7 +42,7 @@ public class ShoppingListService {
         Map<String, ShoppingItem> ingredients = new HashMap<>();
         for (MealPlanEntry entry : mealPlanEntries) {
             int mealId = entry.getMealId();
-            List<MealIngredientRow> rows = mealIngredientRepository.getIngredientsWithNameForMeal(mealId);
+            List<MealIngredientRow> rows = mealIngredientRepository.getIngredientsWithNutritionForMeal(mealId);
             for (MealIngredientRow row : rows) {
                 String key = row.ingredient().getId() + "|" + row.unit();
 
