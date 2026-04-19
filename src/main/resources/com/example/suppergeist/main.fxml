@@ -41,7 +41,7 @@
                                 </VBox.margin>
                                 <Button onAction="#goToPreviousWeek" styleClass="week-nav-button">⟸</Button>
                                 <Region HBox.hgrow="ALWAYS"/>
-                                <Label fx:id="weekLabel"></Label>
+                                <Label fx:id="weekLabel"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button onAction="#goToNextWeek" styleClass="week-nav-button">⟹</Button>
                             </HBox>
@@ -57,8 +57,6 @@
         <fx:include fx:id="preferencesSidebar" source="preferences-sidebar.fxml"/>
     </right>
     <bottom>
-        <HBox spacing="10" styleClass="footer">
-            <Label text="Buttons will go here later"/>
-        </HBox>
+        <HBox spacing="10" styleClass="footer"/>
     </bottom>
 </BorderPane>

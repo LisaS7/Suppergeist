@@ -38,8 +38,6 @@ VBox {
 
 GridPane {
     -fx-padding: 16 16 16 16;
-    -fx-hgap: 12;
-    -fx-vgap: 12;
     -fx-border-color: transparent;
 }
 
@@ -74,23 +72,6 @@ Separator .line {
     -fx-font-family: "Kings";
     -fx-font-weight: NORMAL;
     -fx-text-fill: #dce8ed;
-}
-
-
-/* ── Main content area ───────────────────────────────────── */
-
-.main-content {
-    -fx-padding: 20 20 20 20;
-    -fx-spacing: 14;
-    -fx-background-color: #b8cad3;
-}
-
-/* Section heading inside main-content */
-.main-content > Label {
-    -fx-font-size: 18px;
-    -fx-font-weight: BOLD;
-    -fx-text-fill: #051d29;
-    -fx-padding: 0 0 4 0;
 }
 
 
@@ -194,6 +175,7 @@ GridPane > Label {
     -fx-font-size: 24px;
 }
 
+/* Display-toggle checkboxes (showCalories, showNutritionalInfo) — direct children of the sidebar root VBox */
 .sidebar > CheckBox {
     -fx-text-fill: #051d29;
     -fx-font-size: 14px;
@@ -550,12 +532,9 @@ GridPane > Label {
     -fx-cursor: HAND;
 }
 
-.sidebar .spinner .increment-arrow-button {
-    -fx-border-width: 0 0 0 2; /* left border divides it from the text field */
-}
-
+.sidebar .spinner .increment-arrow-button,
 .sidebar .spinner .decrement-arrow-button {
-    -fx-border-width: 0 0 0 2; /* left border divides it from the text field */
+    -fx-border-width: 0 0 0 2; /* left border divides each from the text field */
 }
 
 .sidebar .spinner .increment-arrow-button:hover,
@@ -574,64 +553,6 @@ GridPane > Label {
     -fx-background-color: #051d29;
 }
 
-
-/* ChoiceBox ─────────────────────────────────────────────── */
-
-.sidebar .choice-box {
-    -fx-background-color: #dce8ed;
-    -fx-border-color: #051d29;
-    -fx-border-width: 2;
-    -fx-border-radius: 0;
-    -fx-background-radius: 0;
-    -fx-padding: 4 8 4 8;
-    -fx-font-size: 14px;
-    -fx-cursor: HAND;
-}
-
-.sidebar .choice-box:focused {
-    -fx-border-color: #051d29;
-    -fx-border-width: 2.5;
-}
-
-.sidebar .choice-box:hover {
-    -fx-background-color: #b8cad3;
-}
-
-/* The label that shows the selected value */
-.sidebar .choice-box .label {
-    -fx-text-fill: #051d29;
-    -fx-font-size: 14px;
-}
-
-/* The small dropdown arrow glyph */
-.sidebar .choice-box .open-button .arrow {
-    -fx-background-color: #051d29;
-}
-
-/*
-   Dropdown popup — JavaFX renders this as a ContextMenu with class
-   .choice-box-popup. Scoping to that class avoids touching any other
-   context menus in the app.
-*/
-.choice-box-popup .menu-item {
-    -fx-background-color: #b8cad3;
-    -fx-padding: 5 12 5 12;
-}
-
-.choice-box-popup .menu-item .label {
-    -fx-text-fill: #051d29;
-    -fx-font-size: 14px;
-}
-
-.choice-box-popup .menu-item:focused,
-.choice-box-popup .menu-item:hover {
-    -fx-background-color: #dce8ed;
-}
-
-.choice-box-popup .menu-item:focused .label,
-.choice-box-popup .menu-item:hover .label {
-    -fx-text-fill: #051d29;
-}
 
 
 /* ── Shopping List ──────────────────────────────────────── */
@@ -654,11 +575,6 @@ GridPane > Label {
 /* Suppress Modena's default grey background insets */
 .shopping-list-scroll > .viewport {
     -fx-background-color: #b8cad3;
-}
-
-.shopping-list-scroll:focused {
-    -fx-border-color: #051d29;
-    -fx-border-width: 2.5;
 }
 
 .shopping-list-items {
