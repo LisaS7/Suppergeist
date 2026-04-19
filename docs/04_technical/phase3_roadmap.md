@@ -33,7 +33,7 @@ grid; the hardcoded reference date is gone from `MainController`.
 
 ---
 
-## Task 2 — `NutritionService` ⬜
+## Task 2 — `NutritionService` ✅
 
 Computes a `NutritionalEstimate` for a meal from its stored `MealIngredient` rows and the nutrition columns on
 `ingredients`. The CoFID nutrition data is already in `app.db` — this task just wires it up.
@@ -146,7 +146,7 @@ Revisit post-submission if needed.
 - [x] Hardcoded reference date replaced with current-week calculation
 - [x] Prev/Next week buttons and week range label working in the UI
 - [ ] Empty week state shows `"No plan for this week"` in the grid; shopping list shows `"No plan loaded"`
-- [ ] `NutritionService` computes estimates from stored ingredient data
+- [x] `NutritionService` computes estimates from stored ingredient data
 - [ ] Meal cards show real kcal figures where data exists; `showCalories` toggle is functional
 - [ ] Daily and weekly kcal totals visible when `showCalories` is on
 - [ ] `!` indicator with tooltip appears on meal cards missing nutrition data
