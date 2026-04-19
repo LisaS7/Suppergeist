@@ -1,17 +1,19 @@
 package com.example.suppergeist.ui;
 
+import com.example.suppergeist.model.NutritionalEstimate;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.repository.*;
-import com.example.suppergeist.service.MealPlanService;
-import com.example.suppergeist.service.ShoppingListService;
-import com.example.suppergeist.service.UserPreferencesService;
-import com.example.suppergeist.service.WeeklyMealViewModel;
+import com.example.suppergeist.service.*;
+import javafx.animation.RotateTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.transform.Rotate;
+import javafx.util.Duration;
 import lombok.Setter;
 
 import java.sql.SQLException;
@@ -27,6 +29,7 @@ public class MainController {
     @Setter private MealPlanService mealPlanService;
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
+    @Setter private NutritionService nutritionService;
 
     private User user;
     private LocalDate currentWeekStart;
@@ -72,23 +75,49 @@ public class MainController {
                 labelledDates.add(meal.date());
             }
 
-            // Create card
-            VBox card = new VBox();
-            card.getStyleClass().add("meal-card");
-
-            // Title
-            Label nameLabel = new Label(meal.mealName());
-
-            // Calories placeholder #TODO
-            Label calorieLabel = new Label("-- kcal");
-            calorieLabel.getStyleClass().add("meal-kcal");
-
-            card.getChildren().addAll(nameLabel, calorieLabel);
+            NutritionalEstimate estimate = nutritionService.estimateForMeal(meal.mealId());
+            StackPane card = buildMealCard(meal, estimate);
 
             int row = nextRowForDate.getOrDefault(meal.date(), 1);
             nextRowForDate.put(meal.date(), row + 1);
             mealPlanGrid.add(card, column, row);
         }
+    }
+
+    private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate) {
+        VBox front = new VBox();
+        front.getStyleClass().add("meal-card");
+        Label nameLabel = new Label(meal.mealName());
+        Label calorieLabel = new Label(estimate != null ? estimate.cal() + " kcal" : "-- kcal");
+        calorieLabel.getStyleClass().add("meal-kcal");
+        front.getChildren().addAll(nameLabel, calorieLabel);
+
+        VBox back = new VBox();
+        back.getStyleClass().add("meal-card-back");
+        back.setVisible(false);
+
+        StackPane card = new StackPane(front, back);
+        boolean[] flipped = {false};
+        card.setOnMouseClicked(e -> flipCard(card, front, back, flipped));
+        return card;
+    }
+
+    private void flipCard(StackPane card, VBox front, VBox back, boolean[] flipped) {
+        RotateTransition firstHalf = new RotateTransition(Duration.millis(150), card);
+        firstHalf.setAxis(Rotate.Y_AXIS);
+        firstHalf.setFromAngle(0);
+        firstHalf.setToAngle(90);
+        firstHalf.setOnFinished(e -> {
+            flipped[0] = !flipped[0];
+            front.setVisible(!flipped[0]);
+            back.setVisible(flipped[0]);
+            RotateTransition secondHalf = new RotateTransition(Duration.millis(150), card);
+            secondHalf.setAxis(Rotate.Y_AXIS);
+            secondHalf.setFromAngle(-90);
+            secondHalf.setToAngle(0);
+            secondHalf.play();
+        });
+        firstHalf.play();
     }
 
     public void setup() throws SQLException {
