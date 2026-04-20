@@ -12,7 +12,7 @@ import javafx.scene.layout.VBox;
 import java.util.*;
 
 public class ShoppingListController {
-    private LinkedHashMap<String, List<ShoppingItem>> categorisedList;
+    private Map<String, List<ShoppingItem>> categorisedList;
 
     // UI
     @FXML private VBox shoppingListBox;
@@ -44,14 +44,14 @@ public class ShoppingListController {
         return String.valueOf(quantity);
     }
 
-    public void refresh(LinkedHashMap<String, List<ShoppingItem>> shoppingList) {
+    public void refresh(Map<String, List<ShoppingItem>> shoppingList) {
         this.categorisedList = shoppingList;
         shoppingListBox.getChildren().clear();
 
         for (String category : this.categorisedList.keySet()) {
             Label header = new Label(category);
             shoppingListBox.getChildren().add(header);
-            
+
             for (ShoppingItem item : this.categorisedList.get(category)) {
                 CheckBox box = new CheckBox(item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit());
                 shoppingListBox.getChildren().add(box);

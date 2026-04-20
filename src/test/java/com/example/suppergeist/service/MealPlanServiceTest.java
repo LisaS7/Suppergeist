@@ -3,7 +3,6 @@ package com.example.suppergeist.service;
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
 import com.example.suppergeist.repository.MealPlanRepository;
-import com.example.suppergeist.repository.MealRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +33,8 @@ class MealPlanServiceTest {
 
         try (Connection conn = dbManager.getConnection()) {
             conn.createStatement().execute("""
-                INSERT INTO users (id, name) VALUES (1, 'User One'), (2, 'User Two')
-            """);
+                        INSERT INTO users (id, name) VALUES (1, 'User One'), (2, 'User Two')
+                    """);
         }
 
         service = new MealPlanService(
@@ -90,7 +89,7 @@ class MealPlanServiceTest {
 
     @Test
     void getWeeklyMeals_returnsEmptyList_whenNoPlanExistsForUser() throws SQLException {
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 4, 1));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 4, 1));
 
         assertTrue(result.isEmpty());
     }
@@ -99,7 +98,7 @@ class MealPlanServiceTest {
     void getWeeklyMeals_returnsEmptyList_whenPlanHasNoEntries() throws SQLException {
         insertMealPlan(1, LocalDate.of(2026, 3, 30));
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 4, 1));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 4, 1));
 
         assertTrue(result.isEmpty());
     }
@@ -110,7 +109,7 @@ class MealPlanServiceTest {
         LocalDate weekStart = LocalDate.of(2026, 3, 30);
         insertMealPlan(1, weekStart);
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 4, 1));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 4, 1));
 
         assertTrue(result.isEmpty()); // plan found, but no entries — confirms the week was resolved correctly
     }
@@ -120,7 +119,7 @@ class MealPlanServiceTest {
         insertMealPlan(1, LocalDate.of(2026, 3, 30));
 
         // Reference date resolves to the NEXT Monday (2026-04-06), not 2026-03-30
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 4, 6));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 4, 6));
 
         assertTrue(result.isEmpty());
     }
@@ -132,7 +131,7 @@ class MealPlanServiceTest {
         int mealId = insertMeal("Spaghetti Bolognese");
         insertEntry(planId, mealId, 0, "dinner");
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 3, 30));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30));
 
         assertEquals(1, result.size());
         assertEquals("Spaghetti Bolognese", result.get(0).mealName());
@@ -146,7 +145,7 @@ class MealPlanServiceTest {
         int mealId = insertMeal("Omelette");
         insertEntry(planId, mealId, 2, "breakfast"); // day offset 2 → Wednesday 2026-04-01
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 3, 30));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30));
 
         assertEquals(LocalDate.of(2026, 4, 1), result.get(0).date());
     }
@@ -158,7 +157,7 @@ class MealPlanServiceTest {
         int mealId = insertMeal("Toast");
         insertEntry(planId, mealId, 0, "breakfast"); // Monday the 30th
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 3, 30));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30));
 
         assertEquals("Monday 30 Mar", result.get(0).dayLabel());
     }
@@ -174,7 +173,7 @@ class MealPlanServiceTest {
         insertEntry(planId, meal2, 1, "dinner");
         insertEntry(planId, meal3, 2, "lunch");
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 3, 30));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30));
 
         assertEquals(3, result.size());
         assertEquals("Porridge", result.get(0).mealName());
@@ -189,7 +188,7 @@ class MealPlanServiceTest {
         int mealId = insertMeal("Sunday Roast");
         insertEntry(planId, mealId, 6, "dinner"); // day offset 6 → Sunday 2026-04-05
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 3, 30));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30));
 
         assertEquals(1, result.size());
         assertEquals(LocalDate.of(2026, 4, 5), result.get(0).date());
@@ -206,7 +205,7 @@ class MealPlanServiceTest {
         insertEntry(plan1, meal1, 0, "lunch");
         insertEntry(plan2, meal2, 0, "dinner");
 
-        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1,LocalDate.of(2026, 3, 30));
+        List<WeeklyMealViewModel> result = service.getWeeklyMeals(1, LocalDate.of(2026, 3, 30));
 
         assertEquals(1, result.size());
         assertEquals("Soup", result.get(0).mealName());

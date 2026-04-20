@@ -37,7 +37,7 @@ public class ShoppingListService {
         };
     }
 
-    public LinkedHashMap<String, List<ShoppingItem>> buildList(int mealPlanId) throws SQLException {
+    public Map<String, List<ShoppingItem>> buildList(int mealPlanId) throws SQLException {
         List<MealPlanEntry> mealPlanEntries = mealPlanEntryRepository.getMealPlanEntries(mealPlanId);
         Map<String, ShoppingItem> ingredients = new HashMap<>();
         for (MealPlanEntry entry : mealPlanEntries) {
@@ -57,7 +57,7 @@ public class ShoppingListService {
             }
         }
 
-        LinkedHashMap<String, List<ShoppingItem>> grouped = new LinkedHashMap<>();
+        TreeMap<String, List<ShoppingItem>> grouped = new TreeMap<>();
         for (ShoppingItem item : ingredients.values()) {
             String category = deriveCategory(item.foodCode());
             grouped.computeIfAbsent(category, k -> new ArrayList<>()).add(item);
@@ -67,8 +67,6 @@ public class ShoppingListService {
             items.sort(Comparator.comparing(ShoppingItem::name));
         }
 
-        LinkedHashMap<String, List<ShoppingItem>> sorted = new LinkedHashMap<>();
-        grouped.keySet().stream().sorted().forEach(key -> sorted.put(key, grouped.get(key)));
-        return sorted;
+        return grouped;
     }
 }

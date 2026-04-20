@@ -14,8 +14,8 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -109,7 +109,7 @@ class ShoppingListServiceTest {
     }
 
     /** Flattens all items across all categories into a single list. */
-    private List<ShoppingItem> allItems(LinkedHashMap<String, List<ShoppingItem>> result) {
+    private List<ShoppingItem> allItems(Map<String, List<ShoppingItem>> result) {
         return result.values().stream().flatMap(List::stream).toList();
     }
 
@@ -119,7 +119,7 @@ class ShoppingListServiceTest {
     void buildList_returnsEmptyMap_whenPlanHasNoEntries() throws SQLException {
         int planId = insertMealPlan();
 
-        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+        Map<String, List<ShoppingItem>> result = service.buildList(planId);
 
         assertTrue(result.isEmpty());
     }
@@ -218,7 +218,7 @@ class ShoppingListServiceTest {
 
     @Test
     void buildList_returnsEmptyMap_forNonExistentPlanId() throws SQLException {
-        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(9999);
+        Map<String, List<ShoppingItem>> result = service.buildList(9999);
 
         assertTrue(result.isEmpty());
     }
@@ -261,7 +261,7 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 2.0, "whole");
 
-        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+        Map<String, List<ShoppingItem>> result = service.buildList(planId);
 
         assertTrue(result.containsKey("Dairy & Eggs"));
         assertEquals("Egg", result.get("Dairy & Eggs").get(0).name());
@@ -275,7 +275,7 @@ class ShoppingListServiceTest {
         insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 50.0, "g");
 
-        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+        Map<String, List<ShoppingItem>> result = service.buildList(planId);
 
         assertTrue(result.containsKey("General"));
     }
@@ -290,7 +290,7 @@ class ShoppingListServiceTest {
         insertMealIngredient(mealId, egg, 2.0, "whole");
         insertMealIngredient(mealId, lettuce, 100.0, "g");
 
-        LinkedHashMap<String, List<ShoppingItem>> result = service.buildList(planId);
+        Map<String, List<ShoppingItem>> result = service.buildList(planId);
 
         assertEquals(2, result.size());
         assertTrue(result.containsKey("Dairy & Eggs"));

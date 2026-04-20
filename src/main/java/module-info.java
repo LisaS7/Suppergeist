@@ -5,7 +5,8 @@ module com.example.suppergeist {
     requires static lombok;
     requires java.sql;
     requires org.apache.commons.csv;
-    
+    requires jdk.compiler;
+
     opens com.example.suppergeist.ui to javafx.fxml;
 
     exports com.example.suppergeist;

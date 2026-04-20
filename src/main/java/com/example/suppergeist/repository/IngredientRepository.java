@@ -74,8 +74,7 @@ public class IngredientRepository {
                 results.add(new Ingredient(
                         rs.getInt("id"),
                         rs.getString("name"),
-                        rs.getString("food_code"),
-                        null, null, null, null, null, null, null, null, null, null, null, null
+                        rs.getString("food_code")
                 ));
             }
             return results;

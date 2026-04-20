@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 public class MealPlanEntry {
     private final Integer id;
     private final int mealPlanId;
@@ -13,12 +12,16 @@ public class MealPlanEntry {
     private final String mealType;
     private final String mealName;
 
-    public MealPlanEntry(int mealPlanId, int mealId, int dayOffset, String mealType, String mealName) {
-        this.id = null;
+    public MealPlanEntry(Integer id, int mealPlanId, int mealId, int dayOffset, String mealType, String mealName) {
+        this.id = id;
         this.mealPlanId = mealPlanId;
         this.mealId = mealId;
         this.dayOffset = dayOffset;
         this.mealType = mealType;
         this.mealName = mealName;
+    }
+    
+    public MealPlanEntry(int mealPlanId, int mealId, int dayOffset, String mealType, String mealName) {
+        this(null, mealPlanId, mealId, dayOffset, mealType, mealName);
     }
 }

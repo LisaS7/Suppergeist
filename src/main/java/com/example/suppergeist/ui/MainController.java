@@ -5,6 +5,7 @@ import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.service.*;
 import javafx.animation.RotateTransition;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -158,20 +159,20 @@ public class MainController {
 
         // ARRANGE
         StackPane card = new StackPane(front, back);
-        boolean[] flipped = {false};
+        SimpleBooleanProperty flipped = new SimpleBooleanProperty(false);
         card.setOnMouseClicked(e -> flipCard(card, front, back, flipped));
         return card;
     }
 
-    private void flipCard(StackPane card, VBox front, GridPane back, boolean[] flipped) {
+    private void flipCard(StackPane card, VBox front, GridPane back, SimpleBooleanProperty flipped) {
         RotateTransition firstHalf = new RotateTransition(Duration.millis(150), card);
         firstHalf.setAxis(Rotate.Y_AXIS);
         firstHalf.setFromAngle(0);
         firstHalf.setToAngle(90);
         firstHalf.setOnFinished(e -> {
-            flipped[0] = !flipped[0];
-            front.setVisible(!flipped[0]);
-            back.setVisible(flipped[0]);
+            flipped.set(!flipped.get());
+            front.setVisible(!flipped.get());
+            back.setVisible(flipped.get());
             RotateTransition secondHalf = new RotateTransition(Duration.millis(150), card);
             secondHalf.setAxis(Rotate.Y_AXIS);
             secondHalf.setFromAngle(-90);
@@ -211,7 +212,7 @@ public class MainController {
 
         if (!weeklyMeals.isEmpty()) {
             int planId = weeklyMeals.getFirst().mealPlanId();
-            LinkedHashMap<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
+            Map<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
             shoppingListController.refresh(shoppingList);
         }
     }

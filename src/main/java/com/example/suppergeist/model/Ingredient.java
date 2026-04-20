@@ -22,8 +22,8 @@ public class Ingredient {
     private final Double vitaminB12Mcg;
     private final Double folateMcg;
 
-    public Ingredient(String name, String foodCode) {
-        this.id = null;
+    public Ingredient(int id, String name, String foodCode) {
+        this.id = id;
         this.name = name;
         this.foodCode = foodCode;
         this.energyKcal = null;
