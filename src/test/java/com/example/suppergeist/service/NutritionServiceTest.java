@@ -15,6 +15,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -90,14 +92,15 @@ class NutritionServiceTest {
     }
 
     @Test
-    void estimateForMeal_returnsEstimateWithCorrectTotals() throws SQLException {
+    void estimatesForMeals_returnsEstimateWithCorrectTotals() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "Test Meal");
             // 200g of an ingredient with 100 kcal/100g, 10g protein/100g
             int ingId = insertIngredientWithNutrition(conn, "Test Ingredient", 100.0, 10.0, 5.0, 20.0);
             linkIngredient(conn, mealId, ingId, 200.0);
 
-            NutritionalEstimate result = nutritionService.estimateForMeals(mealId);
+            Map<Integer, NutritionalEstimate> results = nutritionService.estimatesForMeals(List.of(mealId));
+            NutritionalEstimate result = results.get(mealId);
 
             assertNotNull(result);
             assertEquals(200, result.cal());          // (200/100) * 100
@@ -108,7 +111,7 @@ class NutritionServiceTest {
     }
 
     @Test
-    void estimateForMeals_sumsContributionsAcrossMultipleIngredients() throws SQLException {
+    void estimatesForMeals_sumsContributionsAcrossMultipleIngredients() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "Multi-Ingredient Meal");
             int ing1 = insertIngredientWithNutrition(conn, "Ingredient A", 200.0, 0.0, 0.0, 0.0);
@@ -116,30 +119,34 @@ class NutritionServiceTest {
             linkIngredient(conn, mealId, ing1, 100.0); // contributes 200 kcal
             linkIngredient(conn, mealId, ing2, 100.0); // contributes 100 kcal
 
-            NutritionalEstimate result = nutritionService.estimateForMeals(mealId);
+            Map<Integer, NutritionalEstimate> results = nutritionService.estimatesForMeals(List.of(mealId));
 
-            assertNotNull(result);
-            assertEquals(300, result.cal());
+            assertNotNull(results.get(mealId));
+            assertEquals(300, results.get(mealId).cal());
         }
     }
 
     @Test
-    void estimateForMeals_returnsNullWhenNoIngredientHasKcalData() throws SQLException {
+    void estimatesForMeals_omitsMealWhenNoIngredientHasKcalData() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "No Nutrition Meal");
             int ingId = insertIngredientNoNutrition(conn, "Unknown Ingredient");
             linkIngredient(conn, mealId, ingId, 100.0);
 
-            assertNull(nutritionService.estimateForMeals(mealId));
+            Map<Integer, NutritionalEstimate> results = nutritionService.estimatesForMeals(List.of(mealId));
+
+            assertNull(results.get(mealId));
         }
     }
 
     @Test
-    void estimateForMeal_returnsNullWhenMealsHasNoIngredients() throws SQLException {
+    void estimatesForMeals_omitsMealWithNoIngredients() throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
             int mealId = insertMeal(conn, "Empty Meal");
 
-            assertNull(nutritionService.estimateForMeals(mealId));
+            Map<Integer, NutritionalEstimate> results = nutritionService.estimatesForMeals(List.of(mealId));
+
+            assertNull(results.get(mealId));
         }
     }
 }

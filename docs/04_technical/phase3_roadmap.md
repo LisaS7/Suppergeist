@@ -40,8 +40,11 @@ Computes a `NutritionalEstimate` for a meal from its stored `MealIngredient` row
 
 ```java
 public class NutritionService {
-    /** Returns null if the meal has no matched ingredients with nutrition data. */
-    public NutritionalEstimate estimateForMeal(int mealId) throws SQLException { ... }
+    /** Returns estimates keyed by mealId; meals with no matched nutrition data are absent from the map. */
+    public Map<Integer, NutritionalEstimate> estimatesForMeals(List<Integer> mealIds) throws SQLException { ... }
+
+    /** Returns daily kcal totals keyed by date, for days that have at least one matched meal. */
+    public Map<LocalDate, Integer> dailyCalorieTotals(List<WeeklyMealViewModel> meals, Map<Integer, NutritionalEstimate> estimates) { ... }
 }
 ```
 
@@ -62,7 +65,7 @@ null correctly for a meal with no ingredient matches; unit tests cover both case
 
 ---
 
-## Task 3 — Wire nutrition into UI ⬜
+## Task 3 — Wire nutrition into UI 🔄
 
 *(Depends on Task 2)*
 
@@ -147,6 +150,6 @@ Revisit post-submission if needed.
 - [x] Prev/Next week buttons and week range label working in the UI
 - [ ] Empty week state shows `"No plan for this week"` in the grid; shopping list shows `"No plan loaded"`
 - [x] `NutritionService` computes estimates from stored ingredient data
-- [ ] Meal cards show real kcal figures where data exists; `showCalories` toggle is functional
-- [ ] Daily and weekly kcal totals visible when `showCalories` is on
+- [x] Meal cards show real kcal figures where data exists; `showCalories` toggle is functional
+- [x] Daily and weekly kcal totals visible when `showCalories` is on
 - [ ] `!` indicator with tooltip appears on meal cards missing nutrition data

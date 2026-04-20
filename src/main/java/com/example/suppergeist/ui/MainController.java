@@ -10,6 +10,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.transform.Rotate;
@@ -41,6 +42,7 @@ public class MainController {
     // UI Elements
     @FXML private GridPane mealPlanGrid;
     @FXML private Label weekLabel;
+    @FXML private HBox footerBox;
 
     @FXML private PreferencesSidebarController preferencesSidebarController;
     @FXML private ShoppingListController shoppingListController;
@@ -87,6 +89,7 @@ public class MainController {
 
     private void refreshMealPlanGrid() throws SQLException {
         mealPlanGrid.getChildren().clear();
+        footerBox.getChildren().clear();
         mealPlanGrid.setHgap(32);
         mealPlanGrid.setVgap(12);
 
@@ -100,6 +103,8 @@ public class MainController {
         populateMealCards(estimates, nextRowForDate);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
+            int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
+            footerBox.getChildren().add(new Label("Weekly calories: " + weeklyTotal));
         }
     }
 

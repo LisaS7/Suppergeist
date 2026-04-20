@@ -57,6 +57,6 @@
         <fx:include fx:id="preferencesSidebar" source="preferences-sidebar.fxml"/>
     </right>
     <bottom>
-        <HBox spacing="10" styleClass="footer"/>
+        <HBox fx:id="footerBox" spacing="10" styleClass="footer"/>
     </bottom>
 </BorderPane>
