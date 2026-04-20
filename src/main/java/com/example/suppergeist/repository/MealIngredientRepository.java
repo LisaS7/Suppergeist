@@ -2,7 +2,6 @@ package com.example.suppergeist.repository;
 
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.Ingredient;
-import com.example.suppergeist.model.MealIngredient;
 import com.example.suppergeist.model.MealIngredientRow;
 
 import java.sql.Connection;
@@ -17,29 +16,6 @@ public class MealIngredientRepository {
 
     public MealIngredientRepository(DatabaseManager dbManager) {
         this.dbManager = dbManager;
-    }
-
-    public List<MealIngredient> getIngredientsForMeal(int mealId) throws SQLException {
-        String sql = "SELECT * FROM meal_ingredients WHERE meal_id = ?";
-        try (Connection conn = dbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, mealId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<MealIngredient> mealIngredients = new ArrayList<>();
-                while (rs.next()) {
-                    MealIngredient mealIngredient = new MealIngredient(
-                            rs.getInt("id"),
-                            rs.getInt("meal_id"),
-                            rs.getInt("ingredient_id"),
-                            rs.getDouble("quantity"),
-                            rs.getString("unit")
-                    );
-                    mealIngredients.add(mealIngredient);
-                }
-                return mealIngredients;
-            }
-        }
     }
 
     private static Double nullableDouble(ResultSet rs, String col) throws SQLException {

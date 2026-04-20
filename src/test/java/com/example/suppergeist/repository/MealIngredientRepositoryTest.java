@@ -1,7 +1,6 @@
 package com.example.suppergeist.repository;
 
 import com.example.suppergeist.database.DatabaseManager;
-import com.example.suppergeist.model.MealIngredient;
 import com.example.suppergeist.model.MealIngredientRow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,81 +83,6 @@ class MealIngredientRepositoryTest {
             stmt.setString(4, unit);
             stmt.executeUpdate();
         }
-    }
-
-    // --- getIngredientsForMeal ---
-
-    @Test
-    void getIngredientsForMeal_returnsEmptyList_whenNoIngredients() throws SQLException {
-        int mealId = insertMeal("Pasta");
-
-        List<MealIngredient> result = repository.getIngredientsForMeal(mealId);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getIngredientsForMeal_returnsIngredients_forGivenMeal() throws SQLException {
-        int mealId = insertMeal("Pasta");
-        int ingredientId = insertIngredient("Spaghetti");
-        insertMealIngredient(mealId, ingredientId, 200.0, "g");
-
-        List<MealIngredient> result = repository.getIngredientsForMeal(mealId);
-
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void getIngredientsForMeal_mapsAllFieldsCorrectly() throws SQLException {
-        int mealId = insertMeal("Pasta");
-        int ingredientId = insertIngredient("Spaghetti");
-        insertMealIngredient(mealId, ingredientId, 200.0, "g");
-
-        MealIngredient result = repository.getIngredientsForMeal(mealId).get(0);
-
-        assertEquals(mealId, result.getMealId());
-        assertEquals(ingredientId, result.getIngredientId());
-        assertEquals(200.0, result.getQuantity());
-        assertEquals("g", result.getUnit());
-        assertNotNull(result.getId());
-    }
-
-    @Test
-    void getIngredientsForMeal_acceptsNullUnit() throws SQLException {
-        int mealId = insertMeal("Pasta");
-        int ingredientId = insertIngredient("Basil");
-        insertMealIngredient(mealId, ingredientId, 1.0, null);
-
-        MealIngredient result = repository.getIngredientsForMeal(mealId).get(0);
-
-        assertNull(result.getUnit());
-    }
-
-    @Test
-    void getIngredientsForMeal_doesNotReturnIngredients_forOtherMeals() throws SQLException {
-        int meal1 = insertMeal("Pasta");
-        int meal2 = insertMeal("Salad");
-        int ingredientId = insertIngredient("Tomato");
-        insertMealIngredient(meal2, ingredientId, 100.0, "g");
-
-        List<MealIngredient> result = repository.getIngredientsForMeal(meal1);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getIngredientsForMeal_returnsMultipleIngredients() throws SQLException {
-        int mealId = insertMeal("Pasta");
-        int ing1 = insertIngredient("Spaghetti");
-        int ing2 = insertIngredient("Tomato Sauce");
-        int ing3 = insertIngredient("Parmesan");
-        insertMealIngredient(mealId, ing1, 200.0, "g");
-        insertMealIngredient(mealId, ing2, 150.0, "ml");
-        insertMealIngredient(mealId, ing3, 30.0, "g");
-
-        List<MealIngredient> result = repository.getIngredientsForMeal(mealId);
-
-        assertEquals(3, result.size());
     }
 
     // --- getIngredientsWithNameForMeal ---
