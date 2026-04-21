@@ -36,12 +36,10 @@ public class MainController {
 
     private User user;
     private LocalDate currentWeekStart;
-    private static final DayOfWeek weekStartDay = DayOfWeek.MONDAY;
-    private List<WeeklyMealViewModel> weeklyMeals;
+    private static final DayOfWeek WEEK_START_DAY = DayOfWeek.MONDAY;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
 
-    // UI Elements
     @FXML private GridPane mealPlanGrid;
     @FXML private Label weekLabel;
     @FXML private HBox footerBox;
@@ -51,25 +49,25 @@ public class MainController {
 
     @FXML
     private void togglePrefs() {
-        preferencesSidebarController.toggleVisibility();
+        this.preferencesSidebarController.toggleVisibility();
     }
 
     private int columnFor(LocalDate date) {
-        return date.getDayOfWeek().getValue() - weekStartDay.getValue();
+        return date.getDayOfWeek().getValue() - WEEK_START_DAY.getValue();
     }
 
     private void updateWeekLabel() {
-        this.weekLabel.setText(this.currentWeekStart.format(formatter) + " - " + this.currentWeekStart.plusDays(6).format(formatter));
+        this.weekLabel.setText(this.currentWeekStart.format(this.formatter) + " - " + this.currentWeekStart.plusDays(6).format(this.formatter));
     }
 
-    private void populateMealCards(Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
+    private void populateMealCards(List<WeeklyMealViewModel> weeklyMeals, Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
         Set<LocalDate> labelledDates = new HashSet<>();
         for (WeeklyMealViewModel meal : weeklyMeals) {
             // Day label
             int column = columnFor(meal.date());
             if (!labelledDates.contains(meal.date())) {
                 Label dayLabel = new Label(meal.dayLabel());
-                mealPlanGrid.add(dayLabel, column, 0);
+                this.mealPlanGrid.add(dayLabel, column, 0);
                 labelledDates.add(meal.date());
             }
 
@@ -85,48 +83,46 @@ public class MainController {
             int row = nextRowForDate.getOrDefault(meal.date(), 1);
             nextRowForDate.put(meal.date(), row + 1);
 
-            mealPlanGrid.add(card, column, row);
+            this.mealPlanGrid.add(card, column, row);
         }
     }
 
     private void appendCalorieTotals(Map<LocalDate, Integer> nextRowForDate, Map<LocalDate, Integer> calorieTotals) {
         for (Map.Entry<LocalDate, Integer> entry : calorieTotals.entrySet()) {
             int column = columnFor(entry.getKey());
-            mealPlanGrid.add(new Label("Total Calories: " + entry.getValue()), column, nextRowForDate.get(entry.getKey()));
+            this.mealPlanGrid.add(new Label("Total Calories: " + entry.getValue()), column, nextRowForDate.getOrDefault(entry.getKey(), 1));
         }
     }
 
     private void refreshMealPlanGrid() throws SQLException {
-        mealPlanGrid.getChildren().clear();
-        footerBox.getChildren().clear();
-        mealPlanGrid.setHgap(32);
-        mealPlanGrid.setVgap(12);
+        this.mealPlanGrid.getChildren().clear();
+        this.footerBox.getChildren().clear();
 
-        weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
+        List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
         if (weeklyMeals.isEmpty()) {
-            mealPlanGrid.getChildren().add(new Label("No plan for this week"));
-            shoppingListController.refresh(new HashMap<>());
+            this.mealPlanGrid.getChildren().add(new Label("No plan for this week"));
+            this.shoppingListController.refresh(new HashMap<>());
             return;
         }
 
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
-        Map<Integer, NutritionalEstimate> estimates = nutritionService.estimatesForMeals(mealIds);
-        Set<Integer> mealsWithNoIngredients = nutritionService.mealIdsWithNoIngredients(mealIds);
+        Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
+        Set<Integer> mealsWithNoIngredients = this.nutritionService.mealIdsWithNoIngredients(mealIds);
 
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
-        Map<LocalDate, Integer> calorieTotals = nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
+        Map<LocalDate, Integer> calorieTotals = this.nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
 
-        populateMealCards(estimates, nextRowForDate, mealsWithNoIngredients);
+        populateMealCards(weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
-            footerBox.getChildren().add(new Label("Weekly calories: " + weeklyTotal));
+            this.footerBox.getChildren().add(new Label("Weekly calories: " + weeklyTotal));
         }
 
         // Shopping List
         int planId = weeklyMeals.getFirst().mealPlanId();
-        Map<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
-        shoppingListController.refresh(shoppingList);
+        Map<String, List<ShoppingItem>> shoppingList = this.shoppingListService.buildList(planId);
+        this.shoppingListController.refresh(shoppingList);
     }
 
     private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText) {
@@ -137,7 +133,7 @@ public class MainController {
         Label nameLabel = new Label(meal.mealName());
         front.getChildren().add(nameLabel);
         // Calories
-        if (user.isShowCalories()) {
+        if (this.user.isShowCalories()) {
             Label calorieLabel = new Label(estimate != null ? estimate.cal() + " kcal" : "-- kcal");
             calorieLabel.getStyleClass().add("meal-kcal");
             front.getChildren().add(calorieLabel);
@@ -157,6 +153,8 @@ public class MainController {
         if (this.user.isShowNutritionalInfo() && estimate != null) {
             Separator sep = new Separator();
             GridPane.setColumnSpan(sep, 2);
+
+            // Add separator between macro and micro nutrients at row 5
             back.add(sep, 0, 5);
 
             back.add(new Label("Protein:"), 0, 0);
@@ -210,15 +208,17 @@ public class MainController {
 
     public void setup() throws SQLException {
         log.info("Initializing MainController");
+        this.mealPlanGrid.setHgap(32);
+        this.mealPlanGrid.setVgap(12);
 
         // TODO: resolve if multi-user support is added
-        this.user = userPreferencesService.loadUser(1);
+        this.user = this.userPreferencesService.loadUser(1);
         this.currentWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         updateWeekLabel();
 
         // Sidebar
-        preferencesSidebarController.setUserPreferencesService(userPreferencesService);
-        preferencesSidebarController.setOnPreferencesSaved((User updatedUser) -> {
+        this.preferencesSidebarController.setUserPreferencesService(this.userPreferencesService);
+        this.preferencesSidebarController.setOnPreferencesSaved((User updatedUser) -> {
             try {
                 this.user = updatedUser;
                 refreshMealPlanGrid();
@@ -232,22 +232,39 @@ public class MainController {
             }
         });
 
-        preferencesSidebarController.setFormValues(this.user);
-        refreshMealPlanGrid();
-        log.info("Loaded " + weeklyMeals.size() + " meals");
-    }
-
-    @FXML
-    private void goToPreviousWeek() throws SQLException {
-        this.currentWeekStart = currentWeekStart.minusDays(7);
-        updateWeekLabel();
+        this.preferencesSidebarController.setFormValues(this.user);
         refreshMealPlanGrid();
     }
 
     @FXML
-    private void goToNextWeek() throws SQLException {
-        this.currentWeekStart = currentWeekStart.plusDays(7);
-        updateWeekLabel();
-        refreshMealPlanGrid();
+    private void goToPreviousWeek() {
+        try {
+            this.currentWeekStart = this.currentWeekStart.minusDays(7);
+            updateWeekLabel();
+            refreshMealPlanGrid();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Refresh Error");
+            alert.setHeaderText("Meal plan refresh failed");
+            alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
+    private void goToNextWeek() {
+        try {
+            this.currentWeekStart = this.currentWeekStart.plusDays(7);
+            updateWeekLabel();
+            refreshMealPlanGrid();
+        } catch (SQLException e) {
+            log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Refresh Error");
+            alert.setHeaderText("Meal plan refresh failed");
+            alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
+            alert.showAndWait();
+        }
     }
 }
