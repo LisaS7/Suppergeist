@@ -48,6 +48,11 @@ public class ShoppingListController {
         this.categorisedList = shoppingList;
         shoppingListBox.getChildren().clear();
 
+        if (shoppingList.isEmpty()) {
+            shoppingListBox.getChildren().add(new Label("No meal plan loaded"));
+            return;
+        }
+        
         for (String category : this.categorisedList.keySet()) {
             Label header = new Label(category);
             shoppingListBox.getChildren().add(header);

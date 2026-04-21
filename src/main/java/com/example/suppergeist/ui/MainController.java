@@ -103,6 +103,12 @@ public class MainController {
         mealPlanGrid.setVgap(12);
 
         weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
+        if (weeklyMeals.isEmpty()) {
+            mealPlanGrid.getChildren().add(new Label("No plan for this week"));
+            shoppingListController.refresh(new HashMap<>());
+            return;
+        }
+
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = nutritionService.estimatesForMeals(mealIds);
         Set<Integer> mealsWithNoIngredients = nutritionService.mealIdsWithNoIngredients(mealIds);
@@ -116,6 +122,11 @@ public class MainController {
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
             footerBox.getChildren().add(new Label("Weekly calories: " + weeklyTotal));
         }
+
+        // Shopping List
+        int planId = weeklyMeals.getFirst().mealPlanId();
+        Map<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
+        shoppingListController.refresh(shoppingList);
     }
 
     private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText) {
@@ -224,12 +235,6 @@ public class MainController {
         preferencesSidebarController.setFormValues(this.user);
         refreshMealPlanGrid();
         log.info("Loaded " + weeklyMeals.size() + " meals");
-
-        if (!weeklyMeals.isEmpty()) {
-            int planId = weeklyMeals.getFirst().mealPlanId();
-            Map<String, List<ShoppingItem>> shoppingList = shoppingListService.buildList(planId);
-            shoppingListController.refresh(shoppingList);
-        }
     }
 
     @FXML

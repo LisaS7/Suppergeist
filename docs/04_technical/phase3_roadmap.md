@@ -65,7 +65,7 @@ null correctly for a meal with no ingredient matches; unit tests cover both case
 
 ---
 
-## Task 3 — Wire nutrition into UI 🔄
+## Task 3 — Wire nutrition into UI ✅
 
 *(Depends on Task 2)*
 
@@ -91,7 +91,7 @@ and totals; `"-- kcal"` still appears for unmatched meals; daily and weekly tota
 
 ---
 
-## Task 4 — Validation & feedback layer ⬜
+## Task 4 — Validation & feedback layer ✅
 
 *(Depends on Tasks 2 and 3)*
 
@@ -115,7 +115,7 @@ the correct reason; meals with matched data show no indicator.
 
 ---
 
-## Task 5 — Empty state messages ⬜
+## Task 5 — Empty state messages ✅
 
 *(Depends on Task 1)*
 
@@ -148,8 +148,8 @@ Revisit post-submission if needed.
 
 - [x] Hardcoded reference date replaced with current-week calculation
 - [x] Prev/Next week buttons and week range label working in the UI
-- [ ] Empty week state shows `"No plan for this week"` in the grid; shopping list shows `"No plan loaded"`
+- [x] Empty week state shows `"No plan for this week"` in the grid; shopping list shows `"No plan loaded"`
 - [x] `NutritionService` computes estimates from stored ingredient data
 - [x] Meal cards show real kcal figures where data exists; `showCalories` toggle is functional
 - [x] Daily and weekly kcal totals visible when `showCalories` is on
-- [ ] `!` indicator with tooltip appears on meal cards missing nutrition data
+- [x] `!` indicator with tooltip appears on meal cards missing nutrition data
