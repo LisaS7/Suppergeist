@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -147,6 +148,30 @@ class NutritionServiceTest {
             Map<Integer, NutritionalEstimate> results = nutritionService.estimatesForMeals(List.of(mealId));
 
             assertNull(results.get(mealId));
+        }
+    }
+
+    @Test
+    void mealIdsWithNoIngredients_returnsMealWithNoIngredients() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            int mealId = insertMeal(conn, "Empty Meal");
+
+            Set<Integer> result = nutritionService.mealIdsWithNoIngredients(List.of(mealId));
+
+            assertTrue(result.contains(mealId));
+        }
+    }
+
+    @Test
+    void mealIdsWithNoIngredients_excludesMealThatHasIngredients() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            int mealId = insertMeal(conn, "Meal With Ingredients");
+            int ingId = insertIngredientNoNutrition(conn, "Some Ingredient");
+            linkIngredient(conn, mealId, ingId, 100.0);
+
+            Set<Integer> result = nutritionService.mealIdsWithNoIngredients(List.of(mealId));
+
+            assertFalse(result.contains(mealId));
         }
     }
 }

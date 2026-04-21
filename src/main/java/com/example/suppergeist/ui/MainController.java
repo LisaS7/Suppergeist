@@ -10,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -61,7 +62,7 @@ public class MainController {
         this.weekLabel.setText(this.currentWeekStart.format(formatter) + " - " + this.currentWeekStart.plusDays(6).format(formatter));
     }
 
-    private void populateMealCards(Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate) {
+    private void populateMealCards(Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
         Set<LocalDate> labelledDates = new HashSet<>();
         for (WeeklyMealViewModel meal : weeklyMeals) {
             // Day label
@@ -73,7 +74,14 @@ public class MainController {
             }
 
             NutritionalEstimate estimate = estimates.get(meal.mealId());
-            StackPane card = buildMealCard(meal, estimate);
+            String toolTipText = null;
+            if (estimate == null) {
+                toolTipText = mealsWithNoIngredients.contains(meal.mealId())
+                        ? "No ingredients recorded"
+                        : "No nutrition data for this meal";
+            }
+
+            StackPane card = buildMealCard(meal, estimate, toolTipText);
             int row = nextRowForDate.getOrDefault(meal.date(), 1);
             nextRowForDate.put(meal.date(), row + 1);
 
@@ -97,11 +105,12 @@ public class MainController {
         weeklyMeals = mealPlanService.getWeeklyMeals(user.getId(), currentWeekStart);
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = nutritionService.estimatesForMeals(mealIds);
+        Set<Integer> mealsWithNoIngredients = nutritionService.mealIdsWithNoIngredients(mealIds);
 
         Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
         Map<LocalDate, Integer> calorieTotals = nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
 
-        populateMealCards(estimates, nextRowForDate);
+        populateMealCards(estimates, nextRowForDate, mealsWithNoIngredients);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
@@ -109,7 +118,7 @@ public class MainController {
         }
     }
 
-    private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate) {
+    private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText) {
         // FRONT
         VBox front = new VBox();
         front.getStyleClass().add("meal-card");
@@ -121,6 +130,12 @@ public class MainController {
             Label calorieLabel = new Label(estimate != null ? estimate.cal() + " kcal" : "-- kcal");
             calorieLabel.getStyleClass().add("meal-kcal");
             front.getChildren().add(calorieLabel);
+        }
+        // ToolTip
+        if (toolTipText != null) {
+            Label tooltipLabel = new Label("!");
+            front.getChildren().add(tooltipLabel);
+            Tooltip.install(tooltipLabel, new Tooltip(toolTipText));
         }
 
         // BACK

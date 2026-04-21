@@ -7,9 +7,7 @@ import com.example.suppergeist.repository.MealIngredientRepository;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NutritionService {
     private final MealIngredientRepository mealIngredientRepository;
@@ -32,6 +30,17 @@ public class NutritionService {
             NutritionalEstimate estimate = estimates.get(meal.mealId());
             if (estimate != null) {
                 results.put(meal.date(), results.getOrDefault(meal.date(), 0) + estimate.cal());
+            }
+        }
+        return results;
+    }
+
+    public Set<Integer> mealIdsWithNoIngredients(List<Integer> mealIds) throws SQLException {
+        Set<Integer> results = new HashSet<>();
+        Map<Integer, List<MealIngredientRow>> meals = mealIngredientRepository.getIngredientsWithNutritionForMeals(mealIds);
+        for (Integer id : mealIds) {
+            if (!meals.containsKey(id)) {
+                results.add(id);
             }
         }
         return results;
