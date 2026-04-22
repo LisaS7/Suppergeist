@@ -79,14 +79,14 @@ class AppSeedServiceTest {
         seedService.seedIfEmpty();
         seedService.seedMealPlansIfEmpty();
 
-        List<Meal> meals = new MealRepository(dbManager).getAllMeals();
+        List<Meal> meals = new MealRepository(dbManager).getAll();
         assertEquals(7, meals.size());
 
         LocalDate thisWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         MealPlanRepository planRepo = new MealPlanRepository(dbManager);
-        assertTrue(planRepo.getMealPlanByUserAndStartDate(1, thisWeekStart).isPresent());
-        assertTrue(planRepo.getMealPlanByUserAndStartDate(1, thisWeekStart.plusWeeks(1)).isPresent());
-        assertTrue(planRepo.getMealPlanByUserAndStartDate(1, thisWeekStart.plusWeeks(2)).isPresent());
+        assertTrue(planRepo.getByUserAndStartDate(1, thisWeekStart).isPresent());
+        assertTrue(planRepo.getByUserAndStartDate(1, thisWeekStart.plusWeeks(1)).isPresent());
+        assertTrue(planRepo.getByUserAndStartDate(1, thisWeekStart.plusWeeks(2)).isPresent());
     }
 
     @Test
@@ -98,7 +98,7 @@ class AppSeedServiceTest {
         seedService.seedMealPlansIfEmpty();
 
         MealIngredientRepository mealIngRepo = new MealIngredientRepository(dbManager);
-        List<Meal> meals = new MealRepository(dbManager).getAllMeals();
+        List<Meal> meals = new MealRepository(dbManager).getAll();
 
         for (Meal meal : meals) {
             List<MealIngredientRow> rows = mealIngRepo.getIngredientsWithNutritionForMeal(meal.getId());
@@ -114,10 +114,10 @@ class AppSeedServiceTest {
     void seedMealPlansIfEmpty_isIdempotent() throws SQLException, IOException {
         seedService.seedIfEmpty();
         seedService.seedMealPlansIfEmpty();
-        int mealCountAfterFirst = new MealRepository(dbManager).getAllMeals().size();
+        int mealCountAfterFirst = new MealRepository(dbManager).getAll().size();
 
         seedService.seedMealPlansIfEmpty();
-        int mealCountAfterSecond = new MealRepository(dbManager).getAllMeals().size();
+        int mealCountAfterSecond = new MealRepository(dbManager).getAll().size();
 
         assertEquals(mealCountAfterFirst, mealCountAfterSecond);
     }

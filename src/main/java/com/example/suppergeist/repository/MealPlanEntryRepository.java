@@ -3,10 +3,7 @@ package com.example.suppergeist.repository;
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.MealPlanEntry;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +33,34 @@ public class MealPlanEntryRepository {
                 return rows;
             }
         }
+    }
 
+    public MealPlanEntry create(MealPlanEntry mealPlanEntry) throws SQLException {
+        String sql = "INSERT INTO meal_plan_entries (meal_plan_id, meal_id, day_offset, meal_type) " +
+                "VALUES (?, ?, ?, ?)";
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, mealPlanEntry.getMealPlanId());
+            stmt.setInt(2, mealPlanEntry.getMealId());
+            stmt.setInt(3, mealPlanEntry.getDayOffset());
+            stmt.setString(4, mealPlanEntry.getMealType());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                rs.next();
+                return new MealPlanEntry(rs.getInt(1), mealPlanEntry.getMealPlanId(), mealPlanEntry.getMealId(), mealPlanEntry.getDayOffset(), mealPlanEntry.getMealType(), mealPlanEntry.getMealName());
+            }
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM meal_plan_entries WHERE id = ?";
+        try (
+                Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
     }
 
 }

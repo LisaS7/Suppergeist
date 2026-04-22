@@ -3,10 +3,7 @@ package com.example.suppergeist.repository;
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.MealPlan;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -24,7 +21,7 @@ public class MealPlanRepository {
         return new MealPlan(id, userId, startDate);
     }
 
-    public Optional<MealPlan> getMealPlanByUserAndStartDate(int userId, LocalDate startDate) throws SQLException {
+    public Optional<MealPlan> getByUserAndStartDate(int userId, LocalDate startDate) throws SQLException {
         String sql = "SELECT * FROM meal_plans WHERE user_id=? AND start_date=?";
 
         try (
@@ -45,4 +42,30 @@ public class MealPlanRepository {
         }
     }
 
+    public MealPlan create(MealPlan mealPlan) throws SQLException {
+        String sql = "INSERT INTO meal_plans (user_id, start_date) VALUES (?, ?)";
+        try (
+                Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
+        ) {
+            stmt.setInt(1, mealPlan.userId());
+            stmt.setString(2, mealPlan.startDate().toString());
+            stmt.executeUpdate();
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                rs.next();
+                return new MealPlan(rs.getInt(1), mealPlan.userId(), mealPlan.startDate());
+            }
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM meal_plans WHERE id = ?";
+        try (
+                Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
 }

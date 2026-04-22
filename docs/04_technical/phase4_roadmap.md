@@ -22,8 +22,8 @@ defaults:
 |----------------|---------------------|--------------------------------------------------------------------|
 | `meal_plans`   | `meal_plan_entries` | CASCADE — entries are meaningless without their plan               |
 | `meals`        | `meal_ingredients`  | CASCADE — ingredient list is part of the meal                      |
-| `meals`        | `meal_plan_entries` | RESTRICT — do not silently remove plan entries                     |
-| `ingredients`  | `meal_ingredients`  | RESTRICT — do not silently delete ingredient lines                 |
+| `meals`        | `meal_plan_entries` | CASCADE — plan slot is meaningless without the meal                |
+| `ingredients`  | `meal_ingredients`  | CASCADE — ingredient line is meaningless without the ingredient    |
 | `users`        | `meal_plans`        | CASCADE                                                            |
 
 Note: SQLite foreign key enforcement requires `PRAGMA foreign_keys = ON` per connection — confirm
@@ -36,7 +36,7 @@ Audit each repository for missing insert/update/delete methods and add what's ne
 - `MealRepository` — `insert(Meal)`, `update(Meal)`, `delete(int mealId)`
 - `MealPlanRepository` — `insert(MealPlan)`, `delete(int mealPlanId)`
 - `MealPlanEntryRepository` — `insert(MealPlanEntry)`, `delete(int entryId)`
-- `MealIngredientRepository` — `insert(MealIngredient)`, `delete(int id)`
+- `MealIngredientRepository` — `insert(int mealId, int ingredientId, double quantity, String unit)`, `delete(int id)`
 
 Unit-test each write method against a real in-memory or temp DB — do not mock at the repository level.
 

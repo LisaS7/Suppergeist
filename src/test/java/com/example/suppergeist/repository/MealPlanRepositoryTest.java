@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -44,7 +45,7 @@ class MealPlanRepositoryTest {
     private void insertUser(int id) throws SQLException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                 "INSERT INTO users (id, name) VALUES (?, ?)")) {
+                     "INSERT INTO users (id, name) VALUES (?, ?)")) {
             stmt.setInt(1, id);
             stmt.setString(2, "User " + id);
             stmt.executeUpdate();
@@ -54,52 +55,82 @@ class MealPlanRepositoryTest {
     private void insertPlan(int userId, LocalDate startDate) throws SQLException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                 "INSERT INTO meal_plans (user_id, start_date) VALUES (?, ?)")) {
+                     "INSERT INTO meal_plans (user_id, start_date) VALUES (?, ?)")) {
             stmt.setInt(1, userId);
             stmt.setString(2, startDate.toString());
             stmt.executeUpdate();
         }
     }
 
+    private void insertMeal(int id, String name) throws SQLException {
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("INSERT INTO meals (id, name) VALUES (?, ?)")) {
+            stmt.setInt(1, id);
+            stmt.setString(2, name);
+            stmt.executeUpdate();
+        }
+    }
+
+    private void insertPlanEntry(int planId, int mealId) throws SQLException {
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT INTO meal_plan_entries (meal_plan_id, meal_id, day_offset, meal_type) VALUES (?, ?, 0, 'dinner')")) {
+            stmt.setInt(1, planId);
+            stmt.setInt(2, mealId);
+            stmt.executeUpdate();
+        }
+    }
+
+    private int countEntriesForPlan(int planId) throws SQLException {
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM meal_plan_entries WHERE meal_plan_id = ?")) {
+            stmt.setInt(1, planId);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        }
+    }
+
     @Test
-    void getMealPlanByUserAndStartDate_returnsPlan_whenFound() throws SQLException {
+    void get_whenFound() throws SQLException {
         insertPlan(1, LocalDate.of(2026, 3, 31));
 
-        Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
+        Optional<MealPlan> result = repository.getByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
 
         assertTrue(result.isPresent());
     }
 
     @Test
-    void getMealPlanByUserAndStartDate_returnsEmpty_whenNoMatchingUser() throws SQLException {
+    void getByUserAndStartDate_returnsEmpty_whenNoMatchingUser() throws SQLException {
         insertPlan(1, LocalDate.of(2026, 3, 31));
 
-        Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(99, LocalDate.of(2026, 3, 31));
+        Optional<MealPlan> result = repository.getByUserAndStartDate(99, LocalDate.of(2026, 3, 31));
 
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void getMealPlanByUserAndStartDate_returnsEmpty_whenNoMatchingDate() throws SQLException {
+    void getByUserAndStartDate_returnsEmpty_whenNoMatchingDate() throws SQLException {
         insertPlan(1, LocalDate.of(2026, 3, 31));
 
-        Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(1, LocalDate.of(2026, 4, 7));
+        Optional<MealPlan> result = repository.getByUserAndStartDate(1, LocalDate.of(2026, 4, 7));
 
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void getMealPlanByUserAndStartDate_returnsEmpty_whenTableIsEmpty() throws SQLException {
-        Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
+    void getByUserAndStartDate_returnsEmpty_whenTableIsEmpty() throws SQLException {
+        Optional<MealPlan> result = repository.getByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
 
         assertTrue(result.isEmpty());
     }
 
     @Test
-    void getMealPlanByUserAndStartDate_mapsFieldsCorrectly() throws SQLException {
+    void getByUserAndStartDate_mapsFieldsCorrectly() throws SQLException {
         insertPlan(42, LocalDate.of(2026, 4, 7));
 
-        Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(42, LocalDate.of(2026, 4, 7));
+        Optional<MealPlan> result = repository.getByUserAndStartDate(42, LocalDate.of(2026, 4, 7));
 
         assertTrue(result.isPresent());
         MealPlan plan = result.get();
@@ -109,15 +140,61 @@ class MealPlanRepositoryTest {
     }
 
     @Test
-    void getMealPlanByUserAndStartDate_returnsOnlyMatchingPlan_whenMultiplePlansExist() throws SQLException {
+    void get_whenMultiplePlansExist() throws SQLException {
         insertPlan(1, LocalDate.of(2026, 3, 24));
         insertPlan(1, LocalDate.of(2026, 3, 31));
         insertPlan(2, LocalDate.of(2026, 3, 31));
 
-        Optional<MealPlan> result = repository.getMealPlanByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
+        Optional<MealPlan> result = repository.getByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
 
         assertTrue(result.isPresent());
         assertEquals(1, result.get().userId());
         assertEquals(LocalDate.of(2026, 3, 31), result.get().startDate());
+    }
+
+    // --- create ---
+
+    @Test
+    void create_returnsPlanWithGeneratedId() throws SQLException {
+        MealPlan result = repository.create(new MealPlan(null, 1, LocalDate.of(2026, 4, 14)));
+
+        assertNotNull(result.id());
+        assertTrue(result.id() > 0);
+    }
+
+    @Test
+    void create_persistsPlan() throws SQLException {
+        repository.create(new MealPlan(null, 1, LocalDate.of(2026, 4, 14)));
+
+        assertTrue(repository.getByUserAndStartDate(1, LocalDate.of(2026, 4, 14)).isPresent());
+    }
+
+    @Test
+    void create_mapsFieldsCorrectly() throws SQLException {
+        MealPlan result = repository.create(new MealPlan(null, 42, LocalDate.of(2026, 4, 14)));
+
+        assertEquals(42, result.userId());
+        assertEquals(LocalDate.of(2026, 4, 14), result.startDate());
+    }
+
+    // --- delete ---
+
+    @Test
+    void delete_removesPlan() throws SQLException {
+        MealPlan created = repository.create(new MealPlan(null, 1, LocalDate.of(2026, 4, 14)));
+        repository.delete(created.id());
+
+        assertTrue(repository.getByUserAndStartDate(1, LocalDate.of(2026, 4, 14)).isEmpty());
+    }
+
+    @Test
+    void delete_cascadesToMealPlanEntries() throws SQLException {
+        insertMeal(1, "Soup");
+        MealPlan plan = repository.create(new MealPlan(null, 1, LocalDate.of(2026, 4, 14)));
+        insertPlanEntry(plan.id(), 1);
+
+        repository.delete(plan.id());
+
+        assertEquals(0, countEntriesForPlan(plan.id()));
     }
 }

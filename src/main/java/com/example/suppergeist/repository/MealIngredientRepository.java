@@ -111,4 +111,28 @@ public class MealIngredientRepository {
             }
         }
     }
+
+    public void create(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
+        String sql = "INSERT INTO meal_ingredients (meal_id, ingredient_id, quantity, unit) " +
+                "VALUES (?, ?, ?, ?)";
+        try (
+                Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+            stmt.setInt(1, mealId);
+            stmt.setInt(2, ingredientId);
+            stmt.setDouble(3, quantity);
+            stmt.setString(4, unit);
+            stmt.executeUpdate();
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM meal_ingredients WHERE id = ?";
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+        }
+    }
 }

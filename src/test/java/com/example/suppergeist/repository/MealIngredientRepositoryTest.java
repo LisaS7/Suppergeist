@@ -85,6 +85,18 @@ class MealIngredientRepositoryTest {
         }
     }
 
+    private int getMealIngredientId(int mealId, int ingredientId) throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            var stmt = conn.prepareStatement(
+                    "SELECT id FROM meal_ingredients WHERE meal_id = ? AND ingredient_id = ?");
+            stmt.setInt(1, mealId);
+            stmt.setInt(2, ingredientId);
+            var rs = stmt.executeQuery();
+            rs.next();
+            return rs.getInt(1);
+        }
+    }
+
     // --- getIngredientsWithNameForMeal ---
 
     @Test
@@ -164,5 +176,60 @@ class MealIngredientRepositoryTest {
         List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(meal1);
 
         assertTrue(result.isEmpty());
+    }
+
+    // --- create ---
+
+    @Test
+    void create_persistsMealIngredient() throws SQLException {
+        int mealId = insertMeal("Pasta");
+        int ingredientId = insertIngredient("Spaghetti");
+
+        repository.create(mealId, ingredientId, 200.0, "g");
+
+        assertEquals(1, repository.getIngredientsWithNutritionForMeal(mealId).size());
+    }
+
+    @Test
+    void create_mapsFieldsCorrectly() throws SQLException {
+        int mealId = insertMeal("Pasta");
+        int ingredientId = insertIngredient("Spaghetti");
+
+        repository.create(mealId, ingredientId, 200.0, "g");
+
+        MealIngredientRow result = repository.getIngredientsWithNutritionForMeal(mealId).get(0);
+        assertEquals(ingredientId, result.ingredient().getId());
+        assertEquals(200.0, result.quantity());
+        assertEquals("g", result.unit());
+    }
+
+    // --- delete ---
+
+    @Test
+    void delete_removesMealIngredient() throws SQLException {
+        int mealId = insertMeal("Pasta");
+        int ingredientId = insertIngredient("Spaghetti");
+        repository.create(mealId, ingredientId, 200.0, "g");
+        int id = getMealIngredientId(mealId, ingredientId);
+
+        repository.delete(id);
+
+        assertTrue(repository.getIngredientsWithNutritionForMeal(mealId).isEmpty());
+    }
+
+    @Test
+    void delete_doesNotAffectOtherMealIngredients() throws SQLException {
+        int mealId = insertMeal("Pasta");
+        int ing1 = insertIngredient("Spaghetti");
+        int ing2 = insertIngredient("Tomato");
+        repository.create(mealId, ing1, 200.0, "g");
+        repository.create(mealId, ing2, 50.0, "g");
+        int idToDelete = getMealIngredientId(mealId, ing1);
+
+        repository.delete(idToDelete);
+
+        List<MealIngredientRow> remaining = repository.getIngredientsWithNutritionForMeal(mealId);
+        assertEquals(1, remaining.size());
+        assertEquals(ing2, remaining.get(0).ingredient().getId());
     }
 }

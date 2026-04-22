@@ -74,7 +74,8 @@ No layer skipping. UI never touches the database; services never touch the UI.
 - `AppSeedService` — seeds the `ingredients` table from the bundled CoFID CSV on first launch; also seeds 7 hardcoded meals with ingredients and 3 weeks of meal plans for user 1 (dev data)
 - `ShoppingListService` — builds an aggregated shopping list from meal plan entries; groups items by category using food code prefixes; returns `LinkedHashMap<String, List<ShoppingItem>>`
 - `UserPreferencesService` — thin wrapper around `UserRepository` and `IngredientRepository`; loads the user record, saves preferences, and retrieves the full ingredient list for the preferences sidebar
-- `WeeklyMealViewModel` — record passed from `MealPlanService` to the UI (mealPlanId, date, dayLabel, mealType, mealName)
+- `NutritionService` — calculates `NutritionalEstimate` per meal from `MealIngredientRow` data; also provides daily calorie totals and the set of meal IDs that have no ingredients
+- `WeeklyMealViewModel` — record passed from `MealPlanService` to the UI (mealPlanId, mealId, date, dayLabel, mealType, mealName)
 
 ### Service Layer Classes (planned — not yet built)
 - `OllamaClient` — thin HTTP wrapper; returns raw response strings; calls are blocking (run off the JavaFX thread via `Task<MealPlan>`)
@@ -123,13 +124,6 @@ Meal
 ├── id: Integer
 └── name: String
 
-MealIngredient  (join between Meal and Ingredient)
-├── id: Integer
-├── mealId: int
-├── ingredientId: int
-├── quantity: double
-└── unit: String
-
 Ingredient
 ├── id: Integer
 ├── name: String
@@ -140,7 +134,15 @@ NutritionalEstimate
 ├── cal: int
 ├── proteinG: double
 ├── carbsG: double
-└── fatG: double
+├── fatG: double
+├── totalSugarsG: double
+├── fibreG: double
+├── vitaminAMcg: double
+├── vitaminCMg: double
+├── vitaminDMcg: double
+├── vitaminEMg: double
+├── vitaminB12Mcg: double
+└── folateMcg: double
 
 ShoppingItem  (used by ShoppingListService / ShoppingListController)
 ├── name: String
@@ -148,7 +150,7 @@ ShoppingItem  (used by ShoppingListService / ShoppingListController)
 ├── unit: String
 └── foodCode: String
 
-MealIngredientRow  (internal to ShoppingListService — ingredient + quantity resolved together)
+MealIngredientRow  (used by ShoppingListService and NutritionService — ingredient + quantity resolved together)
 ├── ingredient: Ingredient
 ├── quantity: double
 └── unit: String

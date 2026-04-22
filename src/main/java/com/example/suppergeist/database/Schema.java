@@ -47,8 +47,8 @@ public final class Schema {
     public static final String CREATE_MEAL_INGREDIENTS =
             "CREATE TABLE IF NOT EXISTS meal_ingredients (" +
                     "    id            INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "    meal_id       INTEGER NOT NULL REFERENCES meals(id), " +
-                    "    ingredient_id INTEGER NOT NULL REFERENCES ingredients(id), " +
+                    "    meal_id       INTEGER NOT NULL REFERENCES meals(id) ON DELETE CASCADE, " +
+                    "    ingredient_id INTEGER NOT NULL REFERENCES ingredients(id) ON DELETE CASCADE, " +
                     "    quantity      REAL    NOT NULL, " +
                     "    unit          TEXT " +
                     ");";
@@ -60,7 +60,7 @@ public final class Schema {
     public static final String CREATE_MEAL_PLANS =
             "CREATE TABLE IF NOT EXISTS meal_plans (" +
                     "    id         INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "    user_id    INTEGER NOT NULL REFERENCES users(id), " +
+                    "    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, " +
                     "    start_date TEXT    NOT NULL " +
                     ");";
 
@@ -71,8 +71,8 @@ public final class Schema {
     public static final String CREATE_MEAL_PLAN_ENTRIES =
             "CREATE TABLE IF NOT EXISTS meal_plan_entries (" +
                     "    id           INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "    meal_plan_id INTEGER NOT NULL REFERENCES meal_plans(id), " +
-                    "    meal_id      INTEGER NOT NULL REFERENCES meals(id), " +
+                    "    meal_plan_id INTEGER NOT NULL REFERENCES meal_plans(id) ON DELETE CASCADE, " +
+                    "    meal_id      INTEGER NOT NULL REFERENCES meals(id) ON DELETE CASCADE, " +
                     "    day_offset   INTEGER NOT NULL CHECK (day_offset BETWEEN 0 AND 6), " +
                     "    meal_type    TEXT    NOT NULL, " +
                     "    UNIQUE (meal_plan_id, day_offset, meal_type)" +

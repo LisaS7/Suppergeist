@@ -141,4 +141,53 @@ class MealPlanEntryRepositoryTest {
         assertEquals(2, result.get(2).getDayOffset());
         assertEquals("lunch", result.get(2).getMealType());
     }
+
+    // --- create ---
+
+    @Test
+    void create_returnsEntryWithGeneratedId() throws SQLException {
+        MealPlanEntry result = repository.create(new MealPlanEntry(1, 10, 0, "dinner", "Test Meal A"));
+
+        assertNotNull(result.getId());
+        assertTrue(result.getId() > 0);
+    }
+
+    @Test
+    void create_persistsEntry() throws SQLException {
+        repository.create(new MealPlanEntry(1, 10, 0, "dinner", "Test Meal A"));
+
+        assertEquals(1, repository.getMealPlanEntries(1).size());
+    }
+
+    @Test
+    void create_mapsAllFieldsCorrectly() throws SQLException {
+        MealPlanEntry result = repository.create(new MealPlanEntry(1, 42, 3, "lunch", "Test Meal E"));
+
+        assertEquals(1, result.getMealPlanId());
+        assertEquals(42, result.getMealId());
+        assertEquals(3, result.getDayOffset());
+        assertEquals("lunch", result.getMealType());
+        assertEquals("Test Meal E", result.getMealName());
+    }
+
+    // --- delete ---
+
+    @Test
+    void delete_removesEntry() throws SQLException {
+        MealPlanEntry created = repository.create(new MealPlanEntry(1, 10, 0, "dinner", "Test Meal A"));
+        repository.delete(created.getId());
+
+        assertTrue(repository.getMealPlanEntries(1).isEmpty());
+    }
+
+    @Test
+    void delete_doesNotAffectOtherEntries() throws SQLException {
+        MealPlanEntry first = repository.create(new MealPlanEntry(1, 10, 0, "dinner", "Test Meal A"));
+        repository.create(new MealPlanEntry(1, 11, 1, "lunch", "Test Meal B"));
+        repository.delete(first.getId());
+
+        List<MealPlanEntry> remaining = repository.getMealPlanEntries(1);
+        assertEquals(1, remaining.size());
+        assertEquals(11, remaining.get(0).getMealId());
+    }
 }
