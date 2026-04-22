@@ -41,8 +41,8 @@ public class PreferencesSidebarController {
     @FXML
     public void initialize() {
         // Avoid Food Codes Search Listener
-        avoidFoodCodesSearch.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredIngredients.setPredicate(ingredient ->
+        this.avoidFoodCodesSearch.textProperty().addListener((observable, oldValue, newValue) -> {
+            this.filteredIngredients.setPredicate(ingredient ->
                     newValue == null || newValue.isEmpty() || ingredient.getName().toLowerCase().contains(newValue.toLowerCase())
             );
         });
@@ -55,36 +55,36 @@ public class PreferencesSidebarController {
     }
 
     public void toggleVisibility() {
-        root.setVisible(!root.isVisible());
-        root.setManaged(root.isVisible());
+        this.root.setVisible(!this.root.isVisible());
+        this.root.setManaged(this.root.isVisible());
     }
 
     public void setFormValues(User user) throws SQLException {
         this.user = user;
 
         // ---------- Dietary Constraints ----------
-        vegetarianCheckbox.setSelected(user.getDietaryConstraints().contains("vegetarian"));
-        veganCheckbox.setSelected(user.getDietaryConstraints().contains("vegan"));
-        glutenFreeCheckbox.setSelected(user.getDietaryConstraints().contains("gluten-free"));
-        dairyFreeCheckbox.setSelected(user.getDietaryConstraints().contains("dairy-free"));
+        this.vegetarianCheckbox.setSelected(user.getDietaryConstraints().contains("vegetarian"));
+        this.veganCheckbox.setSelected(user.getDietaryConstraints().contains("vegan"));
+        this.glutenFreeCheckbox.setSelected(user.getDietaryConstraints().contains("gluten-free"));
+        this.dairyFreeCheckbox.setSelected(user.getDietaryConstraints().contains("dairy-free"));
 
         // ---------- Avoid Food Codes ----------
         // Load all ingredients into an ObservableList once. The ListView doesn't use this directly —
         // instead a FilteredList wraps it and acts as a live window, showing only items that match
         // the current search text. The predicate starts as always-true (show everything) and is
         // swapped on each search keystroke. The ObservableList itself never changes.
-        List<Ingredient> allIngredients = userPreferencesService.getAllIngredients();
+        List<Ingredient> allIngredients = this.userPreferencesService.getAllIngredients();
         ObservableList<Ingredient> avoidFoodCodes = FXCollections.observableArrayList();
         avoidFoodCodes.addAll(allIngredients);
         this.filteredIngredients = new FilteredList<>(avoidFoodCodes, ingredient -> true);
 
 
-        avoidFoodCodesListView.setItems(filteredIngredients);
-        avoidFoodCodesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        this.avoidFoodCodesListView.setItems(this.filteredIngredients);
+        this.avoidFoodCodesListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         for (Ingredient ingredient : allIngredients) {
             if (ingredient.getFoodCode() != null && user.getAvoidFoodCodes().contains(ingredient.getFoodCode())) {
-                avoidFoodCodesListView.getSelectionModel().select(ingredient);
+                this.avoidFoodCodesListView.getSelectionModel().select(ingredient);
             }
         }
         // ------------------------------------------
@@ -100,47 +100,50 @@ public class PreferencesSidebarController {
         // ---------- Dietary Constraints ----------
         Set<String> dietaryConstraints = new HashSet<>();
 
-        if (vegetarianCheckbox.isSelected()) {
+        if (this.vegetarianCheckbox.isSelected()) {
             dietaryConstraints.add("vegetarian");
         }
 
-        if (veganCheckbox.isSelected()) {
+        if (this.veganCheckbox.isSelected()) {
             dietaryConstraints.add("vegan");
         }
 
-        if (glutenFreeCheckbox.isSelected()) {
+        if (this.glutenFreeCheckbox.isSelected()) {
             dietaryConstraints.add("gluten-free");
         }
 
-        if (dairyFreeCheckbox.isSelected()) {
+        if (this.dairyFreeCheckbox.isSelected()) {
             dietaryConstraints.add("dairy-free");
         }
 
         // ---------- Avoid Food Codes ----------
-        List<Ingredient> selectedIngredients = avoidFoodCodesListView.getSelectionModel().getSelectedItems();
+        List<Ingredient> selectedIngredients = this.avoidFoodCodesListView.getSelectionModel().getSelectedItems();
         Set<String> selectedFoodCodes = new HashSet<>();
         for (Ingredient ingredient : selectedIngredients) {
             selectedFoodCodes.add(ingredient.getFoodCode());
         }
 
-        this.user = new User(
-                this.user.getId(),
-                this.user.getName(),
-                dietaryConstraints,
-                selectedFoodCodes,
-                this.servingsPerMealSpinner.getValue(),
-                this.showCaloriesCheckbox.isSelected(),
-                this.showNutritionalInfoCheckbox.isSelected()
-        );
-
         try {
             this.userPreferencesService.savePreferences(this.user);
+            this.user = new User(
+                    this.user.getId(),
+                    this.user.getName(),
+                    dietaryConstraints,
+                    selectedFoodCodes,
+                    this.servingsPerMealSpinner.getValue(),
+                    this.showCaloriesCheckbox.isSelected(),
+                    this.showNutritionalInfoCheckbox.isSelected()
+            );
             if (this.onPreferencesSaved != null) {
                 this.onPreferencesSaved.accept(this.user);
             }
         } catch (SQLException e) {
             log.log(Level.SEVERE, "Failed to save user preferences", e);
-            new Alert(Alert.AlertType.ERROR, "Failed to save preferences").showAndWait();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Save Error");
+            alert.setHeaderText("Failed to save preferences");
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
         }
     }
 }

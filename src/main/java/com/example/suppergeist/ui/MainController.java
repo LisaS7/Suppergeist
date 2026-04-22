@@ -154,7 +154,7 @@ public class MainController {
             Separator sep = new Separator();
             GridPane.setColumnSpan(sep, 2);
 
-            // Add separator between macro and micro nutrients at row 5
+            // row 5 is intentionally blank — separator fills it
             back.add(sep, 0, 5);
 
             back.add(new Label("Protein:"), 0, 0);
@@ -206,6 +206,15 @@ public class MainController {
         firstHalf.play();
     }
 
+    private void handleGridRefreshError(SQLException e) {
+        log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Refresh Error");
+        alert.setHeaderText("Meal plan refresh failed");
+        alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
+        alert.showAndWait();
+    }
+
     public void setup() throws SQLException {
         log.info("Initializing MainController");
         this.mealPlanGrid.setHgap(32);
@@ -223,18 +232,14 @@ public class MainController {
                 this.user = updatedUser;
                 refreshMealPlanGrid();
             } catch (SQLException e) {
-                log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Refresh Error");
-                alert.setHeaderText("Meal plan refresh failed");
-                alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
-                alert.showAndWait();
+                handleGridRefreshError(e);
             }
         });
 
         this.preferencesSidebarController.setFormValues(this.user);
         refreshMealPlanGrid();
     }
+
 
     @FXML
     private void goToPreviousWeek() {
@@ -243,12 +248,7 @@ public class MainController {
             updateWeekLabel();
             refreshMealPlanGrid();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Refresh Error");
-            alert.setHeaderText("Meal plan refresh failed");
-            alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
-            alert.showAndWait();
+            handleGridRefreshError(e);
         }
     }
 
@@ -259,12 +259,7 @@ public class MainController {
             updateWeekLabel();
             refreshMealPlanGrid();
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Refresh Error");
-            alert.setHeaderText("Meal plan refresh failed");
-            alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
-            alert.showAndWait();
+            handleGridRefreshError(e);
         }
     }
 }

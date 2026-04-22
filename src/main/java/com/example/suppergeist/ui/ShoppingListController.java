@@ -2,7 +2,6 @@ package com.example.suppergeist.ui;
 
 import com.example.suppergeist.model.ShoppingItem;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.input.Clipboard;
@@ -16,7 +15,10 @@ public class ShoppingListController {
 
     // UI
     @FXML private VBox shoppingListBox;
-    @FXML private Button copyListButton;
+
+    private String formatItem(ShoppingItem item) {
+        return item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit();
+    }
 
     @FXML
     private void copyToClipboard() {
@@ -25,7 +27,7 @@ public class ShoppingListController {
         for (String category : categories) {
             stringBuilder.append(category).append("\n");
             for (ShoppingItem item : this.categorisedList.get(category)) {
-                String itemString = item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit();
+                String itemString = formatItem(item);
                 stringBuilder.append(itemString).append("\n");
             }
             stringBuilder.append("\n");
@@ -52,13 +54,13 @@ public class ShoppingListController {
             shoppingListBox.getChildren().add(new Label("No meal plan loaded"));
             return;
         }
-        
+
         for (String category : this.categorisedList.keySet()) {
             Label header = new Label(category);
             shoppingListBox.getChildren().add(header);
 
             for (ShoppingItem item : this.categorisedList.get(category)) {
-                CheckBox box = new CheckBox(item.name() + " - " + formatQuantity(item.totalQuantity()) + " " + item.unit());
+                CheckBox box = new CheckBox(formatItem(item));
                 shoppingListBox.getChildren().add(box);
             }
         }
