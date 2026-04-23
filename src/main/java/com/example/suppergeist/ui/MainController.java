@@ -32,7 +32,8 @@ public class MainController {
     @Setter private NutritionService nutritionService;
 
     private static final Logger log = Logger.getLogger(MainController.class.getName());
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
+    private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
+    private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
     private static final DayOfWeek WEEK_START_DAY = DayOfWeek.MONDAY;
 
     private User user;
@@ -58,20 +59,20 @@ public class MainController {
     }
 
     private void updateWeekLabel() {
-        this.weekLabel.setText(this.currentWeekStart.format(this.formatter) + " - " + this.currentWeekStart.plusDays(6).format(this.formatter));
+        this.weekLabel.setText(this.currentWeekStart.format(this.weekFormatter) + " - " + this.currentWeekStart.plusDays(6).format(this.weekFormatter));
+    }
+
+    private void updateDayLabels() {
+        for (int i = 0; i < 7; i++) {
+            LocalDate currentDate = currentWeekStart.plusDays(i);
+            Label dayLabel = new Label(currentDate.format(dayFormatter));
+            int column = columnFor(currentDate);
+            this.mealPlanGrid.add(dayLabel, column, 0);
+        }
     }
 
     private void populateMealCards(List<WeeklyMealViewModel> weeklyMeals, Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
-        Set<LocalDate> labelledDates = new HashSet<>();
         for (WeeklyMealViewModel meal : weeklyMeals) {
-            // Day label
-            int column = columnFor(meal.date());
-            if (!labelledDates.contains(meal.date())) {
-                Label dayLabel = new Label(meal.dayLabel());
-                this.mealPlanGrid.add(dayLabel, column, 0);
-                labelledDates.add(meal.date());
-            }
-
             NutritionalEstimate estimate = estimates.get(meal.mealId());
             String toolTipText = null;
             if (estimate == null) {
@@ -81,17 +82,20 @@ public class MainController {
             }
 
             StackPane card = buildMealCard(meal, estimate, toolTipText);
-            int row = nextRowForDate.getOrDefault(meal.date(), 1);
-            nextRowForDate.put(meal.date(), row + 1);
-
+            int column = columnFor(meal.date());
+            int row = nextRowForDate.get(meal.date());
             this.mealPlanGrid.add(card, column, row);
+
+            nextRowForDate.put(meal.date(), row + 1);
         }
     }
 
     private void appendCalorieTotals(Map<LocalDate, Integer> nextRowForDate, Map<LocalDate, Integer> calorieTotals) {
         for (Map.Entry<LocalDate, Integer> entry : calorieTotals.entrySet()) {
             int column = columnFor(entry.getKey());
-            this.mealPlanGrid.add(new Label("Total Calories: " + entry.getValue()), column, nextRowForDate.getOrDefault(entry.getKey(), 1));
+            int row = nextRowForDate.get(entry.getKey());
+            this.mealPlanGrid.add(new Label("Total Calories: " + entry.getValue()), column, row);
+            nextRowForDate.put(entry.getKey(), row + 1);
         }
     }
 
@@ -113,19 +117,32 @@ public class MainController {
             return;
         }
 
+        Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
+        for (int i = 0; i < 7; i++) {
+            nextRowForDate.put(currentWeekStart.plusDays(i), 1);
+        }
+
         List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
         Set<Integer> mealsWithNoIngredients = this.nutritionService.mealIdsWithNoIngredients(mealIds);
 
-        Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
         Map<LocalDate, Integer> calorieTotals = this.nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
+
+        updateDayLabels();
 
         populateMealCards(weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
             this.weeklyCalories.setText("Weekly calories: " + weeklyTotal);
+        }
+
+        // + meal buttons
+        int row = Collections.max(nextRowForDate.values()) + 1;
+        for (Map.Entry<LocalDate, Integer> entry : nextRowForDate.entrySet()) {
+            int column = columnFor(entry.getKey());
+            mealPlanGrid.add(new Button("+"), column, row);
         }
 
         // Buttons!
