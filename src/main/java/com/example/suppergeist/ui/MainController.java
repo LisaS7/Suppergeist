@@ -5,15 +5,11 @@ import com.example.suppergeist.model.NutritionalEstimate;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
 import com.example.suppergeist.service.*;
-import javafx.animation.RotateTransition;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.transform.Rotate;
-import javafx.util.Duration;
 import lombok.Setter;
 
 import java.sql.SQLException;
@@ -83,7 +79,7 @@ public class MainController {
         }
     }
 
-    private void populateMealCards(List<WeeklyMealViewModel> weeklyMeals, Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
+    private void populateMealCards(MealCardBuilder builder, List<WeeklyMealViewModel> weeklyMeals, Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
         for (WeeklyMealViewModel meal : weeklyMeals) {
             NutritionalEstimate estimate = estimates.get(meal.mealId());
             String toolTipText = null;
@@ -93,7 +89,7 @@ public class MainController {
                         : "No nutrition data for this meal";
             }
 
-            StackPane card = buildMealCard(meal, estimate, toolTipText);
+            StackPane card = builder.buildMealCard(meal, estimate, toolTipText);
             int column = columnFor(meal.date());
             int row = nextRowForDate.get(meal.date());
             this.mealPlanGrid.add(card, column, row);
@@ -136,6 +132,7 @@ public class MainController {
     }
 
     private void refreshMealPlanGrid() throws SQLException {
+        MealCardBuilder builder = new MealCardBuilder(this.user);
         this.mealPlanGrid.getChildren().clear();
         this.weeklyCalories.setText("");
         this.createButton.setVisible(false);
@@ -165,7 +162,7 @@ public class MainController {
         for (int i = 0; i < 7; i++) {
             nextRowForDate.put(currentWeekStart.plusDays(i), 1);
         }
-        populateMealCards(weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
+        populateMealCards(builder, weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
@@ -191,86 +188,6 @@ public class MainController {
         this.shoppingListController.refresh(shoppingList);
     }
 
-    private StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText) {
-        // FRONT
-        VBox front = new VBox();
-        front.getStyleClass().add("meal-card");
-        // Meal name
-        Label nameLabel = new Label(meal.mealName());
-        front.getChildren().add(nameLabel);
-        // Calories
-        if (this.user.isShowCalories()) {
-            Label calorieLabel = new Label(estimate != null ? estimate.cal() + " kcal" : "-- kcal");
-            calorieLabel.getStyleClass().add("meal-kcal");
-            front.getChildren().add(calorieLabel);
-        }
-        // ToolTip
-        if (toolTipText != null) {
-            Label tooltipLabel = new Label("!");
-            front.getChildren().add(tooltipLabel);
-            Tooltip.install(tooltipLabel, new Tooltip(toolTipText));
-        }
-
-        // BACK
-        GridPane back = new GridPane();
-        back.getStyleClass().add("meal-card-back");
-        back.setHgap(10);
-        back.setVisible(false);
-        if (this.user.isShowNutritionalInfo() && estimate != null) {
-            Separator sep = new Separator();
-            GridPane.setColumnSpan(sep, 2);
-
-            // row 5 is intentionally blank — separator fills it
-            back.add(sep, 0, 5);
-
-            back.add(new Label("Protein:"), 0, 0);
-            back.add(new Label("Carbs:"), 0, 1);
-            back.add(new Label("Fat:"), 0, 2);
-            back.add(new Label("Sugar:"), 0, 3);
-            back.add(new Label("Fibre:"), 0, 4);
-            back.add(new Label("Vitamin A:"), 0, 6);
-            back.add(new Label("Vitamin C:"), 0, 7);
-            back.add(new Label("Vitamin D:"), 0, 8);
-            back.add(new Label("Vitamin E:"), 0, 9);
-            back.add(new Label("Vitamin B12:"), 0, 10);
-            back.add(new Label("Folate:"), 0, 11);
-            back.add(new Label(Math.round(estimate.proteinG()) + "g"), 1, 0);
-            back.add(new Label(Math.round(estimate.carbsG()) + "g"), 1, 1);
-            back.add(new Label(Math.round(estimate.fatG()) + "g"), 1, 2);
-            back.add(new Label(Math.round(estimate.totalSugarsG()) + "g"), 1, 3);
-            back.add(new Label(Math.round(estimate.fibreG()) + "g"), 1, 4);
-            back.add(new Label(Math.round(estimate.vitaminAMcg()) + "mcg"), 1, 6);
-            back.add(new Label(Math.round(estimate.vitaminCMg()) + "mg"), 1, 7);
-            back.add(new Label(Math.round(estimate.vitaminDMcg()) + "mcg"), 1, 8);
-            back.add(new Label(Math.round(estimate.vitaminEMg()) + "mg"), 1, 9);
-            back.add(new Label(Math.round(estimate.vitaminB12Mcg()) + "mcg"), 1, 10);
-            back.add(new Label(Math.round(estimate.folateMcg()) + "mcg"), 1, 11);
-        }
-
-        // ARRANGE
-        StackPane card = new StackPane(front, back);
-        SimpleBooleanProperty flipped = new SimpleBooleanProperty(false);
-        card.setOnMouseClicked(e -> flipCard(card, front, back, flipped));
-        return card;
-    }
-
-    private void flipCard(StackPane card, VBox front, GridPane back, SimpleBooleanProperty flipped) {
-        RotateTransition firstHalf = new RotateTransition(Duration.millis(150), card);
-        firstHalf.setAxis(Rotate.Y_AXIS);
-        firstHalf.setFromAngle(0);
-        firstHalf.setToAngle(90);
-        firstHalf.setOnFinished(e -> {
-            flipped.set(!flipped.get());
-            front.setVisible(!flipped.get());
-            back.setVisible(flipped.get());
-            RotateTransition secondHalf = new RotateTransition(Duration.millis(150), card);
-            secondHalf.setAxis(Rotate.Y_AXIS);
-            secondHalf.setFromAngle(-90);
-            secondHalf.setToAngle(0);
-            secondHalf.play();
-        });
-        firstHalf.play();
-    }
 
     private void handleGridRefreshError(SQLException e) {
         log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
