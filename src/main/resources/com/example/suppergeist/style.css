@@ -234,7 +234,7 @@ GridPane > Label {
 }
 
 .footer > Label {
-    -fx-font-size: 13px;
+    -fx-font-size: 26px;
     -fx-text-fill: #dce8ed;
 }
 

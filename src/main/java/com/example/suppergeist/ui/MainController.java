@@ -7,10 +7,7 @@ import com.example.suppergeist.service.*;
 import javafx.animation.RotateTransition;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -43,6 +40,9 @@ public class MainController {
     @FXML private GridPane mealPlanGrid;
     @FXML private Label weekLabel;
     @FXML private HBox footerBox;
+    @FXML private Label weeklyCalories;
+    @FXML private Button createButton;
+    @FXML private Button deleteButton;
 
     @FXML private PreferencesSidebarController preferencesSidebarController;
     @FXML private ShoppingListController shoppingListController;
@@ -96,12 +96,18 @@ public class MainController {
 
     private void refreshMealPlanGrid() throws SQLException {
         this.mealPlanGrid.getChildren().clear();
-        this.footerBox.getChildren().clear();
+        this.weeklyCalories.setText("");
+        this.createButton.setVisible(false);
+        this.deleteButton.setVisible(false);
+        this.createButton.setManaged(false);
+        this.deleteButton.setManaged(false);
 
         List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
         if (weeklyMeals.isEmpty()) {
             this.mealPlanGrid.getChildren().add(new Label("No plan for this week"));
             this.shoppingListController.refresh(new HashMap<>());
+            this.createButton.setVisible(true);
+            this.createButton.setManaged(true);
             return;
         }
 
@@ -116,8 +122,12 @@ public class MainController {
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
-            this.footerBox.getChildren().add(new Label("Weekly calories: " + weeklyTotal));
+            this.weeklyCalories.setText("Weekly calories: " + weeklyTotal);
         }
+
+        // Buttons!
+        this.deleteButton.setVisible(true);
+        this.deleteButton.setManaged(true);
 
         // Shopping List
         int planId = weeklyMeals.getFirst().mealPlanId();

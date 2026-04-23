@@ -9,7 +9,7 @@ Status markers: ✅ Done · 🔄 In Progress · ⬜ Not Started
 
 ---
 
-## Task 1 — Schema cascade rules + repository write methods ⬜
+## Task 1 — Schema cascade rules + repository write methods ✅
 
 Two prerequisites before any create/delete UI can be built.
 
@@ -53,9 +53,8 @@ The simplest entry point: let the user start a blank plan for the current week, 
 
 **UI:**
 
-- When the displayed week has no plan, show a "Create plan for this week" button in the grid area (in place of
-  the empty-state message added in Phase 3)
-- When a plan exists, a "Delete plan" option is available (confirmation dialog before proceeding)
+- When the displayed week has no plan, keep the empty-state message in the grid area and show a "Create plan for this week" button in the footer bar
+- When a plan exists, a "Delete plan" option is available in the footer bar (confirmation dialog before proceeding)
 
 **Service:**
 
@@ -127,7 +126,7 @@ on the meal card updates when the ingredient panel is closed (calls `NutritionSe
 
 ## Phase 4 Completion Criteria
 
-- [ ] Cascade rules applied in `Schema.java`; `PRAGMA foreign_keys = ON` confirmed active; all write methods present and tested
+- [x] Cascade rules applied in `Schema.java`; `PRAGMA foreign_keys = ON` confirmed active; all write methods present and tested
 - [ ] User can create and delete a week's plan via the UI
 - [ ] User can add, rename, and remove meals in individual slots
 - [ ] User can add and remove ingredients on a meal; nutrition estimate updates accordingly

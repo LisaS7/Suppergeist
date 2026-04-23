@@ -57,6 +57,10 @@
         <fx:include fx:id="preferencesSidebar" source="preferences-sidebar.fxml"/>
     </right>
     <bottom>
-        <HBox fx:id="footerBox" spacing="10" styleClass="footer"/>
+        <HBox fx:id="footerBox" spacing="10" styleClass="footer">
+            <Button fx:id="createButton">Create Plan</Button>
+            <Button fx:id="deleteButton">Delete Plan</Button>
+            <Label fx:id="weeklyCalories"></Label>
+        </HBox>
     </bottom>
 </BorderPane>
