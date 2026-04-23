@@ -1,5 +1,6 @@
 package com.example.suppergeist.ui;
 
+import com.example.suppergeist.model.MealPlan;
 import com.example.suppergeist.model.NutritionalEstimate;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.model.User;
@@ -9,7 +10,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.transform.Rotate;
@@ -31,15 +31,16 @@ public class MainController {
     @Setter private ShoppingListService shoppingListService;
     @Setter private NutritionService nutritionService;
 
-    private User user;
-    private LocalDate currentWeekStart;
-    private static final DayOfWeek WEEK_START_DAY = DayOfWeek.MONDAY;
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
+    private static final DayOfWeek WEEK_START_DAY = DayOfWeek.MONDAY;
+
+    private User user;
+    private LocalDate currentWeekStart;
+    private MealPlan currentPlan;
 
     @FXML private GridPane mealPlanGrid;
     @FXML private Label weekLabel;
-    @FXML private HBox footerBox;
     @FXML private Label weeklyCalories;
     @FXML private Button createButton;
     @FXML private Button deleteButton;
@@ -102,8 +103,9 @@ public class MainController {
         this.createButton.setManaged(false);
         this.deleteButton.setManaged(false);
 
-        List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
-        if (weeklyMeals.isEmpty()) {
+        this.currentPlan = mealPlanService.findPlanForWeek(user.getId(), currentWeekStart);
+
+        if (currentPlan == null) {
             this.mealPlanGrid.getChildren().add(new Label("No plan for this week"));
             this.shoppingListController.refresh(new HashMap<>());
             this.createButton.setVisible(true);
@@ -111,6 +113,7 @@ public class MainController {
             return;
         }
 
+        List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
         Set<Integer> mealsWithNoIngredients = this.nutritionService.mealIdsWithNoIngredients(mealIds);
@@ -130,8 +133,7 @@ public class MainController {
         this.deleteButton.setManaged(true);
 
         // Shopping List
-        int planId = weeklyMeals.getFirst().mealPlanId();
-        Map<String, List<ShoppingItem>> shoppingList = this.shoppingListService.buildList(planId);
+        Map<String, List<ShoppingItem>> shoppingList = this.shoppingListService.buildList(currentPlan.id());
         this.shoppingListController.refresh(shoppingList);
     }
 
@@ -270,6 +272,33 @@ public class MainController {
             refreshMealPlanGrid();
         } catch (SQLException e) {
             handleGridRefreshError(e);
+        }
+    }
+
+    @FXML
+    private void createPlan() {
+        try {
+            mealPlanService.createEmptyPlan(user.getId(), currentWeekStart);
+            refreshMealPlanGrid();
+        } catch (SQLException e) {
+            handleGridRefreshError(e);
+        }
+    }
+
+    @FXML
+    private void deletePlan() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Delete");
+        alert.setContentText("Do you want to delete this meal plan?");
+        Optional<ButtonType> response = alert.showAndWait();
+
+        if (response.isPresent() && response.get() == ButtonType.OK) {
+            try {
+                mealPlanService.deletePlan(currentPlan.id());
+                refreshMealPlanGrid();
+            } catch (SQLException e) {
+                handleGridRefreshError(e);
+            }
         }
     }
 }

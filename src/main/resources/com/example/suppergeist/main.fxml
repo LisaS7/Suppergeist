@@ -58,8 +58,8 @@
     </right>
     <bottom>
         <HBox fx:id="footerBox" spacing="10" styleClass="footer">
-            <Button fx:id="createButton">Create Plan</Button>
-            <Button fx:id="deleteButton">Delete Plan</Button>
+            <Button fx:id="createButton" onAction="#createPlan">Create Plan</Button>
+            <Button fx:id="deleteButton" onAction="#deletePlan">Delete Plan</Button>
             <Label fx:id="weeklyCalories"></Label>
         </HBox>
     </bottom>

@@ -49,4 +49,17 @@ public class MealPlanService {
         }
         return weeklyMeals;
     }
+
+    public MealPlan findPlanForWeek(int userId, LocalDate startDate) throws SQLException {
+        Optional<MealPlan> mealPlan = mealPlanRepository.getByUserAndStartDate(userId, startDate);
+        return mealPlan.orElse(null);
+    }
+
+    public MealPlan createEmptyPlan(int userId, LocalDate startDate) throws SQLException {
+        return mealPlanRepository.create(new MealPlan(null, userId, startDate));
+    }
+
+    public void deletePlan(int id) throws SQLException {
+        mealPlanRepository.delete(id);
+    }
 }

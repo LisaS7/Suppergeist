@@ -1,6 +1,7 @@
 package com.example.suppergeist.service;
 
 import com.example.suppergeist.database.DatabaseManager;
+import com.example.suppergeist.model.MealPlan;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
 import com.example.suppergeist.repository.MealPlanRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -209,6 +210,96 @@ class MealPlanServiceTest {
 
         assertEquals(1, result.size());
         assertEquals("Soup", result.get(0).mealName());
+    }
+
+    // --- findPlanForWeek ---
+
+    @Test
+    void findPlanForWeek_returnsNull_whenNoPlanExists() throws SQLException {
+        assertNull(service.findPlanForWeek(1, LocalDate.of(2026, 4, 14)));
+    }
+
+    @Test
+    void findPlanForWeek_returnsPlan_whenOneExists() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 14);
+        insertMealPlan(1, weekStart);
+
+        assertNotNull(service.findPlanForWeek(1, weekStart));
+    }
+
+    @Test
+    void findPlanForWeek_returnsNull_forDifferentUser() throws SQLException {
+        insertMealPlan(2, LocalDate.of(2026, 4, 14));
+
+        assertNull(service.findPlanForWeek(1, LocalDate.of(2026, 4, 14)));
+    }
+
+    @Test
+    void findPlanForWeek_returnsNull_forDifferentWeek() throws SQLException {
+        insertMealPlan(1, LocalDate.of(2026, 4, 14));
+
+        assertNull(service.findPlanForWeek(1, LocalDate.of(2026, 4, 7)));
+    }
+
+    // --- createEmptyPlan ---
+
+    @Test
+    void createEmptyPlan_returnsNewPlan_withCorrectUserAndStartDate() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 14);
+
+        MealPlan plan = service.createEmptyPlan(1, weekStart);
+
+        assertNotNull(plan.id());
+        assertEquals(1, plan.userId());
+        assertEquals(weekStart, plan.startDate());
+    }
+
+    @Test
+    void createEmptyPlan_persistsPlan_retrievableByFindPlanForWeek() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 14);
+        service.createEmptyPlan(1, weekStart);
+
+        assertNotNull(service.findPlanForWeek(1, weekStart));
+    }
+
+    @Test
+    void createEmptyPlan_createsNoEntries() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 14);
+        service.createEmptyPlan(1, weekStart);
+
+        List<WeeklyMealViewModel> meals = service.getWeeklyMeals(1, weekStart);
+        assertTrue(meals.isEmpty());
+    }
+
+    // --- deletePlan ---
+
+    @Test
+    void deletePlan_removesThePlan() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 14);
+        MealPlan plan = service.createEmptyPlan(1, weekStart);
+
+        service.deletePlan(plan.id());
+
+        assertNull(service.findPlanForWeek(1, weekStart));
+    }
+
+    @Test
+    void deletePlan_cascadesEntries() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 14);
+        MealPlan plan = service.createEmptyPlan(1, weekStart);
+        int mealId = insertMeal("Pasta");
+        insertEntry(plan.id(), mealId, 0, "dinner");
+
+        service.deletePlan(plan.id());
+
+        // No entries survive the cascade
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT COUNT(*) FROM meal_plan_entries WHERE meal_plan_id = ?")) {
+            stmt.setInt(1, plan.id());
+            var rs = stmt.executeQuery();
+            assertEquals(0, rs.getInt(1));
+        }
     }
 
 }

@@ -45,7 +45,7 @@ Unit-test each write method against a real in-memory or temp DB — do not mock 
 
 ---
 
-## Task 2 — Create / delete a week's plan ⬜
+## Task 2 — Create / delete a week's plan ✅
 
 *(Depends on Task 1)*
 
@@ -127,6 +127,6 @@ on the meal card updates when the ingredient panel is closed (calls `NutritionSe
 ## Phase 4 Completion Criteria
 
 - [x] Cascade rules applied in `Schema.java`; `PRAGMA foreign_keys = ON` confirmed active; all write methods present and tested
-- [ ] User can create and delete a week's plan via the UI
+- [x] User can create and delete a week's plan via the UI
 - [ ] User can add, rename, and remove meals in individual slots
 - [ ] User can add and remove ingredients on a meal; nutrition estimate updates accordingly
