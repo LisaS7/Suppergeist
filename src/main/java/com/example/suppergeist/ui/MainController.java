@@ -35,6 +35,7 @@ public class MainController {
     private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
     private final DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
     private static final DayOfWeek WEEK_START_DAY = DayOfWeek.MONDAY;
+    private static final String STYLESHEET = "/com/example/suppergeist/style.css";
 
     private User user;
     private LocalDate currentWeekStart;
@@ -52,6 +53,17 @@ public class MainController {
     @FXML
     private void togglePrefs() {
         this.preferencesSidebarController.toggleVisibility();
+    }
+
+    private Alert styledAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setContentText(content);
+        alert.setGraphic(null);
+        alert.getDialogPane().getStylesheets().add(
+                getClass().getResource(STYLESHEET).toExternalForm()
+        );
+        return alert;
     }
 
     private int columnFor(LocalDate date) {
@@ -118,7 +130,7 @@ public class MainController {
         dialog.getDialogPane().setContent(box);
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+                getClass().getResource(STYLESHEET).toExternalForm()
         );
         dialog.showAndWait();
     }
@@ -141,20 +153,18 @@ public class MainController {
             return;
         }
 
-        Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
-        for (int i = 0; i < 7; i++) {
-            nextRowForDate.put(currentWeekStart.plusDays(i), 1);
-        }
-
         List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
         Set<Integer> mealsWithNoIngredients = this.nutritionService.mealIdsWithNoIngredients(mealIds);
-
         Map<LocalDate, Integer> calorieTotals = this.nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
 
         updateDayLabels();
 
+        Map<LocalDate, Integer> nextRowForDate = new HashMap<>();
+        for (int i = 0; i < 7; i++) {
+            nextRowForDate.put(currentWeekStart.plusDays(i), 1);
+        }
         populateMealCards(weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
@@ -163,6 +173,7 @@ public class MainController {
         }
 
         // + meal buttons
+        // the buttons are placed in the max row + 1 so that they will be aligned in the UI
         int row = Collections.max(nextRowForDate.values()) + 1;
         for (Map.Entry<LocalDate, Integer> entry : nextRowForDate.entrySet()) {
             int column = columnFor(entry.getKey());
@@ -263,14 +274,7 @@ public class MainController {
 
     private void handleGridRefreshError(SQLException e) {
         log.log(Level.SEVERE, "Failed to refresh meal plan grid", e);
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Refresh Error");
-        alert.setHeaderText("Meal plan refresh failed");
-        alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
-        alert.setGraphic(null);
-        alert.getDialogPane().getStylesheets().add(
-                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
-        );
+        Alert alert = styledAlert(Alert.AlertType.ERROR, "Refresh Error", "The grid could not be refreshed.\n\n" + e.getMessage());
         alert.showAndWait();
     }
 
@@ -334,13 +338,7 @@ public class MainController {
 
     @FXML
     private void deletePlan() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Delete");
-        alert.setContentText("Do you want to delete this meal plan?");
-        alert.setGraphic(null);
-        alert.getDialogPane().getStylesheets().add(
-                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
-        );
+        Alert alert = styledAlert(Alert.AlertType.CONFIRMATION, "Confirm Delete", "Do you want to delete this meal plan?");
         Optional<ButtonType> response = alert.showAndWait();
 
         if (response.isPresent() && response.get() == ButtonType.OK) {
