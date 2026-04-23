@@ -143,6 +143,10 @@ public class PreferencesSidebarController {
             alert.setTitle("Save Error");
             alert.setHeaderText("Failed to save preferences");
             alert.setContentText(e.getMessage());
+            alert.setGraphic(null);
+            alert.getDialogPane().getStylesheets().add(
+                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+            );
             alert.showAndWait();
         }
     }

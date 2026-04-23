@@ -32,6 +32,10 @@ public class SuppergeistApplication extends Application {
         alert.setTitle("Startup Error");
         alert.setHeaderText("Application startup failed");
         alert.setContentText("Suppergeist could not start.\n\n" + error.getMessage());
+        alert.setGraphic(null);
+        alert.getDialogPane().getStylesheets().add(
+            SuppergeistApplication.class.getResource("style.css").toExternalForm()
+        );
         alert.showAndWait();
 
         Platform.exit();
@@ -68,6 +72,10 @@ public class SuppergeistApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        // Load fonts early so error dialogs also use the app font
+        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Kings-Regular.ttf"), 22);
+        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Quintessential-Regular.ttf"), 22);
+
         if (initError != null) {
             showFatalError(initError);
             return;
@@ -92,10 +100,6 @@ public class SuppergeistApplication extends Application {
         }
 
         Scene scene = new Scene(fxmlLoader.getRoot(), 1800, 1200);
-
-        // Font
-        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Kings-Regular.ttf"), 22);
-        Font.loadFont(SuppergeistApplication.class.getResourceAsStream("fonts/Quintessential-Regular.ttf"), 22);
 
         // CSS
         var css = SuppergeistApplication.class.getResource("style.css");

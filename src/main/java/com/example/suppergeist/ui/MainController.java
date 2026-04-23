@@ -241,6 +241,10 @@ public class MainController {
         alert.setTitle("Refresh Error");
         alert.setHeaderText("Meal plan refresh failed");
         alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
+        alert.setGraphic(null);
+        alert.getDialogPane().getStylesheets().add(
+            getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+        );
         alert.showAndWait();
     }
 
@@ -307,6 +311,10 @@ public class MainController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirm Delete");
         alert.setContentText("Do you want to delete this meal plan?");
+        alert.setGraphic(null);
+        alert.getDialogPane().getStylesheets().add(
+            getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+        );
         Optional<ButtonType> response = alert.showAndWait();
 
         if (response.isPresent() && response.get() == ButtonType.OK) {

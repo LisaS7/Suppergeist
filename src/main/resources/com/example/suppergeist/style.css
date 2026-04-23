@@ -578,6 +578,48 @@ GridPane > Label {
 }
 
 
+/* ── Alert / Dialog ─────────────────────────────────────── */
+
+.dialog-pane {
+    -fx-background-color: #b8cad3;
+    -fx-border-color: #051d29;
+    -fx-border-width: 3;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 18px;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, #1d3a49, 12, 0.2, 3, 3);
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: #1d3a49;
+    -fx-border-color: #051d29;
+    -fx-border-width: 0 0 3 0;
+    -fx-background-radius: 0;
+    -fx-padding: 16 20 16 20;
+}
+
+.dialog-pane > .header-panel > .label {
+    -fx-text-fill: #dce8ed;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 22px;
+    -fx-font-weight: BOLD;
+}
+
+.dialog-pane > .content.label {
+    -fx-text-fill: #051d29;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 18px;
+    -fx-padding: 20 20 10 20;
+}
+
+.dialog-pane > .button-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 8 20 16 20;
+}
+
+
 /* ── Shopping List ──────────────────────────────────────── */
 
 .shopping-list {
