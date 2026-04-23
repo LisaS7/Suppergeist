@@ -4,6 +4,7 @@ import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.MealPlan;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
 import com.example.suppergeist.repository.MealPlanRepository;
+import com.example.suppergeist.repository.MealRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ class MealPlanServiceTest {
         }
 
         service = new MealPlanService(
+                new MealRepository(dbManager),
                 new MealPlanRepository(dbManager),
                 new MealPlanEntryRepository(dbManager)
         );
@@ -281,6 +283,44 @@ class MealPlanServiceTest {
         service.deletePlan(plan.id());
 
         assertNull(service.findPlanForWeek(1, weekStart));
+    }
+
+    // --- addMealToSlot ---
+
+    @Test
+    void addMealToSlot_appearsInGetWeeklyMeals() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13); // Monday
+        MealPlan plan = service.createEmptyPlan(1, weekStart);
+
+        service.addMealToSlot("Stir Fry", "dinner", plan.id(), 0);
+
+        List<WeeklyMealViewModel> meals = service.getWeeklyMeals(1, weekStart);
+        assertEquals(1, meals.size());
+        assertEquals("Stir Fry", meals.get(0).mealName());
+        assertEquals("dinner", meals.get(0).mealType());
+    }
+
+    @Test
+    void addMealToSlot_computesDateFromDayOffset() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13); // Monday
+        MealPlan plan = service.createEmptyPlan(1, weekStart);
+
+        service.addMealToSlot("Omelette", "breakfast", plan.id(), 2);
+
+        List<WeeklyMealViewModel> meals = service.getWeeklyMeals(1, weekStart);
+        assertEquals(LocalDate.of(2026, 4, 15), meals.get(0).date()); // offset 2 → Wednesday
+    }
+
+    @Test
+    void addMealToSlot_multipleEntriesInSamePlan() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13); // Monday
+        MealPlan plan = service.createEmptyPlan(1, weekStart);
+
+        service.addMealToSlot("Porridge", "breakfast", plan.id(), 0);
+        service.addMealToSlot("Salad", "lunch", plan.id(), 0);
+
+        List<WeeklyMealViewModel> meals = service.getWeeklyMeals(1, weekStart);
+        assertEquals(2, meals.size());
     }
 
     @Test

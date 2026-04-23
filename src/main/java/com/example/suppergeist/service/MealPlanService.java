@@ -1,9 +1,11 @@
 package com.example.suppergeist.service;
 
+import com.example.suppergeist.model.Meal;
 import com.example.suppergeist.model.MealPlan;
 import com.example.suppergeist.model.MealPlanEntry;
 import com.example.suppergeist.repository.MealPlanEntryRepository;
 import com.example.suppergeist.repository.MealPlanRepository;
+import com.example.suppergeist.repository.MealRepository;
 
 import java.sql.SQLException;
 import java.time.DayOfWeek;
@@ -16,11 +18,13 @@ import java.util.List;
 import java.util.Optional;
 
 public class MealPlanService {
+    private final MealRepository mealRepository;
     private final MealPlanRepository mealPlanRepository;
     private final MealPlanEntryRepository mealPlanEntryRepository;
     private static final DateTimeFormatter dayLabelFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
 
-    public MealPlanService(MealPlanRepository mealPlanRepository, MealPlanEntryRepository mealPlanEntryRepository) {
+    public MealPlanService(MealRepository mealRepository, MealPlanRepository mealPlanRepository, MealPlanEntryRepository mealPlanEntryRepository) {
+        this.mealRepository = mealRepository;
         this.mealPlanRepository = mealPlanRepository;
         this.mealPlanEntryRepository = mealPlanEntryRepository;
     }
@@ -57,6 +61,12 @@ public class MealPlanService {
 
     public MealPlan createEmptyPlan(int userId, LocalDate startDate) throws SQLException {
         return mealPlanRepository.create(new MealPlan(null, userId, startDate));
+    }
+
+    public void addMealToSlot(String mealName, String mealType, int mealPlanId, int dayOffset) throws SQLException {
+        Meal meal = mealRepository.create(mealName);
+        MealPlanEntry entry = new MealPlanEntry(mealPlanId, meal.getId(), dayOffset, mealType, mealName);
+        mealPlanEntryRepository.create(entry);
     }
 
     public void deletePlan(int id) throws SQLException {

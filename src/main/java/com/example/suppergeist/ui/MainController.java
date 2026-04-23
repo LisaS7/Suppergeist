@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.logging.Level;
@@ -128,7 +129,19 @@ public class MainController {
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource(STYLESHEET).toExternalForm()
         );
-        dialog.showAndWait();
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String mealName = textField.getText();
+            String mealType = comboBox.getValue();
+            int dayOffset = (int) ChronoUnit.DAYS.between(currentWeekStart, mealDate);
+
+            try {
+                mealPlanService.addMealToSlot(mealName, mealType, currentPlan.id(), dayOffset);
+                refreshMealPlanGrid();
+            } catch (SQLException e) {
+                handleGridRefreshError(e);
+            }
+        }
     }
 
     private void refreshMealPlanGrid() throws SQLException {
@@ -175,7 +188,8 @@ public class MainController {
         for (Map.Entry<LocalDate, Integer> entry : nextRowForDate.entrySet()) {
             int column = columnFor(entry.getKey());
             Button button = new Button("+");
-            button.setOnAction(e -> showAddMealDialog(entry.getKey()));
+            button.setOnAction(e ->
+                    showAddMealDialog(entry.getKey()));
             mealPlanGrid.add(button, column, row);
         }
 

@@ -72,7 +72,7 @@ clicking "Delete plan" removes it and the grid returns to the empty state.
 
 ---
 
-## Task 3 — Add / edit / remove meals in slots ⬜
+## Task 3 — Add / edit / remove meals in slots 🔄
 
 *(Depends on Task 2)*
 
@@ -80,18 +80,18 @@ Let the user fill in the meal grid slot by slot.
 
 **Interaction:**
 
-- Empty slot shows a small "+" affordance; clicking it opens an add-meal dialog
+- Empty slot shows a small "+" affordance; clicking it opens an add-meal dialog ✅
 - Filled slot has an edit icon (or is directly clickable); clicking opens an edit dialog
 - Edit dialog has a "Remove" option to clear the slot
 
 **Add / edit dialog:**
 
-- Text field for meal name
-- Dropdown / selector for meal type (e.g. breakfast, lunch, dinner — driven by the types already in the schema)
-- Save writes a `Meal` row (if new) and a `MealPlanEntry` row linking it to the plan, day offset, and meal type
-- Edit updates the `Meal` name in place
+- Text field for meal name ✅ (dialog shell exists with TextField + ComboBox)
+- Dropdown / selector for meal type (e.g. breakfast, lunch, dinner — driven by the types already in the schema) ✅
+- Save writes a `Meal` row (if new) and a `MealPlanEntry` row linking it to the plan, day offset, and meal type ⬜ (`showAndWait()` result not yet handled)
+- Edit updates the `Meal` name in place ⬜
 - Remove deletes the `MealPlanEntry`; the `Meal` row is left in place (it may be referenced by other plans or
-  reused in future)
+  reused in future) ⬜
 
 **Done when:** a user can fill every slot in a week, rename meals, and clear slots; changes persist across
 restarts; the grid reflects the DB state accurately after each operation.
@@ -128,5 +128,5 @@ on the meal card updates when the ingredient panel is closed (calls `NutritionSe
 
 - [x] Cascade rules applied in `Schema.java`; `PRAGMA foreign_keys = ON` confirmed active; all write methods present and tested
 - [x] User can create and delete a week's plan via the UI
-- [ ] User can add, rename, and remove meals in individual slots
+- [ ] User can add, rename, and remove meals in individual slots (dialog shell + "+" buttons done; save logic pending)
 - [ ] User can add and remove ingredients on a meal; nutrition estimate updates accordingly

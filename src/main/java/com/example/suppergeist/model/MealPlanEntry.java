@@ -1,6 +1,5 @@
 package com.example.suppergeist.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
@@ -20,7 +19,7 @@ public class MealPlanEntry {
         this.mealType = mealType;
         this.mealName = mealName;
     }
-    
+
     public MealPlanEntry(int mealPlanId, int mealId, int dayOffset, String mealType, String mealName) {
         this(null, mealPlanId, mealId, dayOffset, mealType, mealName);
     }

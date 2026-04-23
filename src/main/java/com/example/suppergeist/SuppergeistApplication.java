@@ -34,7 +34,7 @@ public class SuppergeistApplication extends Application {
         alert.setContentText("Suppergeist could not start.\n\n" + error.getMessage());
         alert.setGraphic(null);
         alert.getDialogPane().getStylesheets().add(
-            SuppergeistApplication.class.getResource("style.css").toExternalForm()
+                SuppergeistApplication.class.getResource("style.css").toExternalForm()
         );
         alert.showAndWait();
 
@@ -56,12 +56,13 @@ public class SuppergeistApplication extends Application {
             appSeedService.seedMealPlansIfEmpty();
 
             IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
+            MealRepository mealRepository = new MealRepository(dbManager);
             MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
             MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
             MealIngredientRepository mealIngredientRepository = new MealIngredientRepository(dbManager);
 
             this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
-            this.mealPlanService = new MealPlanService(mealPlanRepository, mealPlanEntryRepository);
+            this.mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
             this.shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
             this.nutritionService = new NutritionService(mealIngredientRepository);
         } catch (SQLException | IOException e) {
