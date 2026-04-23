@@ -619,6 +619,102 @@ GridPane > Label {
     -fx-padding: 8 20 16 20;
 }
 
+/* Content area spacing */
+.dialog-pane .content VBox {
+    -fx-spacing: 10;
+    -fx-padding: 4 0 4 0;
+}
+
+/* TextField inside a dialog */
+.dialog-pane .text-field {
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-text-fill: #051d29;
+    -fx-prompt-text-fill: #4f6c7b;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 18px;
+    -fx-padding: 6 8 6 8;
+}
+
+.dialog-pane .text-field:focused {
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
+    -fx-border-width: 2.5;
+}
+
+/* ComboBox inside a dialog */
+.dialog-pane .combo-box-base {
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 18px;
+}
+
+.dialog-pane .combo-box-base > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #051d29;
+    -fx-padding: 6 8 6 8;
+}
+
+.dialog-pane .combo-box-base > .arrow-button {
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
+    -fx-border-width: 0 0 0 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-cursor: HAND;
+    -fx-padding: 6 10 6 10;
+}
+
+.dialog-pane .combo-box-base > .arrow-button > .arrow {
+    -fx-background-color: #051d29;
+}
+
+.dialog-pane .combo-box-base:hover {
+    -fx-background-color: #b8cad3;
+}
+
+.dialog-pane .combo-box-base:hover > .arrow-button {
+    -fx-background-color: #b8cad3;
+}
+
+/* ComboBox dropdown popup — lives outside the dialog pane, must be global */
+.combo-box-popup > .list-view {
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-effect: dropshadow(gaussian, #1d3a49, 8, 0.15, 2, 2);
+}
+
+.combo-box-popup > .list-view .list-cell {
+    -fx-background-color: #dce8ed;
+    -fx-text-fill: #051d29;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 18px;
+    -fx-padding: 6 8 6 8;
+}
+
+.combo-box-popup > .list-view .list-cell:odd {
+    -fx-background-color: #b8cad3;
+}
+
+.combo-box-popup > .list-view .list-cell:hover {
+    -fx-background-color: #88a9b7;
+}
+
+.combo-box-popup > .list-view .list-cell:selected {
+    -fx-background-color: #4f6c7b;
+    -fx-text-fill: #dce8ed;
+}
+
 
 /* ── Shopping List ──────────────────────────────────────── */
 

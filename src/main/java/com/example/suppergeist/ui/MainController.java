@@ -99,6 +99,30 @@ public class MainController {
         }
     }
 
+    private void showAddMealDialog(LocalDate mealDate) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Add Meal");
+        dialog.getDialogPane().setHeaderText("Add a meal");
+
+        VBox box = new VBox();
+
+        TextField textField = new TextField();
+        textField.setPromptText("Enter meal name");
+
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.getItems().addAll("Breakfast", "Lunch", "Dinner");
+        comboBox.setValue("Select meal type");
+
+        box.getChildren().addAll(textField, comboBox);
+
+        dialog.getDialogPane().setContent(box);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+        );
+        dialog.showAndWait();
+    }
+
     private void refreshMealPlanGrid() throws SQLException {
         this.mealPlanGrid.getChildren().clear();
         this.weeklyCalories.setText("");
@@ -142,7 +166,9 @@ public class MainController {
         int row = Collections.max(nextRowForDate.values()) + 1;
         for (Map.Entry<LocalDate, Integer> entry : nextRowForDate.entrySet()) {
             int column = columnFor(entry.getKey());
-            mealPlanGrid.add(new Button("+"), column, row);
+            Button button = new Button("+");
+            button.setOnAction(e -> showAddMealDialog(entry.getKey()));
+            mealPlanGrid.add(button, column, row);
         }
 
         // Buttons!
@@ -243,7 +269,7 @@ public class MainController {
         alert.setContentText("The grid could not be refreshed.\n\n" + e.getMessage());
         alert.setGraphic(null);
         alert.getDialogPane().getStylesheets().add(
-            getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
         );
         alert.showAndWait();
     }
@@ -313,7 +339,7 @@ public class MainController {
         alert.setContentText("Do you want to delete this meal plan?");
         alert.setGraphic(null);
         alert.getDialogPane().getStylesheets().add(
-            getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
         );
         Optional<ButtonType> response = alert.showAndWait();
 
