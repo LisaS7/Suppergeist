@@ -31,10 +31,9 @@ All eight model types exist and compile:
 
 - `Ingredient.java` — `id`, `name`, `foodCode`
 - `MealIngredient.java` — `id`, `mealId`, `ingredientId`, `quantity`, `unit`
-- `Meal.java` — `id`, `name`
+- `Meal.java` — `id`, `mealPlanId`, `dayOffset`, `mealType`, `mealName` (a scheduled occurrence within a plan)
 - `MealPlan.java` — `id`, `userId`, `startDate`
 - `User.java`
-- `MealPlanEntry.java` — maps to the `meal_plan_entries` join table
 - `NutritionalEstimate.java` — record with `cal`, `proteinG`, `carbsG`, `fatG` (non-persisted)
 - `UserPreferences.java` — record with `dietaryConstraints`, `avoidIngredients`, `servingsPerMeal`
 

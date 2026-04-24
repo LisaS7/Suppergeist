@@ -42,7 +42,6 @@ Suppergeist follows a strict three-layer architecture. Each layer has a single r
 
 ### Data Layer
 - `MealPlanRepository` — CRUD for saved plans (`app.db`)
-- `MealPlanEntryRepository` — CRUD for plan entries (join between plans and meals) (`app.db`)
 - `MealRepository` — CRUD for meals (`app.db`)
 - `MealIngredientRepository` — ingredient lines per meal, with joined ingredient names (`app.db`)
 - `UserRepository` — read/write user record including all preference fields (`app.db`)

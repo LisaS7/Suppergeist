@@ -120,7 +120,7 @@ public MealPlan generateAndSave(int userId, LocalDate weekStart) throws IOExcept
 3. Call `OllamaClient.generate(prompt)`
 4. Parse response via `MealPlanParser`
 5. Persist using the write methods from Phase 4: insert a `MealPlan` row, then for each `ParsedMeal` insert
-   a `Meal` row + `MealPlanEntry` row; attempt ingredient name lookup via `IngredientRepository.searchByName()`
+   a single `Meal` row (carrying `mealPlanId`, `dayOffset`, `mealType`, `mealName`); attempt ingredient name lookup via `IngredientRepository.searchByName()`
    and insert `MealIngredient` rows where a match is found (unmatched ingredients are skipped, not an error)
 6. Return the saved `MealPlan`
 

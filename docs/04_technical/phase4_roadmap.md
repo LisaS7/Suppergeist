@@ -20,9 +20,8 @@ defaults:
 
 | Parent deleted | Child rows in       | Behaviour                                                          |
 |----------------|---------------------|--------------------------------------------------------------------|
-| `meal_plans`   | `meal_plan_entries` | CASCADE — entries are meaningless without their plan               |
+| `meal_plans`   | `meals`             | CASCADE — meal slots are meaningless without their plan            |
 | `meals`        | `meal_ingredients`  | CASCADE — ingredient list is part of the meal                      |
-| `meals`        | `meal_plan_entries` | CASCADE — plan slot is meaningless without the meal                |
 | `ingredients`  | `meal_ingredients`  | CASCADE — ingredient line is meaningless without the ingredient    |
 | `users`        | `meal_plans`        | CASCADE                                                            |
 
@@ -35,7 +34,6 @@ Audit each repository for missing insert/update/delete methods and add what's ne
 
 - `MealRepository` — `insert(Meal)`, `update(Meal)`, `delete(int mealId)`
 - `MealPlanRepository` — `insert(MealPlan)`, `delete(int mealPlanId)`
-- `MealPlanEntryRepository` — `insert(MealPlanEntry)`, `delete(int entryId)`
 - `MealIngredientRepository` — `insert(int mealId, int ingredientId, double quantity, String unit)`, `delete(int id)`
 
 Unit-test each write method against a real in-memory or temp DB — do not mock at the repository level.
@@ -88,10 +86,9 @@ Let the user fill in the meal grid slot by slot.
 
 - Text field for meal name ✅ (dialog shell exists with TextField + ComboBox)
 - Dropdown / selector for meal type (e.g. breakfast, lunch, dinner — driven by the types already in the schema) ✅
-- Save writes a `Meal` row (if new) and a `MealPlanEntry` row linking it to the plan, day offset, and meal type ⬜ (`showAndWait()` result not yet handled)
+- Save writes a single `Meal` row carrying `mealPlanId`, `dayOffset`, `mealType`, and `mealName` ⬜ (`showAndWait()` result not yet handled)
 - Edit updates the `Meal` name in place ⬜
-- Remove deletes the `MealPlanEntry`; the `Meal` row is left in place (it may be referenced by other plans or
-  reused in future) ⬜
+- Remove deletes the `Meal` row; cascade removes any associated `meal_ingredients` rows ⬜
 
 **Done when:** a user can fill every slot in a week, rename meals, and clear slots; changes persist across
 restarts; the grid reflects the DB state accurately after each operation.

@@ -193,7 +193,7 @@ For development, `MainController` still uses a fixed reference date (`2026-04-06
 - `avoidFoodCodesSearch` listener moved to `initialize()` — registered once, reads `this.filteredIngredients` at fire time (safe because `setFormValues` always runs before any keystroke)
 - `promptText="Search ingredients…"` on search field; `// TODO` on hardcoded `getUser(1)`
 
-> **Follow-up (not in scope for 7b):** `MainController.initialize()` still constructs its own `DatabaseManager`, `MealRepository`, `MealPlanRepository`, `MealPlanEntryRepository`, and `MealPlanService` directly. These should move to `SuppergeistApplication` and be injected via setter (the same pattern used for `UserPreferencesService`). Deferred until `MealPlanService` gains more responsibilities that make the wiring worth touching.
+> **Follow-up (not in scope for 7b):** `MainController.initialize()` still constructs its own `DatabaseManager`, `MealRepository`, `MealPlanRepository`, and `MealPlanService` directly. These should move to `SuppergeistApplication` and be injected via setter (the same pattern used for `UserPreferencesService`). Deferred until `MealPlanService` gains more responsibilities that make the wiring worth touching.
 
 ---
 
@@ -292,9 +292,8 @@ to `NO ACTION`). Decide cascade rules before implementing any delete operations:
 
 | Parent deleted | Child rows in       | Expected behaviour                                                  |
 |----------------|---------------------|---------------------------------------------------------------------|
-| `meal_plans`   | `meal_plan_entries` | CASCADE — entries are meaningless without their plan                |
+| `meal_plans`   | `meals`             | CASCADE — meal slots are meaningless without their plan             |
 | `meals`        | `meal_ingredients`  | CASCADE — ingredients list is part of the meal                      |
-| `meals`        | `meal_plan_entries` | RESTRICT or SET NULL                                                |
 | `ingredients`  | `meal_ingredients`  | RESTRICT — don't silently delete ingredient lines                   |
 | `users`        | `meal_plans`        | CASCADE or RESTRICT — depends on whether user deletion is supported |
 
