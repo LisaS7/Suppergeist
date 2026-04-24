@@ -75,7 +75,7 @@ No layer skipping. UI never touches the database; services never touch the UI.
 - `ShoppingListService` — builds an aggregated shopping list from meal plan entries; groups items by category using food code prefixes; returns `LinkedHashMap<String, List<ShoppingItem>>`
 - `UserPreferencesService` — thin wrapper around `UserRepository` and `IngredientRepository`; loads the user record, saves preferences, and retrieves the full ingredient list for the preferences sidebar
 - `NutritionService` — calculates `NutritionalEstimate` per meal from `MealIngredientRow` data; also provides daily calorie totals and the set of meal IDs that have no ingredients
-- `WeeklyMealViewModel` — record passed from `MealPlanService` to the UI (mealPlanId, mealId, date, dayLabel, mealType, mealName)
+- `WeeklyMealViewModel` — record passed from `MealPlanService` to the UI (mealPlanId, mealId, date, dayLabel, mealType, mealName) — mealId here is the `meals.id` PK
 
 ### Service Layer Classes (planned — not yet built)
 - `OllamaClient` — thin HTTP wrapper; returns raw response strings; calls are blocking (run off the JavaFX thread via `Task<MealPlan>`)
@@ -86,7 +86,6 @@ No layer skipping. UI never touches the database; services never touch the UI.
 - `UserRepository` — CRUD for user record including all preference fields (`app.db`)
 - `MealRepository` — CRUD for meals (`app.db`)
 - `MealPlanRepository` — CRUD for meal plans (`app.db`)
-- `MealPlanEntryRepository` — CRUD for meal plan entries (join between plans and meals) (`app.db`)
 - `IngredientRepository` — queries on the ingredients/CoFID data (`app.db`)
 - `MealIngredientRepository` — queries meal–ingredient joins; used by `ShoppingListService` to retrieve ingredients per meal (`app.db`)
 
@@ -112,17 +111,12 @@ MealPlan
 ├── userId: int
 └── startDate: LocalDate
 
-MealPlanEntry  (join between MealPlan and Meal)
+Meal  (a scheduled occurrence within a plan — one row per meal slot)
 ├── id: Integer
 ├── mealPlanId: int
-├── mealId: int
 ├── dayOffset: int  (0–6, days from plan startDate)
 ├── mealType: String  (e.g. "dinner")
 └── mealName: String
-
-Meal
-├── id: Integer
-└── name: String
 
 Ingredient
 ├── id: Integer

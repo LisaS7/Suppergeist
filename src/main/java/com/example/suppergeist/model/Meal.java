@@ -5,18 +5,20 @@ import lombok.Getter;
 @Getter
 public class Meal {
     private final Integer id;
-    private final String name;
+    private final int mealPlanId;
+    private final int dayOffset;
+    private final String mealType;
+    private final String mealName;
 
-    public Meal(Integer id, String name) {
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Meal name must not be blank");
-        }
+    public Meal(Integer id, int mealPlanId, int dayOffset, String mealType, String mealName) {
         this.id = id;
-        this.name = name;
+        this.mealPlanId = mealPlanId;
+        this.dayOffset = dayOffset;
+        this.mealType = mealType;
+        this.mealName = mealName;
     }
 
-    public Meal(String name) {
-        this(null, name);
+    public Meal(int mealPlanId, int dayOffset, String mealType, String mealName) {
+        this(null, mealPlanId, dayOffset, mealType, mealName);
     }
-
 }

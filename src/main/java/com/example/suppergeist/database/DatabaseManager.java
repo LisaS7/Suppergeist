@@ -48,9 +48,7 @@ public class DatabaseManager {
                 Schema.CREATE_MEAL_INGREDIENTS,
                 Schema.CREATE_INDEX_MEAL_INGREDIENTS,
                 Schema.CREATE_MEAL_PLANS,
-                Schema.CREATE_INDEX_MEAL_PLANS_USER_WEEK,
-                Schema.CREATE_MEAL_PLAN_ENTRIES,
-                Schema.CREATE_INDEX_MEAL_PLAN_ENTRIES
+                Schema.CREATE_INDEX_MEAL_PLANS_USER_WEEK
         );
 
         log.info("Starting schema creation");

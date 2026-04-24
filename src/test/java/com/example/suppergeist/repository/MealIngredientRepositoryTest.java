@@ -28,6 +28,11 @@ class MealIngredientRepositoryTest {
 
         dbManager.init();
 
+        try (var conn = dbManager.getConnection()) {
+            conn.createStatement().execute("INSERT INTO users (id, name) VALUES (1, 'Test User')");
+            conn.createStatement().execute("INSERT INTO meal_plans (id, user_id, start_date) VALUES (1, 1, '2026-01-01')");
+        }
+
         repository = new MealIngredientRepository(dbManager);
     }
 
@@ -38,11 +43,13 @@ class MealIngredientRepositoryTest {
 
     // --- helpers ---
 
-    private int insertMeal(String name) throws SQLException {
+    private int insertMeal(String name, int dayOffset) throws SQLException {
         try (Connection conn = dbManager.getConnection()) {
-            var stmt = conn.prepareStatement("INSERT INTO meals (name) VALUES (?)",
+            var stmt = conn.prepareStatement(
+                    "INSERT INTO meals (meal_plan_id, day_offset, meal_type, name) VALUES (1, ?, 'dinner', ?)",
                     java.sql.PreparedStatement.RETURN_GENERATED_KEYS);
-            stmt.setString(1, name);
+            stmt.setInt(1, dayOffset);
+            stmt.setString(2, name);
             stmt.executeUpdate();
             return stmt.getGeneratedKeys().getInt(1);
         }
@@ -97,11 +104,11 @@ class MealIngredientRepositoryTest {
         }
     }
 
-    // --- getIngredientsWithNameForMeal ---
+    // --- getIngredientsWithNutritionForMeal ---
 
     @Test
-    void getIngredientsWithNameForMeal_returnsEmptyList_whenNoIngredients() throws SQLException {
-        int mealId = insertMeal("Pasta");
+    void getIngredientsWithNutritionForMeal_returnsEmptyList_whenNoIngredients() throws SQLException {
+        int mealId = insertMeal("Pasta", 0);
 
         List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(mealId);
 
@@ -109,8 +116,8 @@ class MealIngredientRepositoryTest {
     }
 
     @Test
-    void getIngredientsWithNameForMeal_returnsNameFromIngredientsTable() throws SQLException {
-        int mealId = insertMeal("Pasta");
+    void getIngredientsWithNutritionForMeal_returnsNameFromIngredientsTable() throws SQLException {
+        int mealId = insertMeal("Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
@@ -124,8 +131,8 @@ class MealIngredientRepositoryTest {
     }
 
     @Test
-    void getIngredientsWithNameForMeal_returnsResultsOrderedByNutrition() throws SQLException {
-        int mealId = insertMeal("Stir Fry");
+    void getIngredientsWithNutritionForMeal_returnsResultsOrderedByName() throws SQLException {
+        int mealId = insertMeal("Stir Fry", 0);
         int ingZ = insertIngredient("Zucchini");
         int ingA = insertIngredient("Aubergine");
         int ingM = insertIngredient("Mushroom");
@@ -142,7 +149,7 @@ class MealIngredientRepositoryTest {
 
     @Test
     void getIngredientsWithNutritionForMeal_mapsNutritionFields_whenPresent() throws SQLException {
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal("Pasta", 0);
         int ingredientId = insertIngredientWithNutrition("Spaghetti", 371.0, 13.0, 1.5, 74.0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
@@ -156,7 +163,7 @@ class MealIngredientRepositoryTest {
 
     @Test
     void getIngredientsWithNutritionForMeal_returnsNullNutritionFields_whenAbsent() throws SQLException {
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal("Pasta", 0);
         int ingredientId = insertIngredient("Mystery Herb");
         insertMealIngredient(mealId, ingredientId, 5.0, "g");
 
@@ -167,9 +174,9 @@ class MealIngredientRepositoryTest {
     }
 
     @Test
-    void getIngredientsWithNameForMeal_doesNotReturnIngredients_forOtherMeals() throws SQLException {
-        int meal1 = insertMeal("Soup");
-        int meal2 = insertMeal("Curry");
+    void getIngredientsWithNutritionForMeal_doesNotReturnIngredients_forOtherMeals() throws SQLException {
+        int meal1 = insertMeal("Soup", 0);
+        int meal2 = insertMeal("Curry", 1);
         int ingredientId = insertIngredient("Lentils");
         insertMealIngredient(meal2, ingredientId, 200.0, "g");
 
@@ -182,7 +189,7 @@ class MealIngredientRepositoryTest {
 
     @Test
     void create_persistsMealIngredient() throws SQLException {
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal("Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
 
         repository.create(mealId, ingredientId, 200.0, "g");
@@ -192,7 +199,7 @@ class MealIngredientRepositoryTest {
 
     @Test
     void create_mapsFieldsCorrectly() throws SQLException {
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal("Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
 
         repository.create(mealId, ingredientId, 200.0, "g");
@@ -207,7 +214,7 @@ class MealIngredientRepositoryTest {
 
     @Test
     void delete_removesMealIngredient() throws SQLException {
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal("Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
         repository.create(mealId, ingredientId, 200.0, "g");
         int id = getMealIngredientId(mealId, ingredientId);
@@ -219,7 +226,7 @@ class MealIngredientRepositoryTest {
 
     @Test
     void delete_doesNotAffectOtherMealIngredients() throws SQLException {
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal("Pasta", 0);
         int ing1 = insertIngredient("Spaghetti");
         int ing2 = insertIngredient("Tomato");
         repository.create(mealId, ing1, 200.0, "g");

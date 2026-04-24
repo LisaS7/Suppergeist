@@ -3,7 +3,7 @@ package com.example.suppergeist.service;
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.repository.MealIngredientRepository;
-import com.example.suppergeist.repository.MealPlanEntryRepository;
+import com.example.suppergeist.repository.MealRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class ShoppingListServiceTest {
         }
 
         service = new ShoppingListService(
-                new MealPlanEntryRepository(dbManager),
+                new MealRepository(dbManager),
                 new MealIngredientRepository(dbManager)
         );
     }
@@ -58,12 +58,14 @@ class ShoppingListServiceTest {
         }
     }
 
-    private int insertMeal(String name) throws SQLException {
+    private int insertMeal(int planId, String name, int dayOffset) throws SQLException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO meals (name) VALUES (?)",
+                     "INSERT INTO meals (meal_plan_id, day_offset, meal_type, name) VALUES (?, ?, 'dinner', ?)",
                      PreparedStatement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, name);
+            stmt.setInt(1, planId);
+            stmt.setInt(2, dayOffset);
+            stmt.setString(3, name);
             stmt.executeUpdate();
             return stmt.getGeneratedKeys().getInt(1);
         }
@@ -85,17 +87,6 @@ class ShoppingListServiceTest {
         }
     }
 
-    private void insertMealPlanEntry(int mealPlanId, int mealId, int dayOffset) throws SQLException {
-        try (Connection conn = dbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO meal_plan_entries (meal_plan_id, meal_id, day_offset, meal_type) VALUES (?, ?, ?, 'dinner')")) {
-            stmt.setInt(1, mealPlanId);
-            stmt.setInt(2, mealId);
-            stmt.setInt(3, dayOffset);
-            stmt.executeUpdate();
-        }
-    }
-
     private void insertMealIngredient(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
@@ -108,7 +99,9 @@ class ShoppingListServiceTest {
         }
     }
 
-    /** Flattens all items across all categories into a single list. */
+    /**
+     * Flattens all items across all categories into a single list.
+     */
     private List<ShoppingItem> allItems(Map<String, List<ShoppingItem>> result) {
         return result.values().stream().flatMap(List::stream).toList();
     }
@@ -127,9 +120,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_returnsSingleItem_forOneMealWithOneIngredient() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal(planId, "Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
         List<ShoppingItem> items = allItems(service.buildList(planId));
@@ -140,9 +132,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_carriesNameAndUnit_fromIngredient() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal(planId, "Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
         ShoppingItem item = allItems(service.buildList(planId)).get(0);
@@ -154,9 +145,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_setsQuantity_forSingleIngredient() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Pasta");
+        int mealId = insertMeal(planId, "Pasta", 0);
         int ingredientId = insertIngredient("Spaghetti");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 200.0, "g");
 
         ShoppingItem item = allItems(service.buildList(planId)).get(0);
@@ -167,11 +157,9 @@ class ShoppingListServiceTest {
     @Test
     void buildList_aggregatesQuantity_forSameIngredientAcrossMultipleMeals() throws SQLException {
         int planId = insertMealPlan();
-        int meal1 = insertMeal("Pasta");
-        int meal2 = insertMeal("Chicken Soup");
+        int meal1 = insertMeal(planId, "Pasta", 0);
+        int meal2 = insertMeal(planId, "Chicken Soup", 1);
         int ingredientId = insertIngredient("Chicken");
-        insertMealPlanEntry(planId, meal1, 0);
-        insertMealPlanEntry(planId, meal2, 1);
         insertMealIngredient(meal1, ingredientId, 200.0, "g");
         insertMealIngredient(meal2, ingredientId, 150.0, "g");
 
@@ -184,10 +172,9 @@ class ShoppingListServiceTest {
     @Test
     void buildList_keepsSeparateItems_forDifferentIngredients() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Salad");
+        int mealId = insertMeal(planId, "Salad", 0);
         int ing1 = insertIngredient("Lettuce");
         int ing2 = insertIngredient("Tomato");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ing1, 100.0, "g");
         insertMealIngredient(mealId, ing2, 50.0, "g");
 
@@ -199,13 +186,10 @@ class ShoppingListServiceTest {
     @Test
     void buildList_aggregatesAcrossThreeMeals_forSharedIngredient() throws SQLException {
         int planId = insertMealPlan();
-        int meal1 = insertMeal("Monday Dinner");
-        int meal2 = insertMeal("Wednesday Dinner");
-        int meal3 = insertMeal("Friday Dinner");
+        int meal1 = insertMeal(planId, "Monday Dinner", 0);
+        int meal2 = insertMeal(planId, "Wednesday Dinner", 2);
+        int meal3 = insertMeal(planId, "Friday Dinner", 4);
         int ingredientId = insertIngredient("Olive Oil");
-        insertMealPlanEntry(planId, meal1, 0);
-        insertMealPlanEntry(planId, meal2, 2);
-        insertMealPlanEntry(planId, meal3, 4);
         insertMealIngredient(meal1, ingredientId, 10.0, "ml");
         insertMealIngredient(meal2, ingredientId, 15.0, "ml");
         insertMealIngredient(meal3, ingredientId, 20.0, "ml");
@@ -228,9 +212,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_carriesFoodCode_fromIngredient() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Omelette");
+        int mealId = insertMeal(planId, "Omelette", 0);
         int ingredientId = insertIngredient("Egg", "12-001");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 2.0, "whole");
 
         ShoppingItem item = allItems(service.buildList(planId)).get(0);
@@ -241,9 +224,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_carriesNullFoodCode_whenIngredientHasNoFoodCode() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Mystery Dish");
+        int mealId = insertMeal(planId, "Mystery Dish", 0);
         int ingredientId = insertIngredient("Unknown ingredient", null);
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 50.0, "g");
 
         ShoppingItem item = allItems(service.buildList(planId)).get(0);
@@ -256,9 +238,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_groupsItemByFoodCode_intoDairyCategory() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Omelette");
+        int mealId = insertMeal(planId, "Omelette", 0);
         int ingredientId = insertIngredient("Egg", "12-001");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 2.0, "whole");
 
         Map<String, List<ShoppingItem>> result = service.buildList(planId);
@@ -270,9 +251,8 @@ class ShoppingListServiceTest {
     @Test
     void buildList_groupsItemWithNullFoodCode_intoGeneralCategory() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Mystery Dish");
+        int mealId = insertMeal(planId, "Mystery Dish", 0);
         int ingredientId = insertIngredient("Unknown ingredient", null);
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, ingredientId, 50.0, "g");
 
         Map<String, List<ShoppingItem>> result = service.buildList(planId);
@@ -283,10 +263,9 @@ class ShoppingListServiceTest {
     @Test
     void buildList_separatesItemsAcrossCategories_whenFoodCodesdiffer() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Salad");
+        int mealId = insertMeal(planId, "Salad", 0);
         int egg = insertIngredient("Egg", "12-001");       // Dairy & Eggs
         int lettuce = insertIngredient("Lettuce", "13-001"); // Vegetables & Beans
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, egg, 2.0, "whole");
         insertMealIngredient(mealId, lettuce, 100.0, "g");
 
@@ -300,11 +279,10 @@ class ShoppingListServiceTest {
     @Test
     void buildList_returnsCategoriesInAlphabeticalOrder() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Mixed Meal");
+        int mealId = insertMeal(planId, "Mixed Meal", 0);
         int egg = insertIngredient("Egg", "12-001");         // Dairy & Eggs
         int bread = insertIngredient("Bread", "11-001");     // Bakery & Grains
         int carrot = insertIngredient("Carrot", "13-001");   // Vegetables & Beans
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, egg, 2.0, "whole");
         insertMealIngredient(mealId, bread, 1.0, "slice");
         insertMealIngredient(mealId, carrot, 100.0, "g");
@@ -317,10 +295,9 @@ class ShoppingListServiceTest {
     @Test
     void buildList_returnsItemsWithinCategoryInAlphabeticalOrder() throws SQLException {
         int planId = insertMealPlan();
-        int mealId = insertMeal("Veggie Stew");
+        int mealId = insertMeal(planId, "Veggie Stew", 0);
         int zucchini = insertIngredient("Zucchini", "13-010");
         int aubergine = insertIngredient("Aubergine", "13-020");
-        insertMealPlanEntry(planId, mealId, 0);
         insertMealIngredient(mealId, zucchini, 100.0, "g");
         insertMealIngredient(mealId, aubergine, 150.0, "g");
 

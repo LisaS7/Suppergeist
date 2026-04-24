@@ -17,9 +17,17 @@ public final class Schema {
 
     public static final String CREATE_MEALS =
             "CREATE TABLE IF NOT EXISTS meals (" +
-                    "id   INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "name TEXT    NOT NULL" +
+                    "id           INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "meal_plan_id INTEGER NOT NULL REFERENCES meal_plans(id) ON DELETE CASCADE, " +
+                    "day_offset   INTEGER NOT NULL CHECK (day_offset BETWEEN 0 AND 6), " +
+                    "meal_type    TEXT    NOT NULL, " +
+                    "name         TEXT    NOT NULL, " +
+                    "UNIQUE (meal_plan_id, day_offset, meal_type)" +
                     ");";
+
+    public static final String CREATE_INDEX_MEALS_MEAL_PLAN_ID =
+            "CREATE INDEX IF NOT EXISTS idx_meals_meal_plan_id " +
+                    "ON meals (meal_plan_id);";
 
     public static final String CREATE_INGREDIENTS =
             "CREATE TABLE IF NOT EXISTS ingredients (" +
@@ -68,18 +76,5 @@ public final class Schema {
             "CREATE UNIQUE INDEX IF NOT EXISTS idx_meal_plans_user_week " +
                     "    ON meal_plans (user_id, start_date);";
 
-    public static final String CREATE_MEAL_PLAN_ENTRIES =
-            "CREATE TABLE IF NOT EXISTS meal_plan_entries (" +
-                    "    id           INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "    meal_plan_id INTEGER NOT NULL REFERENCES meal_plans(id) ON DELETE CASCADE, " +
-                    "    meal_id      INTEGER NOT NULL REFERENCES meals(id) ON DELETE CASCADE, " +
-                    "    day_offset   INTEGER NOT NULL CHECK (day_offset BETWEEN 0 AND 6), " +
-                    "    meal_type    TEXT    NOT NULL, " +
-                    "    UNIQUE (meal_plan_id, day_offset, meal_type)" +
-                    ");";
-
-    public static final String CREATE_INDEX_MEAL_PLAN_ENTRIES =
-            "CREATE INDEX IF NOT EXISTS idx_meal_plan_entries_meal_plan_id " +
-                    "ON meal_plan_entries (meal_plan_id);";
 }
 

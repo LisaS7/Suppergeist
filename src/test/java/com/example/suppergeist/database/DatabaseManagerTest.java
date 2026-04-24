@@ -64,7 +64,6 @@ class DatabaseManagerTest {
         assertTrue(tables.contains("ingredients"));
         assertTrue(tables.contains("meal_ingredients"));
         assertTrue(tables.contains("meal_plans"));
-        assertTrue(tables.contains("meal_plan_entries"));
     }
 
     @Test

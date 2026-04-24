@@ -26,28 +26,7 @@ class IngredientRepositoryTest {
     void setUp() throws IOException, SQLException {
         tempDb = Files.createTempFile("suppergeist-test-", ".db");
         dbManager = new DatabaseManager(tempDb);
-
-        try (Connection conn = dbManager.getConnection()) {
-            conn.createStatement().execute("""
-                CREATE TABLE IF NOT EXISTS ingredients (
-                    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name            TEXT    NOT NULL UNIQUE,
-                    food_code       TEXT,
-                    energy_kcal     REAL,
-                    protein_g       REAL,
-                    fat_g           REAL,
-                    carbohydrate_g  REAL,
-                    total_sugars_g  REAL,
-                    fibre_g         REAL,
-                    vitamin_a_µg    REAL,
-                    vitamin_c_mg    REAL,
-                    vitamin_d_µg    REAL,
-                    vitamin_e_mg    REAL,
-                    vitamin_b12_µg  REAL,
-                    folate_µg       REAL
-                )
-            """);
-        }
+        dbManager.init();
 
         repository = new IngredientRepository(dbManager);
     }

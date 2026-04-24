@@ -6,94 +6,57 @@ import com.example.suppergeist.model.Meal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class MealRepository {
+
     private final DatabaseManager dbManager;
 
     public MealRepository(DatabaseManager dbManager) {
         this.dbManager = dbManager;
     }
 
-    private Meal mapRowToMeal(ResultSet rs) throws SQLException {
-        int mealId = rs.getInt("id");
-        String mealName = rs.getString("name");
-        return new Meal(mealId, mealName);
-    }
-
-    public Optional<Meal> getById(int id) throws SQLException {
-        String sql = "SELECT * FROM meals WHERE id = ?";
-
-        try (
-                Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)
+    public List<Meal> getMeals(int mealPlanId) throws SQLException {
+        String sql = "SELECT id, meal_plan_id, day_offset, meal_type, name " +
+                "FROM meals WHERE meal_plan_id = ? ORDER BY day_offset, meal_type";
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-            stmt.setInt(1, id);
-            try (
-                    ResultSet rs = stmt.executeQuery()
-            ) {
-                if (rs.next()) {
-                    return Optional.of(mapRowToMeal(rs));
+            stmt.setInt(1, mealPlanId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Meal> rows = new ArrayList<>();
+                while (rs.next()) {
+                    rows.add(new Meal(rs.getInt("id"), rs.getInt("meal_plan_id"), rs.getInt("day_offset"), rs.getString("meal_type"), rs.getString("name")));
                 }
+                return rows;
             }
-        }
-        return Optional.empty();
-    }
-
-    public List<Meal> getAll() throws SQLException {
-        String sql = "SELECT * FROM meals";
-
-        try (
-                Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()
-        ) {
-
-            List<Meal> meals = new ArrayList<>();
-            while (rs.next()) {
-                Meal meal = mapRowToMeal(rs);
-                meals.add(meal);
-            }
-            return meals;
         }
     }
 
-    public Meal create(String name) throws SQLException {
-        String sql = "INSERT INTO meals (name) VALUES (?)";
-        try (
-                Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
-        ) {
-            stmt.setString(1, name);
+    public Meal create(Meal meal) throws SQLException {
+        String sql = "INSERT INTO meals (meal_plan_id, day_offset, meal_type, name) VALUES (?, ?, ?, ?)";
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, meal.getMealPlanId());
+            stmt.setInt(2, meal.getDayOffset());
+            stmt.setString(3, meal.getMealType());
+            stmt.setString(4, meal.getMealName());
             stmt.executeUpdate();
             try (ResultSet rs = stmt.getGeneratedKeys()) {
                 rs.next();
-                int id = rs.getInt(1);
-                return new Meal(id, name);
+                return new Meal(rs.getInt(1), meal.getMealPlanId(), meal.getDayOffset(), meal.getMealType(), meal.getMealName());
             }
         }
     }
 
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM meals WHERE id = ?";
-        try (
-                Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
         }
     }
 
-    public void update(Meal meal) throws SQLException {
-        String sql = "UPDATE meals SET name = ? WHERE id = ?";
-        try (
-                Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql)
-        ) {
-            stmt.setString(1, meal.getName());
-            stmt.setInt(2, meal.getId());
-            stmt.executeUpdate();
-        }
-    }
 }

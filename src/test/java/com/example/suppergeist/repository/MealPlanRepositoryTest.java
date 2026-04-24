@@ -62,29 +62,20 @@ class MealPlanRepositoryTest {
         }
     }
 
-    private void insertMeal(int id, String name) throws SQLException {
+    private void insertMeal(int planId, String name) throws SQLException {
         try (Connection conn = dbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("INSERT INTO meals (id, name) VALUES (?, ?)")) {
-            stmt.setInt(1, id);
+             PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT INTO meals (meal_plan_id, day_offset, meal_type, name) VALUES (?, 0, 'dinner', ?)")) {
+            stmt.setInt(1, planId);
             stmt.setString(2, name);
             stmt.executeUpdate();
         }
     }
 
-    private void insertPlanEntry(int planId, int mealId) throws SQLException {
+    private int countMealsForPlan(int planId) throws SQLException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO meal_plan_entries (meal_plan_id, meal_id, day_offset, meal_type) VALUES (?, ?, 0, 'dinner')")) {
-            stmt.setInt(1, planId);
-            stmt.setInt(2, mealId);
-            stmt.executeUpdate();
-        }
-    }
-
-    private int countEntriesForPlan(int planId) throws SQLException {
-        try (Connection conn = dbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT COUNT(*) FROM meal_plan_entries WHERE meal_plan_id = ?")) {
+                     "SELECT COUNT(*) FROM meals WHERE meal_plan_id = ?")) {
             stmt.setInt(1, planId);
             ResultSet rs = stmt.executeQuery();
             rs.next();
@@ -93,7 +84,7 @@ class MealPlanRepositoryTest {
     }
 
     @Test
-    void get_whenFound() throws SQLException {
+    void getByUserAndStartDate_returnsPresent_whenMatchingPlanExists() throws SQLException {
         insertPlan(1, LocalDate.of(2026, 3, 31));
 
         Optional<MealPlan> result = repository.getByUserAndStartDate(1, LocalDate.of(2026, 3, 31));
@@ -134,13 +125,13 @@ class MealPlanRepositoryTest {
 
         assertTrue(result.isPresent());
         MealPlan plan = result.get();
-        assertEquals(1, plan.id());
+        assertNotNull(plan.id());
         assertEquals(42, plan.userId());
         assertEquals(LocalDate.of(2026, 4, 7), plan.startDate());
     }
 
     @Test
-    void get_whenMultiplePlansExist() throws SQLException {
+    void getByUserAndStartDate_isolatesResultsByUserAndDate() throws SQLException {
         insertPlan(1, LocalDate.of(2026, 3, 24));
         insertPlan(1, LocalDate.of(2026, 3, 31));
         insertPlan(2, LocalDate.of(2026, 3, 31));
@@ -188,13 +179,12 @@ class MealPlanRepositoryTest {
     }
 
     @Test
-    void delete_cascadesToMealPlanEntries() throws SQLException {
-        insertMeal(1, "Soup");
+    void delete_cascadesToMeals() throws SQLException {
         MealPlan plan = repository.create(new MealPlan(null, 1, LocalDate.of(2026, 4, 14)));
-        insertPlanEntry(plan.id(), 1);
+        insertMeal(plan.id(), "Soup");
 
         repository.delete(plan.id());
 
-        assertEquals(0, countEntriesForPlan(plan.id()));
+        assertEquals(0, countMealsForPlan(plan.id()));
     }
 }

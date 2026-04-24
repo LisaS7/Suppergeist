@@ -7,37 +7,33 @@ import static org.junit.jupiter.api.Assertions.*;
 class MealTest {
 
     @Test
-    void constructor_throwsOnNullName() {
-        assertThrows(IllegalArgumentException.class, () -> new Meal(null));
-    }
-
-    @Test
-    void constructor_throwsOnBlankName() {
-        assertThrows(IllegalArgumentException.class, () -> new Meal("   "));
-    }
-
-    @Test
-    void constructor_throwsOnEmptyName() {
-        assertThrows(IllegalArgumentException.class, () -> new Meal(""));
-    }
-
-    @Test
-    void nameOnlyConstructor_setsNullId() {
-        Meal meal = new Meal("Pasta");
-        assertNull(meal.getId());
-        assertEquals("Pasta", meal.getName());
-    }
-
-    @Test
-    void fullConstructor_setsIdAndName() {
-        Meal meal = new Meal(42, "Pasta");
-        assertEquals(42, meal.getId());
-        assertEquals("Pasta", meal.getName());
+    void fullConstructor_setsAllFields() {
+        Meal meal = new Meal(10, 1, 3, "dinner", "Spaghetti Bolognese");
+        assertEquals(10, meal.getId());
+        assertEquals(1, meal.getMealPlanId());
+        assertEquals(3, meal.getDayOffset());
+        assertEquals("dinner", meal.getMealType());
+        assertEquals("Spaghetti Bolognese", meal.getMealName());
     }
 
     @Test
     void fullConstructor_acceptsNullId() {
-        Meal meal = new Meal(null, "Pasta");
+        Meal meal = new Meal(null, 1, 0, "breakfast", "Porridge");
         assertNull(meal.getId());
+    }
+
+    @Test
+    void shortConstructor_setsNullId() {
+        Meal meal = new Meal(1, 0, "breakfast", "Porridge");
+        assertNull(meal.getId());
+    }
+
+    @Test
+    void shortConstructor_setsRemainingFields() {
+        Meal meal = new Meal(2, 5, "lunch", "Chicken Salad");
+        assertEquals(2, meal.getMealPlanId());
+        assertEquals(5, meal.getDayOffset());
+        assertEquals("lunch", meal.getMealType());
+        assertEquals("Chicken Salad", meal.getMealName());
     }
 }

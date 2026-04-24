@@ -15,7 +15,6 @@ import java.sql.Statement;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -94,46 +93,6 @@ public class AppSeedService {
                     ))
             );
 
-            List<Integer> mealIds = new ArrayList<>();
-            try (PreparedStatement mealInsert = conn.prepareStatement(
-                    "INSERT INTO meals (name) VALUES (?)", Statement.RETURN_GENERATED_KEYS);
-                 PreparedStatement ingredientLookup = conn.prepareStatement(
-                    "SELECT id FROM ingredients WHERE name = ?");
-                 PreparedStatement linkInsert = conn.prepareStatement(
-                    "INSERT INTO meal_ingredients (meal_id, ingredient_id, quantity, unit) VALUES (?, ?, ?, ?)")) {
-
-                for (Map.Entry<String, List<Object[]>> meal : meals) {
-                    mealInsert.setString(1, meal.getKey());
-                    mealInsert.executeUpdate();
-                    int mealId;
-                    try (ResultSet keys = mealInsert.getGeneratedKeys()) {
-                        keys.next();
-                        mealId = keys.getInt(1);
-                        mealIds.add(mealId);
-                    }
-
-                    for (Object[] ing : meal.getValue()) {
-                        String ingName = (String) ing[0];
-                        double qty = (double) ing[1];
-                        String unit = (String) ing[2];
-
-                        ingredientLookup.setString(1, ingName);
-                        try (ResultSet rs2 = ingredientLookup.executeQuery()) {
-                            if (!rs2.next()) {
-                                log.warning("Seed ingredient not found in CoFID data, skipping: " + ingName);
-                                continue;
-                            }
-                            linkInsert.setInt(1, mealId);
-                            linkInsert.setInt(2, rs2.getInt(1));
-                            linkInsert.setDouble(3, qty);
-                            linkInsert.setString(4, unit);
-                            linkInsert.addBatch();
-                        }
-                    }
-                    linkInsert.executeBatch();
-                }
-            }
-
             LocalDate thisWeekStart = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
             for (int weekOffset = 0; weekOffset < 3; weekOffset++) {
@@ -151,15 +110,48 @@ public class AppSeedService {
                     }
                 }
 
-                try (PreparedStatement entryInsert = conn.prepareStatement(
-                        "INSERT INTO meal_plan_entries (meal_plan_id, meal_id, day_offset, meal_type) VALUES (?, ?, ?, 'dinner')")) {
-                    for (int day = 0; day < 7; day++) {
-                        entryInsert.setInt(1, planId);
-                        entryInsert.setInt(2, mealIds.get(day));
-                        entryInsert.setInt(3, day);
-                        entryInsert.addBatch();
+                try (PreparedStatement mealInsert = conn.prepareStatement(
+                             "INSERT INTO meals (meal_plan_id, day_offset, meal_type, name) VALUES (?, ?, 'dinner', ?)",
+                             Statement.RETURN_GENERATED_KEYS);
+                     PreparedStatement ingredientLookup = conn.prepareStatement(
+                             "SELECT id FROM ingredients WHERE name = ?");
+                     PreparedStatement linkInsert = conn.prepareStatement(
+                             "INSERT INTO meal_ingredients (meal_id, ingredient_id, quantity, unit) VALUES (?, ?, ?, ?)")) {
+
+                    for (int day = 0; day < meals.size(); day++) {
+                        Map.Entry<String, List<Object[]>> meal = meals.get(day);
+
+                        mealInsert.setInt(1, planId);
+                        mealInsert.setInt(2, day);
+                        mealInsert.setString(3, meal.getKey());
+                        mealInsert.executeUpdate();
+
+                        int mealId;
+                        try (ResultSet keys = mealInsert.getGeneratedKeys()) {
+                            keys.next();
+                            mealId = keys.getInt(1);
+                        }
+
+                        for (Object[] ing : meal.getValue()) {
+                            String ingName = (String) ing[0];
+                            double qty = (double) ing[1];
+                            String unit = (String) ing[2];
+
+                            ingredientLookup.setString(1, ingName);
+                            try (ResultSet rs2 = ingredientLookup.executeQuery()) {
+                                if (!rs2.next()) {
+                                    log.warning("Seed ingredient not found in CoFID data, skipping: " + ingName);
+                                    continue;
+                                }
+                                linkInsert.setInt(1, mealId);
+                                linkInsert.setInt(2, rs2.getInt(1));
+                                linkInsert.setDouble(3, qty);
+                                linkInsert.setString(4, unit);
+                                linkInsert.addBatch();
+                            }
+                        }
+                        linkInsert.executeBatch();
                     }
-                    entryInsert.executeBatch();
                 }
             }
 

@@ -1,21 +1,21 @@
 package com.example.suppergeist.service;
 
-import com.example.suppergeist.model.MealPlanEntry;
+import com.example.suppergeist.model.Meal;
 import com.example.suppergeist.model.ShoppingItem;
 import com.example.suppergeist.repository.MealIngredientRepository;
 import com.example.suppergeist.model.MealIngredientRow;
-import com.example.suppergeist.repository.MealPlanEntryRepository;
+import com.example.suppergeist.repository.MealRepository;
 
 import java.sql.SQLException;
 import java.util.*;
 
 public class ShoppingListService {
 
-    private final MealPlanEntryRepository mealPlanEntryRepository;
+    private final MealRepository mealPlanEntryRepository;
     private final MealIngredientRepository mealIngredientRepository;
 
 
-    public ShoppingListService(MealPlanEntryRepository mealPlanEntryRepository, MealIngredientRepository mealIngredientRepository) {
+    public ShoppingListService(MealRepository mealPlanEntryRepository, MealIngredientRepository mealIngredientRepository) {
         this.mealPlanEntryRepository = mealPlanEntryRepository;
         this.mealIngredientRepository = mealIngredientRepository;
     }
@@ -38,10 +38,10 @@ public class ShoppingListService {
     }
 
     public Map<String, List<ShoppingItem>> buildList(int mealPlanId) throws SQLException {
-        List<MealPlanEntry> mealPlanEntries = mealPlanEntryRepository.getMealPlanEntries(mealPlanId);
+        List<Meal> mealPlanEntries = mealPlanEntryRepository.getMeals(mealPlanId);
         Map<String, ShoppingItem> ingredients = new HashMap<>();
-        for (MealPlanEntry entry : mealPlanEntries) {
-            int mealId = entry.getMealId();
+        for (Meal entry : mealPlanEntries) {
+            int mealId = entry.getId();
             List<MealIngredientRow> rows = mealIngredientRepository.getIngredientsWithNutritionForMeal(mealId);
             for (MealIngredientRow row : rows) {
                 String key = row.ingredient().getId() + "|" + row.unit();

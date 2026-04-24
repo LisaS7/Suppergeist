@@ -58,11 +58,11 @@ public class SuppergeistApplication extends Application {
             IngredientRepository ingredientRepository = new IngredientRepository(dbManager);
             MealRepository mealRepository = new MealRepository(dbManager);
             MealPlanRepository mealPlanRepository = new MealPlanRepository(dbManager);
-            MealPlanEntryRepository mealPlanEntryRepository = new MealPlanEntryRepository(dbManager);
+            MealRepository mealPlanEntryRepository = new MealRepository(dbManager);
             MealIngredientRepository mealIngredientRepository = new MealIngredientRepository(dbManager);
 
             this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
-            this.mealPlanService = new MealPlanService(mealRepository, mealPlanRepository, mealPlanEntryRepository);
+            this.mealPlanService = new MealPlanService(mealRepository, mealPlanRepository);
             this.shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
             this.nutritionService = new NutritionService(mealIngredientRepository);
         } catch (SQLException | IOException e) {

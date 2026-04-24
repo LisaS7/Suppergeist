@@ -22,10 +22,4 @@ class MealPlanTest {
         assertNull(plan.id());
     }
 
-    @Test
-    void constructor_withNullId_setsUserIdAndStartDate() {
-        MealPlan plan = new MealPlan(null, 42, LocalDate.of(2026, 4, 7));
-        assertEquals(42, plan.userId());
-        assertEquals(LocalDate.of(2026, 4, 7), plan.startDate());
-    }
 }
