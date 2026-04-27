@@ -90,7 +90,7 @@ public class MainController {
                         : "No nutrition data for this meal";
             }
 
-            StackPane card = builder.buildMealCard(meal, estimate, toolTipText);
+            StackPane card = builder.buildMealCard(meal, estimate, toolTipText, () -> showEditMealDialog(meal), () -> System.out.println("remove"));
             int column = columnFor(meal.date());
             int row = nextRowForDate.get(meal.date());
             this.mealPlanGrid.add(card, column, row);
@@ -137,6 +137,40 @@ public class MainController {
 
             try {
                 mealPlanService.addMealToSlot(mealName, mealType, currentPlan.id(), dayOffset);
+                refreshMealPlanGrid();
+            } catch (SQLException e) {
+                handleGridRefreshError(e);
+            }
+        }
+    }
+
+    private void showEditMealDialog(WeeklyMealViewModel meal) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Meal");
+        dialog.getDialogPane().setHeaderText("Edit the meal");
+
+        VBox box = new VBox();
+
+        TextField textField = new TextField();
+        textField.setText(meal.mealName());
+
+        ComboBox<String> comboBox = new ComboBox<>();
+        comboBox.getItems().addAll("Breakfast", "Lunch", "Dinner");
+        comboBox.setValue(meal.mealType());
+
+        box.getChildren().addAll(textField, comboBox);
+
+        dialog.getDialogPane().setContent(box);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource(STYLESHEET).toExternalForm()
+        );
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String mealName = textField.getText();
+            String mealType = comboBox.getValue();
+            try {
+                mealPlanService.updateMeal(meal.mealId(), mealName, mealType);
                 refreshMealPlanGrid();
             } catch (SQLException e) {
                 handleGridRefreshError(e);

@@ -5,9 +5,8 @@ import com.example.suppergeist.model.User;
 import com.example.suppergeist.service.WeeklyMealViewModel;
 import javafx.animation.RotateTransition;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -21,7 +20,7 @@ public class MealCardBuilder {
         this.user = user;
     }
 
-    public StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText) {
+    public StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText, Runnable onEdit, Runnable onRemove) {
         // FRONT
         VBox front = new VBox();
         front.getStyleClass().add("meal-card");
@@ -80,7 +79,17 @@ public class MealCardBuilder {
         // ARRANGE
         StackPane card = new StackPane(front, back);
         SimpleBooleanProperty flipped = new SimpleBooleanProperty(false);
-        card.setOnMouseClicked(e -> flipCard(card, front, back, flipped));
+        card.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY) flipCard(card, front, back, flipped);
+        });
+
+        // Right Click Menu
+        MenuItem editMenu = new MenuItem("Edit");
+        MenuItem removeMenu = new MenuItem("Remove");
+        editMenu.setOnAction(e -> onEdit.run());
+        removeMenu.setOnAction(e -> onRemove.run());
+        ContextMenu menu = new ContextMenu(editMenu, removeMenu);
+        card.setOnContextMenuRequested(e -> menu.show(card, e.getScreenX(), e.getScreenY()));
         return card;
     }
 

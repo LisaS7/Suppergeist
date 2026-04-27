@@ -49,6 +49,17 @@ public class MealRepository {
         }
     }
 
+    public void update(int mealId, String mealName, String mealType) throws SQLException {
+        String sql = "UPDATE meals SET meal_type=?, name = ? WHERE id = ? ";
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, mealType);
+            stmt.setString(2, mealName);
+            stmt.setInt(3, mealId);
+            stmt.executeUpdate();
+        }
+    }
+
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM meals WHERE id = ?";
         try (Connection conn = dbManager.getConnection();
