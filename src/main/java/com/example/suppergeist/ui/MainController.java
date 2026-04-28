@@ -90,7 +90,7 @@ public class MainController {
                         : "No nutrition data for this meal";
             }
 
-            StackPane card = builder.buildMealCard(meal, estimate, toolTipText, () -> showEditMealDialog(meal), () -> System.out.println("remove"));
+            StackPane card = builder.buildMealCard(meal, estimate, toolTipText, () -> showEditMealDialog(meal), () -> onRemove(meal.mealId()));
             int column = columnFor(meal.date());
             int row = nextRowForDate.get(meal.date());
             this.mealPlanGrid.add(card, column, row);
@@ -171,6 +171,20 @@ public class MainController {
             String mealType = comboBox.getValue();
             try {
                 mealPlanService.updateMeal(meal.mealId(), mealName, mealType);
+                refreshMealPlanGrid();
+            } catch (SQLException e) {
+                handleGridRefreshError(e);
+            }
+        }
+    }
+
+    private void onRemove(int mealId) {
+        Alert alert = styledAlert(Alert.AlertType.CONFIRMATION, "Confirm Delete", "Do you want to delete this meal?");
+        Optional<ButtonType> response = alert.showAndWait();
+
+        if (response.isPresent() && response.get() == ButtonType.OK) {
+            try {
+                mealPlanService.deleteMeal(mealId);
                 refreshMealPlanGrid();
             } catch (SQLException e) {
                 handleGridRefreshError(e);

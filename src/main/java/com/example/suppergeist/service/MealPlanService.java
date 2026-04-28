@@ -23,6 +23,7 @@ public class MealPlanService {
     public MealPlanService(MealRepository mealRepository, MealPlanRepository mealPlanRepository) {
         this.mealRepository = mealRepository;
         this.mealPlanRepository = mealPlanRepository;
+
     }
 
     private String formatDayLabel(LocalDate date) {
@@ -59,6 +60,11 @@ public class MealPlanService {
         return mealPlanRepository.create(new MealPlan(null, userId, startDate));
     }
 
+
+    public void deletePlan(int id) throws SQLException {
+        mealPlanRepository.delete(id);
+    }
+
     public void addMealToSlot(String mealName, String mealType, int mealPlanId, int dayOffset) throws SQLException {
         Meal entry = new Meal(mealPlanId, dayOffset, mealType, mealName);
         mealRepository.create(entry);
@@ -68,7 +74,7 @@ public class MealPlanService {
         mealRepository.update(mealId, mealName, mealType);
     }
 
-    public void deletePlan(int id) throws SQLException {
-        mealPlanRepository.delete(id);
+    public void deleteMeal(int mealId) throws SQLException {
+        mealRepository.delete(mealId);
     }
 }
