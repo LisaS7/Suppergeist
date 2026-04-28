@@ -23,6 +23,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class MainController {
+    record MealFormResult(String name, String type) {
+    }
+
     @Setter private MealPlanService mealPlanService;
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
@@ -108,19 +111,23 @@ public class MainController {
         }
     }
 
-    private void showAddMealDialog(LocalDate mealDate) {
+    private Optional<MealFormResult> buildDialog(String title, String header, String initialMealName, String initialMealType) {
         Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Add Meal");
-        dialog.getDialogPane().setHeaderText("Add a meal");
+        dialog.setTitle(title);
+        dialog.getDialogPane().setHeaderText(header);
 
         VBox box = new VBox();
 
         TextField textField = new TextField();
-        textField.setPromptText("Enter meal name");
+        if (initialMealName == null) {
+            textField.setPromptText("Enter a meal");
+        } else {
+            textField.setText(initialMealName);
+        }
 
         ComboBox<String> comboBox = new ComboBox<>();
         comboBox.getItems().addAll("Breakfast", "Lunch", "Dinner");
-        comboBox.setValue("Select meal type");
+        comboBox.setValue(initialMealType);
 
         box.getChildren().addAll(textField, comboBox);
 
@@ -131,12 +138,17 @@ public class MainController {
         );
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
-            String mealName = textField.getText();
-            String mealType = comboBox.getValue();
-            int dayOffset = (int) ChronoUnit.DAYS.between(currentWeekStart, mealDate);
+            return Optional.of(new MealFormResult(textField.getText(), comboBox.getValue()));
+        }
+        return Optional.empty();
+    }
 
+    private void showAddMealDialog(LocalDate mealDate) {
+        Optional<MealFormResult> result = buildDialog("Add Meal", "Add a meal", null, "Dinner");
+        if (result.isPresent()) {
+            int dayOffset = (int) ChronoUnit.DAYS.between(currentWeekStart, mealDate);
             try {
-                mealPlanService.addMealToSlot(mealName, mealType, currentPlan.id(), dayOffset);
+                mealPlanService.addMealToSlot(result.get().name(), result.get().type(), currentPlan.id(), dayOffset);
                 refreshMealPlanGrid();
             } catch (SQLException e) {
                 handleGridRefreshError(e);
@@ -145,32 +157,10 @@ public class MainController {
     }
 
     private void showEditMealDialog(WeeklyMealViewModel meal) {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Edit Meal");
-        dialog.getDialogPane().setHeaderText("Edit the meal");
-
-        VBox box = new VBox();
-
-        TextField textField = new TextField();
-        textField.setText(meal.mealName());
-
-        ComboBox<String> comboBox = new ComboBox<>();
-        comboBox.getItems().addAll("Breakfast", "Lunch", "Dinner");
-        comboBox.setValue(meal.mealType());
-
-        box.getChildren().addAll(textField, comboBox);
-
-        dialog.getDialogPane().setContent(box);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource(STYLESHEET).toExternalForm()
-        );
-        Optional<ButtonType> result = dialog.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-            String mealName = textField.getText();
-            String mealType = comboBox.getValue();
+        Optional<MealFormResult> result = buildDialog("Edit Meal", "Edit a meal", meal.mealName(), meal.mealType());
+        if (result.isPresent()) {
             try {
-                mealPlanService.updateMeal(meal.mealId(), mealName, mealType);
+                mealPlanService.updateMeal(meal.mealId(), result.get().name(), result.get().type());
                 refreshMealPlanGrid();
             } catch (SQLException e) {
                 handleGridRefreshError(e);
