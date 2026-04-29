@@ -104,7 +104,7 @@ restarts; the grid reflects the DB state accurately after each operation.
 
 ---
 
-## Task 4 — Ingredient editing per meal ⬜
+## Task 4 — Ingredient editing per meal ✅
 
 *(Depends on Task 3)*
 
@@ -112,31 +112,33 @@ Allow the user to attach ingredients to a meal so that nutrition estimates (Phas
 
 **UI:**
 
-- Meal card (or the edit dialog from Task 3) has an "Edit ingredients" affordance
-- Opens an ingredient panel showing the current ingredient list for that meal
-- Each row shows: ingredient name, quantity, unit; a remove button
+- Meal card has an "Edit ingredients" affordance ✅
+- Opens an ingredient dialog showing the current ingredient list for that meal ✅
+- Each row shows: ingredient name, quantity, unit; a remove button ✅
 - An "Add ingredient" row at the bottom: ingredient search field (same pattern as the avoid-foods picker in
-  preferences), quantity input, unit input, confirm button
+  preferences), quantity input, unit input, confirm button ✅
 
 **Service / repository:**
 
-The controller must not call repositories directly (three-layer rule). Add service methods that wrap the
-repository calls:
+A new `MealIngredientService` was added (rather than expanding `MealPlanService`) to keep the meal-planning
+service from getting crowded:
 
 ```java
-// in MealPlanService (or a new MealIngredientService if this layer gets crowded)
-public List<MealIngredientRow> getIngredientsForMeal(int mealId) throws SQLException { ... }
-public void addIngredientToMeal(int mealId, int ingredientId, double quantity, String unit) throws SQLException { ... }
-public void removeIngredientFromMeal(int mealIngredientId) throws SQLException { ... }
+// in MealIngredientService
+public List<MealIngredientRow> getIngredientsForMeal(int mealId) throws SQLException { ... } ✅
+public int addIngredientToMeal(int mealId, int ingredientId, double quantity, String unit) throws SQLException { ... } ✅
+public void removeIngredientFromMeal(int mealIngredientId) throws SQLException { ... } ✅
+public List<Ingredient> searchIngredients(String searchTerm) throws SQLException { ... } ✅
 ```
 
-Ingredient search for the "Add ingredient" row should also go through a service method (e.g.
-`UserPreferencesService.searchIngredientsByName(String query)` — or a more appropriately named service if the
-search is reused outside the preferences context) wrapping `IngredientRepository.searchByName()`. This is the
-same fuzzy LIKE query that Phase 5 will reuse for AI-matched ingredients.
+`addIngredientToMeal` returns the generated `meal_ingredients.id` so the UI can wire up the per-row remove
+button without an extra round-trip. Ingredient search goes through `MealIngredientService.searchIngredients`
+wrapping `IngredientRepository.searchByName()` — the same fuzzy LIKE query that Phase 5 will reuse for
+AI-matched ingredients. ✅
 
 **Done when:** a user can add and remove ingredients on any meal; ingredient lines are persisted; the kcal figure
-on the meal card updates when the ingredient panel is closed (calls `NutritionService.estimateForMeal()`).
+on the meal card updates when the ingredient panel is closed (the controller calls `refreshMealPlanGrid()` after
+the dialog closes, which re-renders the cards with updated nutrition). ✅
 
 ---
 
@@ -145,4 +147,4 @@ on the meal card updates when the ingredient panel is closed (calls `NutritionSe
 - [x] Cascade rules applied in `Schema.java`; `PRAGMA foreign_keys = ON` confirmed active; all write methods present and tested
 - [x] User can create and delete a week's plan via the UI
 - [x] User can add, rename, and remove meals in individual slots
-- [ ] User can add and remove ingredients on a meal; nutrition estimate updates accordingly
+- [x] User can add and remove ingredients on a meal; nutrition estimate updates accordingly

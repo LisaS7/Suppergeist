@@ -158,4 +158,100 @@ class IngredientRepositoryTest {
         assertEquals(1, results.size());
         assertNull(results.get(0).getFoodCode());
     }
+
+    // --- searchByName ---
+
+    @Test
+    void searchByName_returnsEmptyList_whenNoMatch() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute(
+                "INSERT INTO ingredients (name, food_code) VALUES ('Almonds', '11-002')"
+            );
+        }
+
+        List<Ingredient> results = repository.searchByName("Banana");
+
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void searchByName_returnsEmptyList_whenTableIsEmpty() throws SQLException {
+        List<Ingredient> results = repository.searchByName("anything");
+
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void searchByName_returnsIngredient_whenNameMatchesExactly() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute(
+                "INSERT INTO ingredients (name, food_code) VALUES ('Almonds', '11-002')"
+            );
+        }
+
+        List<Ingredient> results = repository.searchByName("Almonds");
+
+        assertEquals(1, results.size());
+        assertEquals("Almonds", results.get(0).getName());
+        assertEquals("11-002", results.get(0).getFoodCode());
+    }
+
+    @Test
+    void searchByName_returnsIngredient_whenNameMatchesPartial() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute(
+                "INSERT INTO ingredients (name, food_code) VALUES ('Chicken Breast', '16-511')"
+            );
+        }
+
+        List<Ingredient> results = repository.searchByName("Chick");
+
+        assertEquals(1, results.size());
+        assertEquals("Chicken Breast", results.get(0).getName());
+    }
+
+    @Test
+    void searchByName_matchesSubstring_anywhereInName() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute(
+                "INSERT INTO ingredients (name, food_code) VALUES ('Chicken Breast', '16-511')"
+            );
+        }
+
+        List<Ingredient> results = repository.searchByName("Breast");
+
+        assertEquals(1, results.size());
+        assertEquals("Chicken Breast", results.get(0).getName());
+    }
+
+    @Test
+    void searchByName_returnsMultipleMatches() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            conn.createStatement().execute("""
+                INSERT INTO ingredients (name, food_code) VALUES
+                    ('Chicken Breast', '16-511'),
+                    ('Chicken Thigh', '16-512'),
+                    ('Beef Mince', '17-200')
+            """);
+        }
+
+        List<Ingredient> results = repository.searchByName("Chicken");
+
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    void searchByName_limitsTo20Results() throws SQLException {
+        try (Connection conn = dbManager.getConnection()) {
+            for (int i = 0; i < 25; i++) {
+                conn.createStatement().execute(
+                    "INSERT INTO ingredients (name, food_code) VALUES ('Apple " + i + "', '14-00" + i + "')"
+                );
+            }
+        }
+
+        List<Ingredient> results = repository.searchByName("Apple");
+
+        assertEquals(20, results.size());
+    }
 }

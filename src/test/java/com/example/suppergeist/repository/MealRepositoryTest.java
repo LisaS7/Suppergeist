@@ -169,6 +169,54 @@ class MealRepositoryTest {
         assertEquals("Chicken Salad", result.getMealName());
     }
 
+    // --- update ---
+
+    @Test
+    void update_changesMealNameAndType() throws SQLException {
+        Meal created = repository.create(new Meal(1, 0, "dinner", "Pasta"));
+
+        repository.update(created.getId(), "Spaghetti Bolognese", "lunch");
+
+        Meal updated = repository.getMeals(1).get(0);
+        assertEquals("Spaghetti Bolognese", updated.getMealName());
+        assertEquals("lunch", updated.getMealType());
+    }
+
+    @Test
+    void update_preservesMealPlanIdAndDayOffset() throws SQLException {
+        Meal created = repository.create(new Meal(1, 3, "dinner", "Pasta"));
+
+        repository.update(created.getId(), "Pasta Primavera", "dinner");
+
+        Meal updated = repository.getMeals(1).get(0);
+        assertEquals(1, updated.getMealPlanId());
+        assertEquals(3, updated.getDayOffset());
+    }
+
+    @Test
+    void update_doesNotAffectOtherMeals() throws SQLException {
+        Meal first = repository.create(new Meal(1, 0, "dinner", "Pasta"));
+        repository.create(new Meal(1, 1, "lunch", "Salad"));
+
+        repository.update(first.getId(), "Lasagne", "dinner");
+
+        List<Meal> all = repository.getMeals(1);
+        assertEquals(2, all.size());
+        Meal salad = all.stream().filter(m -> m.getMealType().equals("lunch")).findFirst().orElseThrow();
+        assertEquals("Salad", salad.getMealName());
+    }
+
+    @Test
+    void update_doesNothing_whenMealIdDoesNotExist() throws SQLException {
+        repository.create(new Meal(1, 0, "dinner", "Pasta"));
+
+        repository.update(9999, "Anything", "lunch");
+
+        Meal unchanged = repository.getMeals(1).get(0);
+        assertEquals("Pasta", unchanged.getMealName());
+        assertEquals("dinner", unchanged.getMealType());
+    }
+
     // --- delete ---
 
     @Test

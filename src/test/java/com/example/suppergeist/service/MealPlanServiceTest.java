@@ -293,4 +293,73 @@ class MealPlanServiceTest {
         assertTrue(service.getWeeklyMeals(1, weekStart).isEmpty());
     }
 
+    // --- updateMeal ---
+
+    @Test
+    void updateMeal_changesMealNameAndType() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13);
+        int planId = insertMealPlan(1, weekStart);
+        int mealId = insertMeal(planId, "Pasta", 0, "dinner");
+
+        service.updateMeal(mealId, "Lasagne", "lunch");
+
+        WeeklyMealViewModel updated = service.getWeeklyMeals(1, weekStart).get(0);
+        assertEquals("Lasagne", updated.mealName());
+        assertEquals("lunch", updated.mealType());
+    }
+
+    @Test
+    void updateMeal_doesNotAffectOtherMeals() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13);
+        int planId = insertMealPlan(1, weekStart);
+        int firstId = insertMeal(planId, "Pasta", 0, "dinner");
+        insertMeal(planId, "Salad", 1, "lunch");
+
+        service.updateMeal(firstId, "Lasagne", "dinner");
+
+        List<WeeklyMealViewModel> meals = service.getWeeklyMeals(1, weekStart);
+        assertEquals(2, meals.size());
+        WeeklyMealViewModel salad = meals.stream()
+                .filter(m -> m.mealType().equals("lunch")).findFirst().orElseThrow();
+        assertEquals("Salad", salad.mealName());
+    }
+
+    // --- deleteMeal ---
+
+    @Test
+    void deleteMeal_removesMealFromPlan() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13);
+        int planId = insertMealPlan(1, weekStart);
+        int mealId = insertMeal(planId, "Pasta", 0, "dinner");
+
+        service.deleteMeal(mealId);
+
+        assertTrue(service.getWeeklyMeals(1, weekStart).isEmpty());
+    }
+
+    @Test
+    void deleteMeal_doesNotAffectOtherMeals() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13);
+        int planId = insertMealPlan(1, weekStart);
+        int firstId = insertMeal(planId, "Pasta", 0, "dinner");
+        insertMeal(planId, "Salad", 1, "lunch");
+
+        service.deleteMeal(firstId);
+
+        List<WeeklyMealViewModel> meals = service.getWeeklyMeals(1, weekStart);
+        assertEquals(1, meals.size());
+        assertEquals("Salad", meals.get(0).mealName());
+    }
+
+    @Test
+    void deleteMeal_leavesMealPlanIntact() throws SQLException {
+        LocalDate weekStart = LocalDate.of(2026, 4, 13);
+        int planId = insertMealPlan(1, weekStart);
+        int mealId = insertMeal(planId, "Pasta", 0, "dinner");
+
+        service.deleteMeal(mealId);
+
+        assertNotNull(service.findPlanForWeek(1, weekStart));
+    }
+
 }
