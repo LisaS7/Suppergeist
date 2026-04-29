@@ -1,4 +1,4 @@
 package com.example.suppergeist.model;
 
-public record MealIngredientRow(Ingredient ingredient, double quantity, String unit) {
+public record MealIngredientRow(int id, Ingredient ingredient, double quantity, String unit) {
 }

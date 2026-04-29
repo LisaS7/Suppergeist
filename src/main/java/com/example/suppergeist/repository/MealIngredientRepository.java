@@ -4,10 +4,7 @@ import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.Ingredient;
 import com.example.suppergeist.model.MealIngredientRow;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 
@@ -26,7 +23,7 @@ public class MealIngredientRepository {
     public Map<Integer, List<MealIngredientRow>> getIngredientsWithNutritionForMeals(List<Integer> mealIds) throws SQLException {
         String placeholders = String.join(", ", Collections.nCopies(mealIds.size(), "?"));
         String sql = """
-                SELECT  mi.meal_id, mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
+                SELECT  mi.id, mi.meal_id, mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
                        i.energy_kcal, i.protein_g, i.fat_g, i.carbohydrate_g,
                        i.total_sugars_g, i.fibre_g, i.vitamin_a_µg, i.vitamin_c_mg,
                        i.vitamin_d_µg, i.vitamin_e_mg, i.vitamin_b12_µg, i.folate_µg
@@ -63,7 +60,7 @@ public class MealIngredientRepository {
                             nullableDouble(rs, "vitamin_b12_µg"),
                             nullableDouble(rs, "folate_µg")
                     );
-                    MealIngredientRow row = new MealIngredientRow(ingredient, rs.getDouble("quantity"), rs.getString("unit"));
+                    MealIngredientRow row = new MealIngredientRow(rs.getInt("id"), ingredient, rs.getDouble("quantity"), rs.getString("unit"));
                     results.computeIfAbsent(mealId, k -> new ArrayList<>()).add(row);
                 }
                 return results;
@@ -73,7 +70,7 @@ public class MealIngredientRepository {
 
     public List<MealIngredientRow> getIngredientsWithNutritionForMeal(int mealId) throws SQLException {
         String sql = """
-                SELECT mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
+                SELECT mi.id, mi.ingredient_id, i.name, mi.quantity, mi.unit, i.food_code,
                        i.energy_kcal, i.protein_g, i.fat_g, i.carbohydrate_g,
                        i.total_sugars_g, i.fibre_g, i.vitamin_a_µg, i.vitamin_c_mg,
                        i.vitamin_d_µg, i.vitamin_e_mg, i.vitamin_b12_µg, i.folate_µg
@@ -105,26 +102,32 @@ public class MealIngredientRepository {
                             nullableDouble(rs, "vitamin_b12_µg"),
                             nullableDouble(rs, "folate_µg")
                     );
-                    results.add(new MealIngredientRow(ingredient, rs.getDouble("quantity"), rs.getString("unit")));
+                    results.add(new MealIngredientRow(rs.getInt("id"), ingredient, rs.getDouble("quantity"), rs.getString("unit")));
                 }
                 return results;
             }
         }
     }
 
-    public void create(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
+    public int create(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
         String sql = "INSERT INTO meal_ingredients (meal_id, ingredient_id, quantity, unit) " +
                 "VALUES (?, ?, ?, ?)";
         try (
                 Connection conn = dbManager.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);
+                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
         ) {
             stmt.setInt(1, mealId);
             stmt.setInt(2, ingredientId);
             stmt.setDouble(3, quantity);
             stmt.setString(4, unit);
             stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
         }
+
     }
 
     public void delete(int id) throws SQLException {

@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 public class SuppergeistApplication extends Application {
     private UserPreferencesService userPreferencesService;
     private MealPlanService mealPlanService;
+    private MealIngredientService mealIngredientService;
     private ShoppingListService shoppingListService;
     private NutritionService nutritionService;
     private Exception initError;
@@ -63,6 +64,7 @@ public class SuppergeistApplication extends Application {
 
             this.userPreferencesService = new UserPreferencesService(userRepository, ingredientRepository);
             this.mealPlanService = new MealPlanService(mealRepository, mealPlanRepository);
+            this.mealIngredientService = new MealIngredientService(mealIngredientRepository, ingredientRepository);
             this.shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
             this.nutritionService = new NutritionService(mealIngredientRepository);
         } catch (SQLException | IOException e) {
@@ -90,6 +92,7 @@ public class SuppergeistApplication extends Application {
         MainController controller = fxmlLoader.getController();
         controller.setUserPreferencesService(userPreferencesService);
         controller.setMealPlanService(mealPlanService);
+        controller.setMealIngredientService(mealIngredientService);
         controller.setShoppingListService(shoppingListService);
         controller.setNutritionService(nutritionService);
 

@@ -1,13 +1,13 @@
 package com.example.suppergeist.ui;
 
-import com.example.suppergeist.model.MealPlan;
-import com.example.suppergeist.model.NutritionalEstimate;
-import com.example.suppergeist.model.ShoppingItem;
-import com.example.suppergeist.model.User;
+import com.example.suppergeist.model.*;
 import com.example.suppergeist.service.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import lombok.Setter;
@@ -27,6 +27,7 @@ public class MainController {
     }
 
     @Setter private MealPlanService mealPlanService;
+    @Setter private MealIngredientService mealIngredientService;
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
     @Setter private NutritionService nutritionService;
@@ -93,11 +94,10 @@ public class MainController {
                         : "No nutrition data for this meal";
             }
 
-            StackPane card = builder.buildMealCard(meal, estimate, toolTipText, () -> showEditMealDialog(meal), () -> onRemove(meal.mealId()));
+            StackPane card = builder.buildMealCard(meal, estimate, toolTipText, () -> showEditMealDialog(meal), () -> showEditIngredientDialog(meal.mealId()), () -> onRemove(meal.mealId()));
             int column = columnFor(meal.date());
             int row = nextRowForDate.get(meal.date());
             this.mealPlanGrid.add(card, column, row);
-
             nextRowForDate.put(meal.date(), row + 1);
         }
     }
@@ -165,6 +165,113 @@ public class MainController {
             } catch (SQLException e) {
                 handleGridRefreshError(e);
             }
+        }
+    }
+
+    private void showEditIngredientDialog(int mealId) {
+        List<MealIngredientRow> ingredients = null;
+        try {
+            ingredients = mealIngredientService.getIngredientsForMeal(mealId);
+        } catch (SQLException e) {
+            handleGridRefreshError(e);
+            return;
+        }
+
+        VBox ingredientList = new VBox();
+        for (MealIngredientRow ingredient : ingredients) {
+            HBox row = new HBox();
+            row.getStyleClass().add("ingredient-row");
+            Label name = new Label(ingredient.ingredient().getName());
+            Label quantity = new Label(String.valueOf(ingredient.quantity()));
+            Label unit = new Label(ingredient.unit());
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            Button removeButton = new Button("X");
+            removeButton.setOnAction(e -> {
+                try {
+                    mealIngredientService.removeIngredientFromMeal(ingredient.id());
+                    ingredientList.getChildren().remove(row);
+                } catch (SQLException ex) {
+                    handleGridRefreshError(ex);
+                }
+            });
+            row.getChildren().addAll(name, quantity, unit, spacer, removeButton);
+            ingredientList.getChildren().add(row);
+        }
+
+
+        ComboBox<Ingredient> ingredientBox = new ComboBox<>();
+        ingredientBox.setEditable(true);
+        ingredientBox.getEditor().textProperty().addListener(((observable, oldValue, newValue) -> {
+            if (newValue == null || newValue.length() < 2) return;
+            try {
+                List<Ingredient> results = mealIngredientService.searchIngredients(newValue);
+                ingredientBox.getItems().setAll(results);
+            } catch (SQLException e) {
+                handleGridRefreshError(e);
+            }
+        }));
+
+
+        TextField quantityField = new TextField();
+        TextField unitField = new TextField();
+
+        Button addButton = new Button("Add");
+        addButton.setOnAction(e -> {
+            Ingredient ingredient = ingredientBox.getValue();
+            if (ingredient == null) return;
+
+            double quantity;
+            try {
+                quantity = Double.parseDouble(quantityField.getText());
+            } catch (NumberFormatException ex) {
+                return;
+            }
+
+            try {
+                int mealIngredientId = mealIngredientService.addIngredientToMeal(mealId, ingredient.getId(), quantity, unitField.getText());
+                HBox newRow = new HBox();
+                newRow.getStyleClass().add("ingredient-row");
+                Region newSpacer = new Region();
+                HBox.setHgrow(newSpacer, Priority.ALWAYS);
+                Button removeButton = new Button("X");
+                removeButton.setOnAction(e2 -> {
+                    try {
+                        mealIngredientService.removeIngredientFromMeal(mealIngredientId);
+                        ingredientList.getChildren().remove(newRow);
+                    } catch (SQLException ex) {
+                        handleGridRefreshError(ex);
+                    }
+                });
+                newRow.getChildren().addAll(new Label(ingredient.getName()), new Label(String.valueOf(quantity)), new Label(unitField.getText()), newSpacer, removeButton);
+                ingredientList.getChildren().add(newRow);
+                quantityField.clear();
+                unitField.clear();
+            } catch (SQLException ex) {
+                handleGridRefreshError(ex);
+            }
+        });
+
+        HBox addRow = new HBox();
+        addRow.getStyleClass().add("ingredient-row");
+        addRow.getChildren().addAll(ingredientBox, quantityField, unitField, addButton);
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Ingredients");
+
+        VBox box = new VBox();
+        box.getChildren().addAll(ingredientList, addRow);
+
+        dialog.getDialogPane().setContent(box);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CLOSE);
+        dialog.getDialogPane().getStylesheets().add(
+                getClass().getResource(STYLESHEET).toExternalForm()
+        );
+        dialog.showAndWait();
+        try {
+            refreshMealPlanGrid();
+        } catch (SQLException e) {
+            handleGridRefreshError(e);
         }
     }
 

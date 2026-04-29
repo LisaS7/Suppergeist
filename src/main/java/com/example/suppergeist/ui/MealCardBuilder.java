@@ -20,7 +20,7 @@ public class MealCardBuilder {
         this.user = user;
     }
 
-    public StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText, Runnable onEdit, Runnable onRemove) {
+    public StackPane buildMealCard(WeeklyMealViewModel meal, NutritionalEstimate estimate, String toolTipText, Runnable onEditMeal, Runnable onEditIngredient, Runnable onRemove) {
         // FRONT
         VBox front = new VBox();
         front.getStyleClass().add("meal-card");
@@ -84,11 +84,13 @@ public class MealCardBuilder {
         });
 
         // Right Click Menu
-        MenuItem editMenu = new MenuItem("Edit");
+        MenuItem editMealMenu = new MenuItem("Edit Meal");
+        MenuItem editIngredientMenu = new MenuItem("Edit Ingredient");
         MenuItem removeMenu = new MenuItem("Remove");
-        editMenu.setOnAction(e -> onEdit.run());
+        editMealMenu.setOnAction(e -> onEditMeal.run());
+        editIngredientMenu.setOnAction(e -> onEditIngredient.run());
         removeMenu.setOnAction(e -> onRemove.run());
-        ContextMenu menu = new ContextMenu(editMenu, removeMenu);
+        ContextMenu menu = new ContextMenu(editMealMenu, editIngredientMenu, removeMenu);
         card.setOnContextMenuRequested(e -> menu.show(card, e.getScreenX(), e.getScreenY()));
         return card;
     }

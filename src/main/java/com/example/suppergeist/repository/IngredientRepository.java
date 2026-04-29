@@ -61,6 +61,24 @@ public class IngredientRepository {
         return Optional.empty();
     }
 
+    public List<Ingredient> searchByName(String name) throws SQLException {
+        String sql = "SELECT id, name, food_code FROM ingredients WHERE name LIKE ? LIMIT 20";
+        try (
+                Connection conn = dbManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+        ) {
+            stmt.setString(1, "%" + name + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Ingredient> results = new ArrayList<>();
+                while (rs.next()) {
+                    results.add(new Ingredient(rs.getInt("id"), rs.getString("name"), rs.getString("food_code")));
+                }
+                return results;
+            }
+        }
+    }
+
     public List<Ingredient> getAllIngredients() throws SQLException {
         String sql = "SELECT id, name, food_code FROM ingredients";
 

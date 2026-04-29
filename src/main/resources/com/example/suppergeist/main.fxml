@@ -18,6 +18,7 @@
             </ImageView>
             <Label text="Suppergeist"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Right-click a card for options" styleClass="header-hint"/>
             <Button onAction="#togglePrefs">
                 <graphic>
                     <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">

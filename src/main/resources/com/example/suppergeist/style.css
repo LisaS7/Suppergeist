@@ -31,6 +31,12 @@ HBox {
     -fx-spacing: 0;
 }
 
+.ingredient-row {
+    -fx-spacing: 8;
+    -fx-padding: 4 0;
+    -fx-alignment: center-left;
+}
+
 VBox {
     -fx-padding: 0;
     -fx-spacing: 0;
@@ -63,7 +69,7 @@ Separator .line {
     -fx-border-width: 0 1 3 1;
     -fx-padding: 20 20 20 20;
     -fx-spacing: 100;
-    -fx-alignment: CENTER_LEFT;
+    -fx-alignment: BOTTOM_LEFT;
 }
 
 /* App title — the first Label inside .header gets larger treatment */
@@ -74,6 +80,14 @@ Separator .line {
     -fx-text-fill: #dce8ed;
 }
 
+
+/* Affordance hint — small muted label in the header */
+.header-hint {
+    -fx-font-size: 14px;
+    -fx-font-family: "Quintessential";
+    -fx-text-fill: #8fa4ae;
+    -fx-font-style: italic;
+}
 
 /* ── Meal Card ───────────────────────────────────────────── */
 /*
@@ -712,6 +726,45 @@ GridPane > Label {
 
 .combo-box-popup > .list-view .list-cell:selected {
     -fx-background-color: #4f6c7b;
+    -fx-text-fill: #dce8ed;
+}
+
+
+/* ── Context Menu ───────────────────────────────────────── */
+
+/*
+   Right-click menu on meal cards.
+   Mirrors the combo-box-popup treatment: foam fill, abyss border,
+   hard edges, dropshadow for elevation, slate-fill on hover.
+*/
+.context-menu {
+    -fx-background-color: #dce8ed;
+    -fx-border-color: #051d29;
+    -fx-border-width: 2;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 4 0 4 0;
+    -fx-effect: dropshadow(gaussian, #1d3a49, 8, 0.15, 2, 2);
+}
+
+.context-menu .menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 6 16 6 16;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #051d29;
+    -fx-font-family: "Quintessential";
+    -fx-font-size: 16px;
+}
+
+.context-menu .menu-item:focused,
+.context-menu .menu-item:hover {
+    -fx-background-color: #4f6c7b;
+}
+
+.context-menu .menu-item:focused .label,
+.context-menu .menu-item:hover .label {
     -fx-text-fill: #dce8ed;
 }
 

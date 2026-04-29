@@ -70,7 +70,7 @@ clicking "Delete plan" removes it and the grid returns to the empty state.
 
 ---
 
-## Task 3 — Add / edit / remove meals in slots 🔄
+## Task 3 — Add / edit / remove meals in slots ✅
 
 *(Depends on Task 2)*
 
@@ -80,7 +80,7 @@ Let the user fill in the meal grid slot by slot.
 
 - Empty slot shows a small "+" affordance; clicking it opens an add-meal dialog ✅
 - Filled slot supports right-click to open a `ContextMenu` with "Edit" and "Remove" items ✅
-- A short hint in the header area ("Right-click a card for options") explains the affordance ⬜
+- A short hint in the header area ("Right-click a card for options") explains the affordance ✅
 - Left-click flip animation is preserved and unaffected ✅
 
 **Add / edit dialog:**
@@ -89,7 +89,7 @@ Let the user fill in the meal grid slot by slot.
 - Dropdown / selector for meal type (e.g. breakfast, lunch, dinner — driven by the types already in the schema) ✅
 - Save writes a single `Meal` row carrying `mealPlanId`, `dayOffset`, `mealType`, and `mealName` ✅
 - Edit pre-populates the dialog with the current name and type; save updates the `Meal` row in place ✅
-- Remove (via context menu) deletes the `Meal` row; cascade removes any associated `meal_ingredients` rows ⬜ (context menu item exists; handler is currently a stub)
+- Remove (via context menu) deletes the `Meal` row; cascade removes any associated `meal_ingredients` rows ✅
 
 **Implementation notes:**
 
@@ -97,7 +97,7 @@ Let the user fill in the meal grid slot by slot.
   passes lambdas that open the appropriate dialog / call the service ✅
 - `MealRepository.update(int mealId, String mealName, String mealType)` ✅
 - `MealPlanService.updateMeal(int mealId, String mealName, String mealType)` ✅
-- `MealPlanService.deleteMeal(int mealId)` ⬜
+- `MealPlanService.deleteMeal(int mealId)` ✅
 
 **Done when:** a user can fill every slot in a week, rename meals, and clear slots; changes persist across
 restarts; the grid reflects the DB state accurately after each operation.
@@ -120,10 +120,20 @@ Allow the user to attach ingredients to a meal so that nutrition estimates (Phas
 
 **Service / repository:**
 
-No new service needed — `MealIngredientRepository.insert` and `delete` (from Task 1) are called directly from
-the controller via the existing service layer pattern. Ingredient search reuses
-`IngredientRepository.searchByName()` (the fuzzy LIKE query that Phase 5 will also use for AI-matched
-ingredients).
+The controller must not call repositories directly (three-layer rule). Add service methods that wrap the
+repository calls:
+
+```java
+// in MealPlanService (or a new MealIngredientService if this layer gets crowded)
+public List<MealIngredientRow> getIngredientsForMeal(int mealId) throws SQLException { ... }
+public void addIngredientToMeal(int mealId, int ingredientId, double quantity, String unit) throws SQLException { ... }
+public void removeIngredientFromMeal(int mealIngredientId) throws SQLException { ... }
+```
+
+Ingredient search for the "Add ingredient" row should also go through a service method (e.g.
+`UserPreferencesService.searchIngredientsByName(String query)` — or a more appropriately named service if the
+search is reused outside the preferences context) wrapping `IngredientRepository.searchByName()`. This is the
+same fuzzy LIKE query that Phase 5 will reuse for AI-matched ingredients.
 
 **Done when:** a user can add and remove ingredients on any meal; ingredient lines are persisted; the kcal figure
 on the meal card updates when the ingredient panel is closed (calls `NutritionService.estimateForMeal()`).
@@ -134,5 +144,5 @@ on the meal card updates when the ingredient panel is closed (calls `NutritionSe
 
 - [x] Cascade rules applied in `Schema.java`; `PRAGMA foreign_keys = ON` confirmed active; all write methods present and tested
 - [x] User can create and delete a week's plan via the UI
-- [ ] User can add, rename, and remove meals in individual slots (add, edit, and right-click context menu done; remove handler + header hint pending)
+- [x] User can add, rename, and remove meals in individual slots
 - [ ] User can add and remove ingredients on a meal; nutrition estimate updates accordingly
