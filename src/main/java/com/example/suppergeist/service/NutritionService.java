@@ -35,17 +35,6 @@ public class NutritionService {
         return results;
     }
 
-    public Set<Integer> mealIdsWithNoIngredients(List<Integer> mealIds) throws SQLException {
-        Set<Integer> results = new HashSet<>();
-        Map<Integer, List<MealIngredientRow>> meals = mealIngredientRepository.getIngredientsWithNutritionForMeals(mealIds);
-        for (Integer id : mealIds) {
-            if (!meals.containsKey(id)) {
-                results.add(id);
-            }
-        }
-        return results;
-    }
-
     /**
      * Returns null if no ingredient in the meal has energyKcal data; caller should show "-- kcal".
      */

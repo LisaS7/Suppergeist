@@ -3,7 +3,9 @@ package com.example.suppergeist.service;
 import com.example.suppergeist.database.DatabaseManager;
 import com.example.suppergeist.model.NutritionalEstimate;
 import com.example.suppergeist.repository.MealIngredientRepository;
+
 import java.time.LocalDate;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +20,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -153,26 +154,6 @@ class NutritionServiceTest {
         Map<Integer, NutritionalEstimate> results = nutritionService.estimatesForMeals(List.of(mealId));
 
         assertNull(results.get(mealId));
-    }
-
-    @Test
-    void mealIdsWithNoIngredients_returnsMealWithNoIngredients() throws SQLException {
-        int mealId = insertMeal("Empty Meal");
-
-        Set<Integer> result = nutritionService.mealIdsWithNoIngredients(List.of(mealId));
-
-        assertTrue(result.contains(mealId));
-    }
-
-    @Test
-    void mealIdsWithNoIngredients_excludesMealThatHasIngredients() throws SQLException {
-        int mealId = insertMeal("Meal With Ingredients");
-        int ingId = insertIngredientNoNutrition("Some Ingredient");
-        linkIngredient(mealId, ingId, 100.0);
-
-        Set<Integer> result = nutritionService.mealIdsWithNoIngredients(List.of(mealId));
-
-        assertFalse(result.contains(mealId));
     }
 
     @Test

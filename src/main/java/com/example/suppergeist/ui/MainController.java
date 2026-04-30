@@ -21,6 +21,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class MainController {
     record MealFormResult(String name, String type) {
@@ -319,7 +320,7 @@ public class MainController {
         List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
-        Set<Integer> mealsWithNoIngredients = this.nutritionService.mealIdsWithNoIngredients(mealIds);
+        Set<Integer> mealsWithNoIngredients = mealIds.stream().filter(id -> !estimates.containsKey(id)).collect(Collectors.toSet());
         Map<LocalDate, Integer> calorieTotals = this.nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
 
         updateDayLabels();
