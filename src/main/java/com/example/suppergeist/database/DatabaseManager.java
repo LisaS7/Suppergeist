@@ -43,6 +43,7 @@ public class DatabaseManager {
         List<String> statements = List.of(
                 Schema.CREATE_USERS,
                 Schema.CREATE_MEALS,
+                Schema.CREATE_INDEX_MEALS_MEAL_PLAN_ID,
                 Schema.CREATE_INGREDIENTS,
                 Schema.CREATE_INDEX_INGREDIENTS,
                 Schema.CREATE_MEAL_INGREDIENTS,
