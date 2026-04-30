@@ -15,10 +15,6 @@ public class MealIngredientRepository {
         this.dbManager = dbManager;
     }
 
-    private static Double nullableDouble(ResultSet rs, String col) throws SQLException {
-        double val = rs.getDouble(col);
-        return rs.wasNull() ? null : val;
-    }
 
     public Map<Integer, List<MealIngredientRow>> getIngredientsWithNutritionForMeals(List<Integer> mealIds) throws SQLException {
         String placeholders = String.join(", ", Collections.nCopies(mealIds.size(), "?"));
@@ -43,23 +39,7 @@ public class MealIngredientRepository {
                 Map<Integer, List<MealIngredientRow>> results = new HashMap<>();
                 while (rs.next()) {
                     int mealId = rs.getInt("meal_id");
-                    Ingredient ingredient = new Ingredient(
-                            rs.getInt("ingredient_id"),
-                            rs.getString("name"),
-                            rs.getString("food_code"),
-                            nullableDouble(rs, "energy_kcal"),
-                            nullableDouble(rs, "protein_g"),
-                            nullableDouble(rs, "fat_g"),
-                            nullableDouble(rs, "carbohydrate_g"),
-                            nullableDouble(rs, "total_sugars_g"),
-                            nullableDouble(rs, "fibre_g"),
-                            nullableDouble(rs, "vitamin_a_µg"),
-                            nullableDouble(rs, "vitamin_c_mg"),
-                            nullableDouble(rs, "vitamin_d_µg"),
-                            nullableDouble(rs, "vitamin_e_mg"),
-                            nullableDouble(rs, "vitamin_b12_µg"),
-                            nullableDouble(rs, "folate_µg")
-                    );
+                    Ingredient ingredient = RowMappers.mapIngredient(rs, "ingredient_id");
                     MealIngredientRow row = new MealIngredientRow(rs.getInt("id"), ingredient, rs.getDouble("quantity"), rs.getString("unit"));
                     results.computeIfAbsent(mealId, k -> new ArrayList<>()).add(row);
                 }
@@ -85,23 +65,7 @@ public class MealIngredientRepository {
             try (ResultSet rs = stmt.executeQuery()) {
                 List<MealIngredientRow> results = new ArrayList<>();
                 while (rs.next()) {
-                    Ingredient ingredient = new Ingredient(
-                            rs.getInt("ingredient_id"),
-                            rs.getString("name"),
-                            rs.getString("food_code"),
-                            nullableDouble(rs, "energy_kcal"),
-                            nullableDouble(rs, "protein_g"),
-                            nullableDouble(rs, "fat_g"),
-                            nullableDouble(rs, "carbohydrate_g"),
-                            nullableDouble(rs, "total_sugars_g"),
-                            nullableDouble(rs, "fibre_g"),
-                            nullableDouble(rs, "vitamin_a_µg"),
-                            nullableDouble(rs, "vitamin_c_mg"),
-                            nullableDouble(rs, "vitamin_d_µg"),
-                            nullableDouble(rs, "vitamin_e_mg"),
-                            nullableDouble(rs, "vitamin_b12_µg"),
-                            nullableDouble(rs, "folate_µg")
-                    );
+                    Ingredient ingredient = RowMappers.mapIngredient(rs, "ingredient_id");
                     results.add(new MealIngredientRow(rs.getInt("id"), ingredient, rs.getDouble("quantity"), rs.getString("unit")));
                 }
                 return results;
