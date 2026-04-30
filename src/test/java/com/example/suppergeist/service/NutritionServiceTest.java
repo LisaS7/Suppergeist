@@ -81,6 +81,50 @@ class NutritionServiceTest {
         }
     }
 
+    private int insertIngredientWithDetailedNutrition(String name,
+                                                      double kcal,
+                                                      Double protein,
+                                                      Double fat,
+                                                      Double carbs,
+                                                      Double sugars,
+                                                      Double fibre,
+                                                      Double vitaminA,
+                                                      Double vitaminC,
+                                                      Double vitaminD,
+                                                      Double vitaminE,
+                                                      Double vitaminB12,
+                                                      Double folate) throws SQLException {
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     """
+                             INSERT INTO ingredients (
+                                 name, energy_kcal, protein_g, fat_g, carbohydrate_g,
+                                 total_sugars_g, fibre_g, vitamin_a_µg, vitamin_c_mg,
+                                 vitamin_d_µg, vitamin_e_mg, vitamin_b12_µg, folate_µg
+                             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             """,
+                     Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, name);
+            stmt.setDouble(2, kcal);
+            stmt.setObject(3, protein);
+            stmt.setObject(4, fat);
+            stmt.setObject(5, carbs);
+            stmt.setObject(6, sugars);
+            stmt.setObject(7, fibre);
+            stmt.setObject(8, vitaminA);
+            stmt.setObject(9, vitaminC);
+            stmt.setObject(10, vitaminD);
+            stmt.setObject(11, vitaminE);
+            stmt.setObject(12, vitaminB12);
+            stmt.setObject(13, folate);
+            stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                keys.next();
+                return keys.getInt(1);
+            }
+        }
+    }
+
     private int insertIngredientNoNutrition(String name) throws SQLException {
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
@@ -168,6 +212,43 @@ class NutritionServiceTest {
 
         assertNotNull(results.get(mealId));
         assertEquals(200, results.get(mealId).cal());
+    }
+
+    @Test
+    void estimatesForMeals_scalesMicronutrientsAndTreatsNullNutrientsAsZero() throws SQLException {
+        int mealId = insertMeal("Detailed Nutrition Meal");
+        int ingId = insertIngredientWithDetailedNutrition(
+                "Fortified Ingredient",
+                120.0,
+                8.0,
+                4.0,
+                16.0,
+                null,
+                6.0,
+                400.0,
+                20.0,
+                5.0,
+                null,
+                2.0,
+                300.0
+        );
+        linkIngredient(mealId, ingId, 150.0);
+
+        NutritionalEstimate result = nutritionService.estimatesForMeals(List.of(mealId)).get(mealId);
+
+        assertNotNull(result);
+        assertEquals(180, result.cal());
+        assertEquals(12.0, result.proteinG());
+        assertEquals(24.0, result.carbsG());
+        assertEquals(6.0, result.fatG());
+        assertEquals(0.0, result.totalSugarsG());
+        assertEquals(9.0, result.fibreG());
+        assertEquals(600.0, result.vitaminAMcg());
+        assertEquals(30.0, result.vitaminCMg());
+        assertEquals(7.5, result.vitaminDMcg());
+        assertEquals(0.0, result.vitaminEMg());
+        assertEquals(3.0, result.vitaminB12Mcg());
+        assertEquals(450.0, result.folateMcg());
     }
 
     // --- dailyCalorieTotals ---

@@ -306,4 +306,45 @@ class ShoppingListServiceTest {
         assertEquals("Aubergine", items.get(0).name());
         assertEquals("Zucchini", items.get(1).name());
     }
+
+    @Test
+    void buildList_keepsSameIngredientSeparateWhenUnitsDiffer() throws SQLException {
+        int planId = insertMealPlan();
+        int meal1 = insertMeal(planId, "Salad", 0);
+        int meal2 = insertMeal(planId, "Soup", 1);
+        int ingredientId = insertIngredient("Spinach", "13-001");
+        insertMealIngredient(meal1, ingredientId, 100.0, "g");
+        insertMealIngredient(meal2, ingredientId, 2.0, "cup");
+
+        List<ShoppingItem> items = service.buildList(planId).get("Vegetables & Beans");
+
+        assertEquals(2, items.size());
+        assertTrue(items.stream().anyMatch(item -> item.unit().equals("g") && item.totalQuantity() == 100.0));
+        assertTrue(items.stream().anyMatch(item -> item.unit().equals("cup") && item.totalQuantity() == 2.0));
+    }
+
+    @Test
+    void buildList_mapsAdditionalFoodCodePrefixesToExpectedCategories() throws SQLException {
+        int planId = insertMealPlan();
+        int mealId = insertMeal(planId, "Mixed Meal", 0);
+        int almond = insertIngredient("Almond", "14-001");
+        int beef = insertIngredient("Beef", "18-001");
+        int ham = insertIngredient("Ham", "19-001");
+        int pasta = insertIngredient("Pasta", "17-001");
+        int beans = insertIngredient("Beans", "50-001");
+        int spice = insertIngredient("Spice", "99-001");
+        insertMealIngredient(mealId, almond, 20.0, "g");
+        insertMealIngredient(mealId, beef, 200.0, "g");
+        insertMealIngredient(mealId, ham, 100.0, "g");
+        insertMealIngredient(mealId, pasta, 250.0, "g");
+        insertMealIngredient(mealId, beans, 400.0, "g");
+        insertMealIngredient(mealId, spice, 5.0, "g");
+
+        Map<String, List<ShoppingItem>> result = service.buildList(planId);
+
+        assertEquals("Almond", result.get("Fruit & Nuts").get(0).name());
+        assertEquals(List.of("Beef", "Ham"), result.get("Meat").stream().map(ShoppingItem::name).toList());
+        assertEquals(List.of("Beans", "Pasta"), result.get("Food Cupboard").stream().map(ShoppingItem::name).toList());
+        assertEquals("Spice", result.get("General").get(0).name());
+    }
 }

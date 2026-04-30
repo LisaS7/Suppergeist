@@ -1,6 +1,7 @@
 plugins {
     java
     application
+    jacoco
     id("org.javamodularity.moduleplugin") version "1.8.15"
     id("org.openjfx.javafxplugin") version "0.0.13"
     id("org.beryx.jlink") version "2.25.0"
@@ -14,6 +15,13 @@ repositories {
 }
 
 val junitVersion = "5.12.1"
+val jacocoVersion = "0.8.13"
+val coverageExcludes = listOf(
+    "module-info.class",
+    "com/example/suppergeist/Launcher.class",
+    "com/example/suppergeist/SuppergeistApplication.class",
+    "com/example/suppergeist/ui/**"
+)
 
 java {
     toolchain {
@@ -49,6 +57,57 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+jacoco {
+    toolVersion = jacocoVersion
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(coverageExcludes)
+            }
+        })
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.test)
+
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(coverageExcludes)
+            }
+        })
+    )
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
 jlink {
