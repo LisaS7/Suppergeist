@@ -124,7 +124,6 @@ public class PreferencesSidebarController {
         }
 
         try {
-            this.userPreferencesService.savePreferences(this.user);
             this.user = new User(
                     this.user.getId(),
                     this.user.getName(),
@@ -134,6 +133,7 @@ public class PreferencesSidebarController {
                     this.showCaloriesCheckbox.isSelected(),
                     this.showNutritionalInfoCheckbox.isSelected()
             );
+            this.userPreferencesService.savePreferences(this.user);
             if (this.onPreferencesSaved != null) {
                 this.onPreferencesSaved.accept(this.user);
             }
@@ -145,7 +145,7 @@ public class PreferencesSidebarController {
             alert.setContentText(e.getMessage());
             alert.setGraphic(null);
             alert.getDialogPane().getStylesheets().add(
-                getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
+                    getClass().getResource("/com/example/suppergeist/style.css").toExternalForm()
             );
             alert.showAndWait();
         }
