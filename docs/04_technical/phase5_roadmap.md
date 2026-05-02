@@ -8,7 +8,7 @@ Status markers: ✅ Done · 🔄 In Progress · ⬜ Not Started
 
 ---
 
-## Task 1 — `OllamaClient` ⬜
+## Task 1 — `OllamaClient` ✅
 
 A thin, blocking HTTP wrapper around the Ollama `/api/generate` endpoint. Lives in
 `com.example.suppergeist.service`.

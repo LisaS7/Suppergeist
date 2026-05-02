@@ -6,6 +6,7 @@ module com.example.suppergeist {
     requires java.sql;
     requires org.apache.commons.csv;
     requires jdk.compiler;
+    requires java.net.http;
 
     opens com.example.suppergeist.ui to javafx.fxml;
 
