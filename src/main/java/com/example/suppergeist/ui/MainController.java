@@ -310,7 +310,9 @@ public class MainController {
         this.currentPlan = mealPlanService.findPlanForWeek(user.getId(), currentWeekStart);
 
         if (currentPlan == null) {
-            this.mealPlanGrid.getChildren().add(new Label("No plan for this week"));
+            Label noPlanLabel = new Label("No plan for this week");
+            noPlanLabel.getStyleClass().add("no-plan-label");
+            this.mealPlanGrid.getChildren().add(noPlanLabel);
             this.shoppingListController.refresh(new HashMap<>());
             this.createButton.setVisible(true);
             this.createButton.setManaged(true);
@@ -342,6 +344,7 @@ public class MainController {
         for (Map.Entry<LocalDate, Integer> entry : nextRowForDate.entrySet()) {
             int column = columnFor(entry.getKey());
             Button button = new Button("+");
+            button.getStyleClass().add("button-primary");
             button.setOnAction(e ->
                     showAddMealDialog(entry.getKey()));
             mealPlanGrid.add(button, column, row);
@@ -423,7 +426,7 @@ public class MainController {
 
     @FXML
     private void deletePlan() {
-        Alert alert = styledAlert(Alert.AlertType.CONFIRMATION, "Confirm Delete", "Do you want to delete this meal plan?");
+        Alert alert = styledAlert(Alert.AlertType.CONFIRMATION, "Confirm Delete", "Dispel this plan?");
         Optional<ButtonType> response = alert.showAndWait();
 
         if (response.isPresent() && response.get() == ButtonType.OK) {

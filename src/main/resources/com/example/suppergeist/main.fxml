@@ -18,7 +18,7 @@
             </ImageView>
             <Label text="Suppergeist"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Right-click a card for options" styleClass="header-hint"/>
+            <Label text="Right-click to summon options" styleClass="header-hint"/>
             <Button onAction="#togglePrefs">
                 <graphic>
                     <ImageView fitHeight="32" fitWidth="32" preserveRatio="true">
@@ -42,7 +42,7 @@
                                 </VBox.margin>
                                 <Button onAction="#goToPreviousWeek" styleClass="week-nav-button">⟸</Button>
                                 <Region HBox.hgrow="ALWAYS"/>
-                                <Label fx:id="weekLabel"/>
+                                <Label fx:id="weekLabel" styleClass="week-label"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button onAction="#goToNextWeek" styleClass="week-nav-button">⟹</Button>
                             </HBox>
@@ -59,8 +59,8 @@
     </right>
     <bottom>
         <HBox fx:id="footerBox" spacing="10" styleClass="footer">
-            <Button fx:id="createButton" onAction="#createPlan">Create Plan</Button>
-            <Button fx:id="deleteButton" onAction="#deletePlan">Delete Plan</Button>
+            <Button fx:id="createButton" onAction="#createPlan">Summon Week</Button>
+            <Button fx:id="deleteButton" onAction="#deletePlan">Banish Plan</Button>
             <Label fx:id="weeklyCalories"></Label>
         </HBox>
     </bottom>

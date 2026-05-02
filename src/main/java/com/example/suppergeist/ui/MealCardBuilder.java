@@ -6,10 +6,12 @@ import com.example.suppergeist.service.WeeklyMealViewModel;
 import javafx.animation.RotateTransition;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.*;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.util.Duration;
 
@@ -35,7 +37,7 @@ public class MealCardBuilder {
         }
         // ToolTip
         if (toolTipText != null) {
-            Label tooltipLabel = new Label("!");
+            Label tooltipLabel = new Label("☁");
             front.getChildren().add(tooltipLabel);
             Tooltip.install(tooltipLabel, new Tooltip(toolTipText));
         }
@@ -78,15 +80,20 @@ public class MealCardBuilder {
 
         // ARRANGE
         StackPane card = new StackPane(front, back);
+        DropShadow normalShadow = new DropShadow(8, 2, 2, Color.web("#1d3a49", 0.15));
+        DropShadow pressedShadow = new DropShadow(3, 1, 1, Color.web("#1d3a49", 0.08));
+        front.setEffect(normalShadow);
+        front.setOnMousePressed(e -> { front.setEffect(pressedShadow); front.setTranslateX(1); front.setTranslateY(1); });
+        front.setOnMouseReleased(e -> { front.setEffect(normalShadow); front.setTranslateX(0); front.setTranslateY(0); });
         SimpleBooleanProperty flipped = new SimpleBooleanProperty(false);
         card.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY) flipCard(card, front, back, flipped);
         });
 
         // Right Click Menu
-        MenuItem editMealMenu = new MenuItem("Edit Meal");
-        MenuItem editIngredientMenu = new MenuItem("Edit Ingredient");
-        MenuItem removeMenu = new MenuItem("Remove");
+        MenuItem editMealMenu = new MenuItem("Rename");
+        MenuItem editIngredientMenu = new MenuItem("Alter Ingredients");
+        MenuItem removeMenu = new MenuItem("Banish");
         editMealMenu.setOnAction(e -> onEditMeal.run());
         editIngredientMenu.setOnAction(e -> onEditIngredient.run());
         removeMenu.setOnAction(e -> onRemove.run());
