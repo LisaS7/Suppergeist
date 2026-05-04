@@ -48,6 +48,7 @@ public class SuppergeistApplication extends Application {
     public void init() {
 
         try {
+            log.info("Starting Suppergeist application initialization");
             DatabaseManager dbManager = new DatabaseManager();
             dbManager.init();
 
@@ -71,6 +72,7 @@ public class SuppergeistApplication extends Application {
             this.nutritionService = new NutritionService(mealIngredientRepository);
             OllamaClient ollamaClient = new OllamaClient(LLM_MODEL);
             this.generatePlanService = new GeneratePlanService(ingredientRepository, ollamaClient, mealPlanService, mealIngredientService);
+            log.info("Suppergeist application initialization complete");
         } catch (SQLException | IOException e) {
             log.log(Level.SEVERE, "Application startup failed", e);
             this.initError = e;
@@ -119,5 +121,6 @@ public class SuppergeistApplication extends Application {
         stage.setTitle("Suppergeist");
         stage.setScene(scene);
         stage.show();
+        log.info("Suppergeist UI started");
     }
 }

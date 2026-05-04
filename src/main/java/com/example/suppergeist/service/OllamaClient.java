@@ -7,10 +7,13 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OllamaClient {
     private static final String OLLAMA_URL = "http://localhost:11434/api/generate";
     private static final Gson GSON = new Gson();
+    private static final Logger log = Logger.getLogger(OllamaClient.class.getName());
 
     private final HttpClient client;
     private final URI uri;
@@ -35,11 +38,21 @@ public class OllamaClient {
                 .build();
 
         try {
+            log.info(() -> "Sending meal-plan generation request to Ollama model " + model + " at " + uri);
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            log.info(() -> "Ollama generation request completed with status " + response.statusCode());
+            if (response.statusCode() >= 400) {
+                log.warning(() -> "Ollama returned unsuccessful status " + response.statusCode()
+                        + " with response body length " + response.body().length());
+            }
             return response.body();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            log.log(Level.WARNING, "Ollama generation request interrupted", e);
             throw new IOException("Request interrupted", e);
+        } catch (IOException e) {
+            log.log(Level.WARNING, "Ollama generation request failed", e);
+            throw e;
         }
     }
 

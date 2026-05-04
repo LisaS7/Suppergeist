@@ -156,6 +156,7 @@ public class MainController {
         if (result.isPresent()) {
             int dayOffset = (int) ChronoUnit.DAYS.between(currentWeekStart, mealDate);
             try {
+                log.info(() -> "Adding meal to current plan " + currentPlan.id() + " for date " + mealDate);
                 mealPlanService.addMealToSlot(result.get().name(), result.get().type(), currentPlan.id(), dayOffset);
                 refreshMealPlanGrid();
             } catch (SQLException e) {
@@ -168,6 +169,7 @@ public class MainController {
         Optional<MealFormResult> result = buildDialog("Edit Meal", "Edit a meal", meal.mealName(), meal.mealType());
         if (result.isPresent()) {
             try {
+                log.info(() -> "Updating meal " + meal.mealId());
                 mealPlanService.updateMeal(meal.mealId(), result.get().name(), result.get().type());
                 refreshMealPlanGrid();
             } catch (SQLException e) {
@@ -219,10 +221,12 @@ public class MainController {
             try {
                 quantity = Double.parseDouble(quantityField.getText());
             } catch (NumberFormatException ex) {
+                log.warning(() -> "Invalid ingredient quantity entered for meal " + mealId + ": " + quantityField.getText());
                 return;
             }
 
             try {
+                log.info(() -> "Adding ingredient " + ingredient.getId() + " to meal " + mealId);
                 int mealIngredientId = mealIngredientService.addIngredientToMeal(mealId, ingredient.getId(), quantity, unitField.getText());
                 HBox newRow = buildIngredientRow(ingredientList, ingredient.getName(), quantity, unitField.getText(), () -> {
                     try {
@@ -293,6 +297,7 @@ public class MainController {
 
         if (response.isPresent() && response.get() == ButtonType.OK) {
             try {
+                log.info(() -> "Deleting meal " + mealId);
                 mealPlanService.deleteMeal(mealId);
                 refreshMealPlanGrid();
             } catch (SQLException e) {
@@ -315,6 +320,7 @@ public class MainController {
         this.currentPlan = mealPlanService.findPlanForWeek(user.getId(), currentWeekStart);
 
         if (currentPlan == null) {
+            log.fine(() -> "Showing empty state for week " + currentWeekStart);
             Label noPlanLabel = new Label("🕸️  No plan for this week  🕸️");
             noPlanLabel.getStyleClass().add("no-plan-label");
             this.mealPlanGrid.getChildren().add(noPlanLabel);
@@ -327,6 +333,7 @@ public class MainController {
         }
 
         List<WeeklyMealViewModel> weeklyMeals = this.mealPlanService.getWeeklyMeals(this.user.getId(), this.currentWeekStart);
+        log.fine(() -> "Refreshing grid for plan " + currentPlan.id() + " with " + weeklyMeals.size() + " meals");
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
         Set<Integer> mealsWithNoIngredients = mealIds.stream().filter(id -> !estimates.containsKey(id)).collect(Collectors.toSet());
@@ -412,6 +419,7 @@ public class MainController {
     private void goToPreviousWeek() {
         try {
             this.currentWeekStart = this.currentWeekStart.minusDays(7);
+            log.info(() -> "Navigated to previous week: " + this.currentWeekStart);
             updateWeekLabel();
             refreshMealPlanGrid();
         } catch (SQLException e) {
@@ -423,6 +431,7 @@ public class MainController {
     private void goToNextWeek() {
         try {
             this.currentWeekStart = this.currentWeekStart.plusDays(7);
+            log.info(() -> "Navigated to next week: " + this.currentWeekStart);
             updateWeekLabel();
             refreshMealPlanGrid();
         } catch (SQLException e) {
@@ -432,6 +441,7 @@ public class MainController {
 
     @FXML
     private void generatePlan() {
+        log.info(() -> "Starting generated meal plan task for week " + currentWeekStart);
         Task<MealPlan> task = new Task<>() {
             @Override
             protected MealPlan call() throws Exception {
@@ -440,12 +450,14 @@ public class MainController {
         };
         task.setOnSucceeded(e -> {
             try {
+                log.info(() -> "Generated meal plan task completed for week " + currentWeekStart);
                 refreshMealPlanGrid();
             } catch (SQLException ex) {
                 handleGridRefreshError(ex);
             }
         });
         task.setOnFailed(e -> {
+            log.log(Level.SEVERE, "Generated meal plan task failed", task.getException());
             styledAlert(Alert.AlertType.ERROR, "Error!", task.getException().getMessage()).showAndWait();
         });
         new Thread(task).start();
@@ -454,6 +466,7 @@ public class MainController {
     @FXML
     private void createPlan() {
         try {
+            log.info(() -> "Creating empty meal plan for week " + currentWeekStart);
             mealPlanService.createEmptyPlan(user.getId(), currentWeekStart);
             refreshMealPlanGrid();
         } catch (SQLException e) {
@@ -468,6 +481,7 @@ public class MainController {
 
         if (response.isPresent() && response.get() == ButtonType.OK) {
             try {
+                log.info(() -> "Deleting current meal plan " + currentPlan.id());
                 mealPlanService.deletePlan(currentPlan.id());
                 refreshMealPlanGrid();
             } catch (SQLException e) {

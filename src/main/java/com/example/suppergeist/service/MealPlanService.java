@@ -14,8 +14,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public class MealPlanService {
+    private static final Logger log = Logger.getLogger(MealPlanService.class.getName());
+
     private final MealRepository mealRepository;
     private final MealPlanRepository mealPlanRepository;
     private static final DateTimeFormatter dayLabelFormatter = DateTimeFormatter.ofPattern("EEEE d MMM");
@@ -34,11 +37,13 @@ public class MealPlanService {
         LocalDate startDate = referenceDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         Optional<MealPlan> mealPlan = mealPlanRepository.getByUserAndStartDate(userId, startDate);
         if (mealPlan.isEmpty()) {
+            log.fine(() -> "No meal plan found for user " + userId + " and week " + startDate);
             return Collections.emptyList();
         }
 
         MealPlan plan = mealPlan.get();
         List<Meal> entries = mealRepository.getMeals(plan.id());
+        log.fine(() -> "Loaded " + entries.size() + " meals for plan " + plan.id());
         List<WeeklyMealViewModel> weeklyMeals = new ArrayList<>();
 
         for (Meal entry : entries) {
@@ -57,25 +62,31 @@ public class MealPlanService {
     }
 
     public MealPlan createEmptyPlan(int userId, LocalDate startDate) throws SQLException {
-        return mealPlanRepository.create(new MealPlan(null, userId, startDate));
+        MealPlan plan = mealPlanRepository.create(new MealPlan(null, userId, startDate));
+        log.info(() -> "Created meal plan " + plan.id() + " for user " + userId + " and week " + startDate);
+        return plan;
     }
 
 
     public void deletePlan(int id) throws SQLException {
         mealPlanRepository.delete(id);
+        log.info(() -> "Deleted meal plan " + id);
     }
 
     public int addMealToSlot(String mealName, String mealType, int mealPlanId, int dayOffset) throws SQLException {
         Meal entry = new Meal(mealPlanId, dayOffset, mealType, mealName);
-        mealRepository.create(entry);
-        return entry.getId();
+        Meal savedEntry = mealRepository.create(entry);
+        log.info(() -> "Added meal " + savedEntry.getId() + " to plan " + mealPlanId + " at day offset " + dayOffset);
+        return savedEntry.getId();
     }
 
     public void updateMeal(int mealId, String mealName, String mealType) throws SQLException {
         mealRepository.update(mealId, mealName, mealType);
+        log.info(() -> "Updated meal " + mealId + " with type " + mealType);
     }
 
     public void deleteMeal(int mealId) throws SQLException {
         mealRepository.delete(mealId);
+        log.info(() -> "Deleted meal " + mealId);
     }
 }

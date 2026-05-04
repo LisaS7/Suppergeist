@@ -15,8 +15,11 @@ import com.example.suppergeist.repository.UserRepository;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class UserPreferencesService {
+    private static final Logger log = Logger.getLogger(UserPreferencesService.class.getName());
+
     private final UserRepository userRepository;
     private final IngredientRepository ingredientRepository;
 
@@ -26,11 +29,16 @@ public class UserPreferencesService {
     }
 
     public User loadUser(int userId) throws SQLException {
-        return userRepository.getUser(userId);
+        User user = userRepository.getUser(userId);
+        log.info(() -> "Loaded user preferences for user " + userId);
+        return user;
     }
 
     public void savePreferences(User user) throws SQLException {
         this.userRepository.savePreferences(user);
+        log.info(() -> "Saved preferences for user " + user.getId()
+                + " with " + user.getDietaryConstraints().size() + " dietary constraints and "
+                + user.getAvoidFoodCodes().size() + " avoided food codes");
     }
 
     public List<Ingredient> getAllIngredients() throws SQLException {

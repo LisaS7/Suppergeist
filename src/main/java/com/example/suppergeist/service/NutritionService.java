@@ -8,8 +8,11 @@ import com.example.suppergeist.repository.MealIngredientRepository;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class NutritionService {
+    private static final Logger log = Logger.getLogger(NutritionService.class.getName());
+
     private final MealIngredientRepository mealIngredientRepository;
 
     public NutritionService(MealIngredientRepository mealIngredientRepository) {
@@ -39,8 +42,14 @@ public class NutritionService {
      * Returns null if no ingredient in the meal has energyKcal data; caller should show "-- kcal".
      */
     public Map<Integer, NutritionalEstimate> estimatesForMeals(List<Integer> mealIds) throws SQLException {
+        if (mealIds.isEmpty()) {
+            log.fine("No meal ids supplied for nutrition estimates");
+            return Collections.emptyMap();
+        }
+
         Map<Integer, List<MealIngredientRow>> rows = mealIngredientRepository.getIngredientsWithNutritionForMeals(mealIds);
         Map<Integer, NutritionalEstimate> results = new HashMap<>();
+        int skippedIngredientsWithoutCalories = 0;
         for (Map.Entry<Integer, List<MealIngredientRow>> entry : rows.entrySet()) {
             int calorieTotal = 0;
             double proteinTotal = 0;
@@ -60,6 +69,7 @@ public class NutritionService {
                 Ingredient ingredient = row.ingredient();
                 // skip the whole row if kcal is absent — other nutrients without kcal are too incomplete to use
                 if (ingredient.getEnergyKcal() == null) {
+                    skippedIngredientsWithoutCalories++;
                     continue;
                 }
 
@@ -81,6 +91,9 @@ public class NutritionService {
                 results.put(mealId, new NutritionalEstimate(calorieTotal, proteinTotal, carbsTotal, fatTotal, sugarTotal, fibreTotal, vitaminATotal, vitaminCTotal, vitaminDTotal, vitaminETotal, vitaminB12Total, folateTotal));
             }
         }
+        int skippedCount = skippedIngredientsWithoutCalories;
+        log.fine(() -> "Built nutrition estimates for " + results.size() + " of " + mealIds.size()
+                + " meals; skipped " + skippedCount + " ingredients without calorie data");
         return results;
     }
 

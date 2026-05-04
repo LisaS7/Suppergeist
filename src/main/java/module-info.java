@@ -7,6 +7,7 @@ module com.example.suppergeist {
     requires org.apache.commons.csv;
     requires jdk.compiler;
     requires java.net.http;
+    requires java.logging;
     requires com.google.gson;
 
     opens com.example.suppergeist.ui to javafx.fxml;

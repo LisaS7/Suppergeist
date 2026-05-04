@@ -7,8 +7,11 @@ import com.example.suppergeist.repository.MealIngredientRepository;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class MealIngredientService {
+    private static final Logger log = Logger.getLogger(MealIngredientService.class.getName());
+
     private final MealIngredientRepository mealIngredientRepository;
     private final IngredientRepository ingredientRepository;
 
@@ -22,11 +25,14 @@ public class MealIngredientService {
     }
 
     public int addIngredientToMeal(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
-        return mealIngredientRepository.create(mealId, ingredientId, quantity, unit);
+        int mealIngredientId = mealIngredientRepository.create(mealId, ingredientId, quantity, unit);
+        log.info(() -> "Added ingredient " + ingredientId + " to meal " + mealId + " as row " + mealIngredientId);
+        return mealIngredientId;
     }
 
     public void removeIngredientFromMeal(int mealIngredientId) throws SQLException {
         mealIngredientRepository.delete(mealIngredientId);
+        log.info(() -> "Removed meal ingredient row " + mealIngredientId);
     }
 
     public List<Ingredient> searchIngredients(String searchTerm) throws SQLException {

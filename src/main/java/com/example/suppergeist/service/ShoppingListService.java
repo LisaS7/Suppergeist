@@ -8,8 +8,10 @@ import com.example.suppergeist.repository.MealRepository;
 
 import java.sql.SQLException;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class ShoppingListService {
+    private static final Logger log = Logger.getLogger(ShoppingListService.class.getName());
 
     private final MealRepository mealPlanEntryRepository;
     private final MealIngredientRepository mealIngredientRepository;
@@ -67,6 +69,8 @@ public class ShoppingListService {
             items.sort(Comparator.comparing(ShoppingItem::name));
         }
 
+        log.fine(() -> "Built shopping list for plan " + mealPlanId + " from " + mealPlanEntries.size()
+                + " meals into " + grouped.size() + " categories");
         return grouped;
     }
 }
