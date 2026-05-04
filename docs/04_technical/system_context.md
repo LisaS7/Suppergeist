@@ -24,7 +24,7 @@ C4Context
 
 | Dependency | Type | Role | Required at runtime? |
 |------------|------|------|----------------------|
-| Ollama | Local process | LLM inference for meal generation | Yes — must be running |
+| Ollama | Local process | LLM inference for meal generation | Required for AI generation; manual plan editing works without calling it |
 | SQLite (`app.db`) | File (read-write) | Plans, preferences, and CoFID nutrition data (seeded on first run) | Yes — created on first run |
 | Java 21 JRE | Runtime | Executes the application | Yes |
 
@@ -41,7 +41,11 @@ C4Context
 
 ## Deployment Context
 
-Suppergeist runs as a single desktop process on the user's machine. It is packaged via `jlink` into a self-contained image. The user is responsible for installing Ollama separately and ensuring a suitable model is pulled (e.g. `ollama pull llama3`).
+Suppergeist runs as a single desktop process on the user's machine. It is packaged via `jlink` into a self-contained image. The user is responsible for installing Ollama separately and pulling the model used by the app:
+
+```bash
+ollama pull qwen2.5:7b
+```
 
 ```
 User's Machine

@@ -34,11 +34,14 @@ Suppergeist follows a strict three-layer architecture. Each layer has a single r
 - Handles async calls to keep the UI non-blocking (JavaFX `Task` / `Platform.runLater`)
 
 ### Service Layer
-- `MealPlanService` — orchestrates plan generation: reads preferences, builds prompt, calls Ollama, parses response, validates, saves via repository
+- `MealPlanService` — loads weekly meal view models and owns manual plan/meal create, update, and delete operations
+- `GeneratePlanService` — orchestrates AI generation: loads preferences and ingredients, builds the prompt, calls Ollama, parses the response, and saves the generated plan
 - `OllamaClient` — thin HTTP wrapper around the Ollama local API; returns raw response strings
 - `PromptBuilder` — constructs structured prompts from user preferences and format templates
-- `MealPlanParser` — parses Ollama's response into typed `MealPlan` / `Meal` models; throws on unparseable output
-- `ShoppingListService` — derives and groups an ingredient list from a `MealPlan`
+- `MealPlanParser` — parses Ollama's response into typed `ParsedMeal` / `ParsedIngredient` records; throws on unparseable output
+- `MealIngredientService` — adds, removes, lists, and searches ingredients for individual meals
+- `ShoppingListService` — derives a grouped ingredient list from a `MealPlan`
+- `NutritionService` — computes calories, macros, and micronutrient estimates from stored meal ingredients
 
 ### Data Layer
 - `MealPlanRepository` — CRUD for saved plans (`app.db`)
@@ -53,29 +56,36 @@ Suppergeist follows a strict three-layer architecture. Each layer has a single r
 
 ```
 MealPlan
-├── weekOf: LocalDate
-└── meals: List<Meal>  (7 entries, one per day)
+├── id: Integer
+├── userId: int
+└── startDate: LocalDate
 
 Meal
-├── day: DayOfWeek
-├── name: String
-├── ingredients: List<Ingredient>
-└── estimate: NutritionalEstimate
+├── id: Integer
+├── mealPlanId: int
+├── dayOffset: int
+├── mealType: String
+└── mealName: String
 
 Ingredient
+├── id: Integer
 ├── name: String
-└── quantity: String  (free-text, e.g. "200g")
+├── foodCode: String
+└── CoFID nutrition columns
 
 NutritionalEstimate
-├── kcal: int
+├── cal: int
 ├── proteinG: double
 ├── carbsG: double
-└── fatG: double
+├── fatG: double
+└── additional sugar, fibre, vitamin, and folate fields
 
-UserPreferences
-├── dietaryConstraints: Set<String>  (e.g. "vegetarian", "gluten-free")
-├── avoidIngredients: List<String>
-└── servingsPerMeal: int
+User
+├── dietaryConstraints: Set<String>
+├── avoidFoodCodes: Set<String>
+├── servingsPerMeal: int
+├── showCalories: boolean
+└── showNutritionalInfo: boolean
 ```
 
 ---
@@ -97,13 +107,13 @@ OllamaClient ──► HTTP POST localhost:11434/api/generate
 raw String response
       │
       ▼
-MealPlanParser ──► MealPlan (typed) or ParseException
+MealPlanParser ──► List<ParsedMeal> or MealPlanParseException
       │
       ▼
-Validation ──► all 7 meals? required fields present? sensible values?
+Validation ──► exactly 7 meals? required fields present? positive quantities?
       │
       ▼
-MealPlanService returns MealPlan (or propagates error to UI)
+GeneratePlanService persists the plan and returns MealPlan
 ```
 
 The prompt specifies the expected JSON structure explicitly. The parser does not rely on LLM goodwill — it validates every field.
@@ -121,8 +131,8 @@ Ollama calls are blocking HTTP and may take several seconds. These are executed 
 ```
 com.example.suppergeist
 ├── ui/                  ← controllers (MainController, PreferencesSidebarController)
-├── service/             ← business logic, AI integration (flat for now; ai/ and plan/ subpackages planned)
-├── repository/          ← SQLite repositories + DatabaseManager, Schema
+├── service/             ← business logic, AI integration, shopping lists, nutrition
+├── repository/          ← SQLite repositories
 ├── database/            ← DatabaseManager, Schema
 └── model/               ← domain models
 ```

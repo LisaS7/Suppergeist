@@ -4,7 +4,8 @@
 
 ### FR-01 — Meal Plan Generation
 - The system shall generate a 7-meal weekly plan using a locally-running Ollama model
-- Each meal shall include: name, key ingredients, and rough calorie/macro estimate
+- Each generated meal shall include: name, meal type, and ingredient lines
+- Calorie and macro estimates shall be computed from stored ingredients after generation, where matched nutrition data exists
 - Generation shall be triggered by a single user action
 
 ### FR-02 — Preference-Aware Generation
@@ -13,22 +14,22 @@
 - The system shall accept a servings-per-meal setting
 - All preferences shall be persisted and applied automatically to future generations
 
-### FR-03 — Plan Editing
-- Each meal card shall expose an Edit dropdown with two options:
-  - **Regenerate** — re-runs AI generation for that slot only, without replacing the rest of the plan
-  - **Override** — allows the user to enter a meal manually via free-text input
-- Edits shall be saved to the current plan
+### FR-03 — Manual Plan Editing
+- The user shall be able to create and delete a plan for the displayed week
+- Empty day slots shall expose an add-meal action
+- Existing meal cards shall support edit and remove actions
+- The user shall be able to add and remove ingredient lines for each meal
+- Manual edits shall be saved to the current plan
 
 ### FR-04 — Shopping List
 - The system shall derive an aggregated ingredient list from the current weekly plan
-- Ingredients shall be grouped by category (e.g. Produce, Protein, Pantry)
+- Ingredients shall be grouped by category derived from CoFID food-code prefixes
 - The user shall be able to copy the list as plain text
-- The user shall be able to download the list as a plain text file
 - Checkbox state (checked/unchecked) shall be maintained in-memory for the session
 
 ### FR-05 — Plan Persistence
 - Generated and edited plans shall be saved to local SQLite storage
-- The user shall be able to browse and view past plans (read-only)
+- The user shall be able to navigate between weeks and view any saved plan for the selected week
 
 ### FR-06 — Nutritional Estimates
 - Rough calorie and macro estimates shall be shown per meal
@@ -36,8 +37,7 @@
 - Estimates are advisory only; no guarantee of accuracy
 
 ### FR-08 — Plan Management
-- The user shall be able to delete individual saved plans
-- The user shall be able to clear the entire plan history
+- The user shall be able to delete the saved plan for the displayed week
 
 ---
 
@@ -54,7 +54,7 @@
 
 ### NFR-03 — Resilience
 - The system shall handle malformed or unexpected Ollama responses gracefully
-- Errors shall be surfaced to the user with a clear message and retry option
+- Errors shall be surfaced to the user with a clear message
 - Raw LLM output shall never be rendered directly without parsing and validation
 
 ### NFR-04 — Portability

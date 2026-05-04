@@ -4,17 +4,16 @@
 
 **Actor:** User  
 **Preconditions:** Ollama is running locally; app is open  
-**Trigger:** User clicks "Generate Plan"
+**Trigger:** User clicks "Conjure with AI"
 
 **Main Flow:**
-1. If a plan already exists, prompt user to confirm replacement
-2. System reads current preferences from SQLite
-3. System constructs a structured prompt (preferences + output format instructions)
-4. System sends prompt to Ollama via local API
-5. System receives response and parses it into a `MealPlan` model
-6. System validates the parsed plan (all 7 meals present, required fields populated)
-7. System displays the plan in the UI
-8. System persists the plan to SQLite
+1. System reads the current cached user preferences
+2. System loads the allowed ingredient list from SQLite
+3. System constructs a structured prompt (preferences + ingredient list + output format instructions)
+4. System sends prompt to Ollama via local API in a JavaFX background task
+5. System receives response and parses it into validated generated meal records
+6. System deletes any existing plan for the same week, then persists the generated plan, meals, and matched ingredient lines
+7. System refreshes the meal grid, nutrition estimates, and shopping list
 
 **Alternate Flow — Ollama unavailable:**
 - Step 4 fails; system shows error "Could not reach Ollama. Is it running?" with retry option
@@ -24,32 +23,30 @@
 
 ---
 
-## UC-02 — Regenerate a Single Meal
+## UC-02 — Add, Edit, or Remove a Meal
 
 **Actor:** User  
-**Preconditions:** A weekly plan is displayed  
-**Trigger:** User clicks Edit → Regenerate on a day card
+**Preconditions:** A weekly plan exists for the displayed week  
+**Trigger:** User clicks an empty slot add button, or right-clicks a meal card
 
 **Main Flow:**
-1. System identifies which day slot is being replaced
-2. System constructs a single-meal prompt (preferences + context of remaining meals to avoid repetition)
-3. System sends prompt to Ollama
-4. System parses and validates the response
-5. System replaces only that day's meal in the displayed plan
-6. System saves the updated plan to SQLite
+1. For an empty slot, user enters a meal name and meal type
+2. For an existing meal, user chooses Edit or Remove from the context menu
+3. System inserts, updates, or deletes the meal row in SQLite
+4. System refreshes the grid, nutrition estimates, and shopping list
 
----
-
-## UC-03 — Override a Meal Manually
+## UC-03 — Edit Meal Ingredients
 
 **Actor:** User  
-**Preconditions:** A weekly plan is displayed  
-**Trigger:** User clicks Edit → Free-text override on a day card
+**Preconditions:** A meal exists  
+**Trigger:** User right-clicks a meal card and opens ingredient editing
 
 **Main Flow:**
-1. User types a meal name and optional notes
-2. System saves the override to that day's slot (no Ollama call)
-3. Plan is updated in the UI and persisted to SQLite
+1. System displays the meal's current ingredients
+2. User searches for an ingredient, enters quantity and unit, and adds it
+3. User optionally removes existing ingredient lines
+4. System persists ingredient changes to SQLite
+5. System refreshes nutrition estimates and the shopping list
 
 ---
 
@@ -57,11 +54,11 @@
 
 **Actor:** User  
 **Preconditions:** A weekly plan exists  
-**Trigger:** User clicks "Shopping List"
+**Trigger:** User opens the "Shopping List" tab
 
 **Main Flow:**
 1. System aggregates all ingredients across the 7 meals
-2. System groups ingredients by category
+2. System groups ingredients by category derived from food-code prefixes
 3. System displays the shopping list view
 4. User optionally checks off items (session-only state)
 5. User optionally copies the list as plain text
@@ -85,14 +82,14 @@
 
 ---
 
-## UC-06 — View Plan History
+## UC-06 — Navigate Weeks
 
 **Actor:** User  
-**Preconditions:** At least one plan has been saved  
-**Trigger:** User opens History view
+**Preconditions:** App is open  
+**Trigger:** User clicks previous/next week buttons
 
 **Main Flow:**
-1. System loads list of saved plans from SQLite (date, week label)
-2. User selects a plan
-3. System displays the plan in read-only mode
-4. User returns to history list or main view
+1. System updates the displayed week start date
+2. System loads the plan for that week if one exists
+3. System displays the saved meals, or an empty-week state if no plan exists
+4. Shopping list and totals update for the selected week
