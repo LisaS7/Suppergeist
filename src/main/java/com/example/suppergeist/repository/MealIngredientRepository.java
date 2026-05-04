@@ -73,6 +73,34 @@ public class MealIngredientRepository {
         }
     }
 
+    public Set<Integer> getMealIdsWithIngredients(List<Integer> mealIds) throws SQLException {
+        if (mealIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        String placeholders = String.join(", ", Collections.nCopies(mealIds.size(), "?"));
+        String sql = """
+                SELECT DISTINCT meal_id
+                FROM meal_ingredients
+                WHERE meal_id IN (""" + placeholders + """
+                )
+                """;
+
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < mealIds.size(); i++) {
+                stmt.setInt(i + 1, mealIds.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                Set<Integer> results = new HashSet<>();
+                while (rs.next()) {
+                    results.add(rs.getInt("meal_id"));
+                }
+                return results;
+            }
+        }
+    }
+
     public int create(int mealId, int ingredientId, double quantity, String unit) throws SQLException {
         String sql = "INSERT INTO meal_ingredients (meal_id, ingredient_id, quantity, unit) " +
                 "VALUES (?, ?, ?, ?)";

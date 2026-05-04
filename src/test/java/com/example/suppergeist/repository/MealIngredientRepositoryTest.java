@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -181,6 +182,38 @@ class MealIngredientRepositoryTest {
         insertMealIngredient(meal2, ingredientId, 200.0, "g");
 
         List<MealIngredientRow> result = repository.getIngredientsWithNutritionForMeal(meal1);
+
+        assertTrue(result.isEmpty());
+    }
+
+    // --- getMealIdsWithIngredients ---
+
+    @Test
+    void getMealIdsWithIngredients_returnsOnlyMealsWithIngredients() throws SQLException {
+        int mealWithIngredient = insertMeal("Soup", 0);
+        int emptyMeal = insertMeal("Toast", 1);
+        int ingredientId = insertIngredient("Lentils");
+        insertMealIngredient(mealWithIngredient, ingredientId, 200.0, "g");
+
+        Set<Integer> result = repository.getMealIdsWithIngredients(List.of(mealWithIngredient, emptyMeal));
+
+        assertEquals(Set.of(mealWithIngredient), result);
+    }
+
+    @Test
+    void getMealIdsWithIngredients_countsIngredientsWithoutNutrition() throws SQLException {
+        int mealId = insertMeal("Mystery Soup", 0);
+        int ingredientId = insertIngredient("Unknown Ingredient");
+        insertMealIngredient(mealId, ingredientId, 100.0, "g");
+
+        Set<Integer> result = repository.getMealIdsWithIngredients(List.of(mealId));
+
+        assertEquals(Set.of(mealId), result);
+    }
+
+    @Test
+    void getMealIdsWithIngredients_returnsEmptySetForEmptyInput() throws SQLException {
+        Set<Integer> result = repository.getMealIdsWithIngredients(List.of());
 
         assertTrue(result.isEmpty());
     }

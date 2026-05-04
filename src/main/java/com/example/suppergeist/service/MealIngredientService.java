@@ -7,6 +7,7 @@ import com.example.suppergeist.repository.MealIngredientRepository;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class MealIngredientService {
@@ -22,6 +23,10 @@ public class MealIngredientService {
 
     public List<MealIngredientRow> getIngredientsForMeal(int mealId) throws SQLException {
         return mealIngredientRepository.getIngredientsWithNutritionForMeal(mealId);
+    }
+
+    public Set<Integer> getMealIdsWithIngredients(List<Integer> mealIds) throws SQLException {
+        return mealIngredientRepository.getMealIdsWithIngredients(mealIds);
     }
 
     public int addIngredientToMeal(int mealId, int ingredientId, double quantity, String unit) throws SQLException {

@@ -22,7 +22,6 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class MainController {
     record MealFormResult(String name, String type) {
@@ -93,14 +92,14 @@ public class MainController {
         }
     }
 
-    private void populateMealCards(MealCardBuilder builder, List<WeeklyMealViewModel> weeklyMeals, Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithNoIngredients) {
+    private void populateMealCards(MealCardBuilder builder, List<WeeklyMealViewModel> weeklyMeals, Map<Integer, NutritionalEstimate> estimates, Map<LocalDate, Integer> nextRowForDate, Set<Integer> mealsWithIngredients) {
         for (WeeklyMealViewModel meal : weeklyMeals) {
             NutritionalEstimate estimate = estimates.get(meal.mealId());
             String toolTipText = null;
             if (estimate == null) {
-                toolTipText = mealsWithNoIngredients.contains(meal.mealId())
-                        ? "No ingredients recorded"
-                        : "No nutrition data for this meal";
+                toolTipText = mealsWithIngredients.contains(meal.mealId())
+                        ? "No nutrition data for this meal"
+                        : "No ingredients recorded";
             }
 
             StackPane card = builder.buildMealCard(meal, estimate, toolTipText, () -> showEditMealDialog(meal), () -> showEditIngredientDialog(meal.mealId()), () -> onRemove(meal.mealId()));
@@ -336,7 +335,7 @@ public class MainController {
         log.fine(() -> "Refreshing grid for plan " + currentPlan.id() + " with " + weeklyMeals.size() + " meals");
         List<Integer> mealIds = weeklyMeals.stream().map(WeeklyMealViewModel::mealId).toList();
         Map<Integer, NutritionalEstimate> estimates = this.nutritionService.estimatesForMeals(mealIds);
-        Set<Integer> mealsWithNoIngredients = mealIds.stream().filter(id -> !estimates.containsKey(id)).collect(Collectors.toSet());
+        Set<Integer> mealsWithIngredients = this.mealIngredientService.getMealIdsWithIngredients(mealIds);
         Map<LocalDate, Integer> calorieTotals = this.nutritionService.dailyCalorieTotals(weeklyMeals, estimates);
 
         updateDayLabels();
@@ -345,7 +344,7 @@ public class MainController {
         for (int i = 0; i < 7; i++) {
             nextRowForDate.put(currentWeekStart.plusDays(i), 1);
         }
-        populateMealCards(builder, weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
+        populateMealCards(builder, weeklyMeals, estimates, nextRowForDate, mealsWithIngredients);
 
         for (int i = 0; i < 7; i++) {
             LocalDate date = currentWeekStart.plusDays(i);
