@@ -53,6 +53,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
     implementation("org.xerial:sqlite-jdbc:3.45.3.0")
     implementation("org.apache.commons:commons-csv:1.10.0")
+    implementation("com.google.code.gson:gson:2.11.0")
 }
 
 tasks.withType<Test> {

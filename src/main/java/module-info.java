@@ -7,8 +7,10 @@ module com.example.suppergeist {
     requires org.apache.commons.csv;
     requires jdk.compiler;
     requires java.net.http;
+    requires com.google.gson;
 
     opens com.example.suppergeist.ui to javafx.fxml;
+    opens com.example.suppergeist.service to com.google.gson;
 
     exports com.example.suppergeist;
     exports com.example.suppergeist.model;
