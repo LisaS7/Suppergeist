@@ -442,6 +442,8 @@ public class MainController {
     @FXML
     private void generatePlan() {
         log.info(() -> "Starting generated meal plan task for week " + currentWeekStart);
+        generateButton.setText("Generating...");
+        generateButton.setDisable(true);
         Task<MealPlan> task = new Task<>() {
             @Override
             protected MealPlan call() throws Exception {
@@ -452,6 +454,8 @@ public class MainController {
             try {
                 log.info(() -> "Generated meal plan task completed for week " + currentWeekStart);
                 refreshMealPlanGrid();
+                generateButton.setText("Conjure with AI");
+                generateButton.setDisable(false);
             } catch (SQLException ex) {
                 handleGridRefreshError(ex);
             }
@@ -459,6 +463,8 @@ public class MainController {
         task.setOnFailed(e -> {
             log.log(Level.SEVERE, "Generated meal plan task failed", task.getException());
             styledAlert(Alert.AlertType.ERROR, "Error!", task.getException().getMessage()).showAndWait();
+            generateButton.setText("Conjure with AI");
+            generateButton.setDisable(false);
         });
         new Thread(task).start();
     }
