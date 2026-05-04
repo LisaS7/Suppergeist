@@ -1,5 +1,7 @@
 package com.example.suppergeist.service;
 
+import com.google.gson.Gson;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -8,17 +10,26 @@ import java.net.http.HttpResponse;
 
 public class OllamaClient {
     private static final String OLLAMA_URL = "http://localhost:11434/api/generate";
-    private final HttpClient client = HttpClient.newHttpClient();
+    private static final Gson GSON = new Gson();
+
+    private final HttpClient client;
+    private final URI uri;
     private final String model;
 
     public OllamaClient(String model) {
+        this(model, URI.create(OLLAMA_URL), HttpClient.newHttpClient());
+    }
+
+    OllamaClient(String model, URI uri, HttpClient client) {
         this.model = model;
+        this.uri = uri;
+        this.client = client;
     }
 
     public String generate(String prompt) throws IOException {
-        String body = "{\"model\":\"" + model + "\",\"prompt\":\"" + prompt + "\",\"stream\":false}";
+        String body = GSON.toJson(new GenerateRequest(model, prompt, false));
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(OLLAMA_URL))
+                .uri(uri)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
@@ -31,4 +42,6 @@ public class OllamaClient {
             throw new IOException("Request interrupted", e);
         }
     }
+
+    private record GenerateRequest(String model, String prompt, boolean stream) {}
 }

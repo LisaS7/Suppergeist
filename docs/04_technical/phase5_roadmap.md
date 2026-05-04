@@ -1,4 +1,4 @@
-I disagree I# Phase 5 Roadmap — Ollama Integration & Plan Generation
+# Phase 5 Roadmap — Ollama Integration & Plan Generation
 
 Goal: layer AI plan generation on top of the manual editing foundation built in Phase 4.
 By the end of Phase 5, a user can click "Generate Plan", see a populated weekly grid, and get clear feedback
@@ -29,20 +29,23 @@ public class OllamaClient {
 
 **Done when:** `OllamaClient.generate("say hello")` returns a non-empty string when Ollama is running locally.
 
+**Current progress:** implemented and covered by `OllamaClientTest`, which verifies the POST request body,
+`"stream": false`, prompt JSON escaping, and raw response return behavior using an in-process HTTP server.
+
 ---
 
-## Task 2 — `PromptBuilder` ⬜
+## Task 2 — `PromptBuilder` ✅
 
 Constructs a structured prompt for meal plan generation from a `User` and the full ingredient list. Lives in
 `com.example.suppergeist.service`.
 
 ```java
 public class PromptBuilder {
-    public String buildMealPlanPrompt(User user, List<Ingredient> ingredients) { ...}
+    public String build(User user, List<Ingredient> ingredients) { ...}
 }
 ```
 
-- Prompt instructs Ollama to return a JSON array of 7 meal objects
+- Prompt instructs Ollama to return a JSON object with a `meals` array containing 7 meal objects
 - Each object must include: `name` (String), `ingredients` (array of `{name, quantity, unit}`), and
   `mealType` (String — e.g. `"dinner"`)
 - Prompt embeds the user's `dietaryConstraints` and a note to avoid ingredients matching `avoidFoodCodes`
@@ -55,12 +58,20 @@ public class PromptBuilder {
 
 > The prompt format must match exactly what `MealPlanParser` expects. Write both together.
 
-**Done when:** `PromptBuilder.buildMealPlanPrompt(user, ingredients)` returns a non-empty, well-formed prompt
+**Done when:** `PromptBuilder.build(user, ingredients)` returns a non-empty, well-formed prompt
 string for a default user; output format matches the schema `MealPlanParser` will parse.
+
+**Current progress:** implemented as `PromptBuilder.build(user, ingredients)` and covered by
+`PromptBuilderTest`. Tests currently verify core prompt instructions, the JSON response shape, allowed vs.
+avoided ingredient lists, dietary constraints, and servings.
+
+**Follow-up polish:** the prompt currently joins ingredient names with semicolons and renders dietary constraints
+with `Set.toString()`. A later hardening pass should make prompt formatting deterministic and quote or escape
+ingredient names.
 
 ---
 
-## Task 3 — `MealPlanParser` ⬜
+## Task 3 — `MealPlanParser` ✅
 
 *(Depends on Task 2 — prompt format defines parse schema)*
 
@@ -76,26 +87,30 @@ public class MealPlanParser {
 `ParsedMeal` is a record: `name`, `mealType`, `List<ParsedIngredient>` where `ParsedIngredient` is
 `name`, `quantity` (double), `unit`.
 
-`MealPlanParseException` is a custom unchecked exception in `com.example.suppergeist.service` — more
+`MealPlanParseException` is a custom checked exception in `com.example.suppergeist.service` — more
 descriptive than `java.text.ParseException` and carries a clear failure message for the UI.
 
-**Validation rules (throw `ParseException` on failure):**
+**Validation rules (throw `MealPlanParseException` on failure):**
 
 - Response must be valid JSON
-- Top-level must be an array with exactly 7 elements
+- Top-level must be an object with a `meals` array containing exactly 7 elements
 - Each object must have non-null, non-blank `name` and `mealType`
 - Each ingredient must have non-blank `name` and a positive `quantity`
 - `unit` is allowed to be null/blank (some ingredients are unitless)
 
-**Jackson:** add `com.fasterxml.jackson.core:jackson-databind` to `build.gradle.kts` and
-`requires com.fasterxml.jackson.databind` to `module-info.java`. This was flagged as a future dependency in
-the Phase 2 roadmap.
+**JSON library:** implemented with Gson, using the existing `com.google.code.gson:gson` dependency and
+`requires com.google.gson` in `module-info.java`. The service package is opened to Gson for reflective parsing.
 
 > Raw LLM output must never reach the UI. `MealPlanParser` is the validation boundary — if it throws, the
 > caller shows an error to the user and offers a retry.
 
 **Done when:** parser correctly handles a well-formed response; throws `MealPlanParseException` with a clear message on
 each failure case; unit tests cover: valid input, missing field, wrong meal count, malformed JSON.
+
+**Current progress:** initial parser and `MealPlanParseException` are implemented, with `MealPlanParserTest`
+covering valid meal/ingredient parsing, multiple meals preserving response order, malformed JSON, missing
+`meals`, empty `meals`, null input, exactly 7 meals, required non-blank meal fields, required ingredients,
+required ingredient names, positive quantities, and allowed null/blank units.
 
 ---
 
@@ -123,7 +138,7 @@ public MealPlan generateAndSave(int userId, LocalDate weekStart) throws IOExcept
 
 1. Load `User` from `UserRepository`
 2. Load full ingredient list from `IngredientRepository.getAllIngredients()`
-3. Build prompt via `PromptBuilder.buildMealPlanPrompt(user, ingredients)`
+3. Build prompt via `PromptBuilder.build(user, ingredients)`
 4. Call `OllamaClient.generate(prompt)`
 5. Parse response via `MealPlanParser`
 6. Persist using the write methods from Phase 4: insert a `MealPlan` row, then for each `ParsedMeal` insert
@@ -191,7 +206,10 @@ Adds non-trivial effort (Jackson, schema versioning) for low demo value. Revisit
 
 ## Phase 5 Completion Criteria
 
-- [ ] `OllamaClient`, `PromptBuilder`, `MealPlanParser` implemented and tested in isolation
+- [x] `OllamaClient`, `PromptBuilder`, `MealPlanParser` implemented and tested in isolation
+  - `OllamaClient`: implemented and tested
+  - `PromptBuilder`: implemented and tested
+  - `MealPlanParser`: implemented and tested
 - [ ] "Generate Plan" button produces a populated weekly grid; the app stays responsive during generation
 - [ ] Parse and network errors surface as user-visible messages with a retry path
 - [ ] Regenerating an existing week replaces it cleanly
