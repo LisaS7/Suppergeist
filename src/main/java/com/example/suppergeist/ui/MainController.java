@@ -332,6 +332,15 @@ public class MainController {
             nextRowForDate.put(currentWeekStart.plusDays(i), 1);
         }
         populateMealCards(builder, weeklyMeals, estimates, nextRowForDate, mealsWithNoIngredients);
+
+        for (int i = 0; i < 7; i++) {
+            LocalDate date = currentWeekStart.plusDays(i);
+            if (nextRowForDate.get(date) == 1) {
+                VBox emptyCard = new VBox(new Label("No meal planned"));
+                emptyCard.getStyleClass().add("meal-card-empty");
+                mealPlanGrid.add(emptyCard, columnFor(date), 1);
+            }
+        }
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
