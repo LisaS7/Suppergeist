@@ -310,7 +310,7 @@ public class MainController {
         this.currentPlan = mealPlanService.findPlanForWeek(user.getId(), currentWeekStart);
 
         if (currentPlan == null) {
-            Label noPlanLabel = new Label("No plan for this week");
+            Label noPlanLabel = new Label("🕸️  No plan for this week  🕸️");
             noPlanLabel.getStyleClass().add("no-plan-label");
             this.mealPlanGrid.getChildren().add(noPlanLabel);
             this.shoppingListController.refresh(new HashMap<>());
@@ -335,7 +335,7 @@ public class MainController {
         if (this.user.isShowCalories()) {
             appendCalorieTotals(nextRowForDate, calorieTotals);
             int weeklyTotal = calorieTotals.values().stream().reduce(0, Integer::sum);
-            this.weeklyCalories.setText("Weekly calories: " + weeklyTotal);
+            this.weeklyCalories.setText("🕯️  Weekly calories: " + weeklyTotal + "  🕯️");
         }
 
         // + meal buttons

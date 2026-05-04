@@ -20,7 +20,7 @@
 .root {
     -fx-background-color: #b8cad3;
     -fx-font-family: "Quintessential";
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
 }
 
 
@@ -103,7 +103,7 @@ Separator .line {
     -fx-background-radius: 0;
 
     -fx-border-color: #051d29;
-    -fx-border-width: 2.5 1.5 3 2.5;
+    -fx-border-width: 2;
     -fx-border-radius: 0;
 
     -fx-padding: 12 14 12 14;
@@ -113,7 +113,7 @@ Separator .line {
 }
 
 .meal-card > Label {
-    -fx-font-size: 16px;
+    -fx-font-size: 14px;
     -fx-text-fill: #051d29;
     -fx-wrap-text: true;
 }
@@ -124,7 +124,7 @@ Separator .line {
 }
 
 .meal-kcal {
-    -fx-font-size: 13px;
+    -fx-font-size: 12px;
     -fx-text-fill: #4f6c7b;
     -fx-font-style: italic;
 }
@@ -136,7 +136,7 @@ Separator .line {
     -fx-background-radius: 0;
 
     -fx-border-color: #051d29;
-    -fx-border-width: 2.5 1.5 3 2.5;
+    -fx-border-width: 2;
     -fx-border-radius: 0;
 
     -fx-effect: dropshadow(gaussian, #1d3a49, 8, 0.15, 2, 2);
@@ -148,7 +148,7 @@ Separator .line {
 }
 
 .meal-card-back > Label {
-    -fx-font-size: 13px;
+    -fx-font-size: 12px;
     -fx-text-fill: #dce8ed;
     -fx-wrap-text: true;
 }
@@ -156,8 +156,6 @@ Separator .line {
 /*
    Empty/pending meal card — current fill.
    Apply this class to slots that have not yet been summoned.
-   The shadow and border are identical to .meal-card; only the
-   fill and text treatment differ to read as "not yet here."
 */
 .meal-card-empty {
     -fx-background-color: #88a9b7;
@@ -165,7 +163,7 @@ Separator .line {
     -fx-background-radius: 0;
 
     -fx-border-color: #051d29;
-    -fx-border-width: 2.5 1.5 3 2.5;
+    -fx-border-width: 2;
     -fx-border-style: dashed;
     -fx-border-radius: 0;
 
@@ -178,15 +176,36 @@ Separator .line {
 }
 
 .meal-card-empty > Label {
-    -fx-font-size: 14px;
+    -fx-font-size: 13px;
     -fx-text-fill: #4f6c7b;
     -fx-font-style: italic;
     -fx-wrap-text: true;
 }
 
+/* Left-edge accent by meal type — override left border colour only */
+.meal-card-breakfast {
+    -fx-border-color: #051d29 #051d29 #051d29 #e8a838;
+    -fx-border-width: 2 2 2 4;
+}
+
+.meal-card-lunch {
+    -fx-border-color: #051d29 #051d29 #051d29 #4f9e6f;
+    -fx-border-width: 2 2 2 4;
+}
+
+.meal-card-dinner {
+    -fx-border-color: #051d29 #051d29 #051d29 #4f6c7b;
+    -fx-border-width: 2 2 2 4;
+}
+
+.meal-card-snack {
+    -fx-border-color: #051d29 #051d29 #051d29 #8f6b9e;
+    -fx-border-width: 2 2 2 4;
+}
+
 /* Day-of-week labels in the GridPane header row */
 GridPane > Label {
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-font-weight: BOLD;
     -fx-text-fill: #1d3a49;
     -fx-padding: 0 0 4 2;
@@ -277,7 +296,7 @@ GridPane > Label {
     -fx-border-radius: 0;
     -fx-background-radius: 0;
     -fx-text-fill: #051d29;
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-font-weight: BOLD;
     -fx-padding: 7 16 7 16;
     -fx-cursor: HAND;
@@ -382,7 +401,7 @@ GridPane > Label {
 .tab-pane .tab .tab-label {
     -fx-text-fill: #051d29;
     -fx-font-weight: BOLD;
-    -fx-font-size: 20px;
+    -fx-font-size: 14px;
 }
 
 /* Hover state — fog fill; border stays abyss */
@@ -413,6 +432,7 @@ GridPane > Label {
     -fx-border-color: #051d29;
     -fx-border-width: 0 2.5 2.5 2.5;
     -fx-border-radius: 0;
+    -fx-padding: 12;
 }
 
 /* Neutralise Modena's focus ring — our abyss border is the indicator */
@@ -563,7 +583,7 @@ GridPane > Label {
     -fx-background-radius: 0;
     -fx-background-insets: 0;
     -fx-text-fill: #051d29;
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-padding: 0 6 5 6;
     -fx-alignment: CENTER;
 }
@@ -616,7 +636,7 @@ GridPane > Label {
     -fx-border-radius: 0;
     -fx-background-radius: 0;
     -fx-font-family: "Quintessential";
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-padding: 0;
     -fx-effect: dropshadow(gaussian, #1d3a49, 12, 0.2, 3, 3);
 }
@@ -639,7 +659,7 @@ GridPane > Label {
 .dialog-pane > .content.label {
     -fx-text-fill: #051d29;
     -fx-font-family: "Quintessential";
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-padding: 20 20 10 20;
 }
 
@@ -664,7 +684,7 @@ GridPane > Label {
     -fx-text-fill: #051d29;
     -fx-prompt-text-fill: #4f6c7b;
     -fx-font-family: "Quintessential";
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-padding: 6 8 6 8;
 }
 
@@ -682,7 +702,7 @@ GridPane > Label {
     -fx-border-radius: 0;
     -fx-background-radius: 0;
     -fx-font-family: "Quintessential";
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
 }
 
 .dialog-pane .combo-box-base > .list-cell {
@@ -727,7 +747,7 @@ GridPane > Label {
     -fx-background-color: #dce8ed;
     -fx-text-fill: #051d29;
     -fx-font-family: "Quintessential";
-    -fx-font-size: 18px;
+    -fx-font-size: 14px;
     -fx-padding: 6 8 6 8;
 }
 

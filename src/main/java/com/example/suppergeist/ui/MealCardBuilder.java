@@ -26,6 +26,7 @@ public class MealCardBuilder {
         // FRONT
         VBox front = new VBox();
         front.getStyleClass().add("meal-card");
+        front.getStyleClass().add("meal-card-" + meal.mealType().toLowerCase());
         // Meal name
         Label nameLabel = new Label(meal.mealName());
         front.getChildren().add(nameLabel);
