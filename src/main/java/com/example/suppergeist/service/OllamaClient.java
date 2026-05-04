@@ -1,6 +1,7 @@
 package com.example.suppergeist.service;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -45,7 +46,7 @@ public class OllamaClient {
                 log.warning(() -> "Ollama returned unsuccessful status " + response.statusCode()
                         + " with response body length " + response.body().length());
             }
-            return response.body();
+            return parseGenerateResponse(response.body());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.log(Level.WARNING, "Ollama generation request interrupted", e);
@@ -57,4 +58,18 @@ public class OllamaClient {
     }
 
     private record GenerateRequest(String model, String prompt, boolean stream) {}
+
+    private String parseGenerateResponse(String body) throws IOException {
+        try {
+            GenerateResponse response = GSON.fromJson(body, GenerateResponse.class);
+            if (response == null || response.response == null) {
+                throw new IOException("Ollama response did not include generated content");
+            }
+            return response.response;
+        } catch (JsonSyntaxException e) {
+            throw new IOException("Invalid Ollama response JSON", e);
+        }
+    }
+
+    private record GenerateResponse(String response) {}
 }

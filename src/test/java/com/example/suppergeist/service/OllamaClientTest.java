@@ -47,14 +47,14 @@ class OllamaClientTest {
     }
 
     @Test
-    void generate_postsPromptToOllamaEndpointAndReturnsRawResponse() throws IOException {
+    void generate_postsPromptToOllamaEndpointAndReturnsGeneratedResponseField() throws IOException {
         URI uri = URI.create("http://127.0.0.1:" + serverSocket.getLocalPort() + "/api/generate");
         OllamaClient client = new OllamaClient("llama3.2", uri, HttpClient.newHttpClient());
 
         String response = client.generate("say \"hello\"\nthen return JSON");
 
         assertNull(serverError);
-        assertEquals("{\"response\":\"meal plan json\"}", response);
+        assertEquals("{\"meals\":[]}", response);
         assertEquals("POST", requestMethod);
         assertEquals("application/json", requestContentType);
 
@@ -92,7 +92,9 @@ class OllamaClientTest {
             }
             requestBody = new String(body, 0, offset);
 
-            byte[] response = "{\"response\":\"meal plan json\"}".getBytes(StandardCharsets.UTF_8);
+            byte[] response = """
+                    {"model":"llama3.2","response":"{\\"meals\\":[]}","done":true}
+                    """.getBytes(StandardCharsets.UTF_8);
             output.write(("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
                     + response.length + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
             output.write(response);
