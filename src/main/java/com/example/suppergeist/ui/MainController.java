@@ -2,6 +2,7 @@ package com.example.suppergeist.ui;
 
 import com.example.suppergeist.model.*;
 import com.example.suppergeist.service.*;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -32,6 +33,7 @@ public class MainController {
     @Setter private UserPreferencesService userPreferencesService;
     @Setter private ShoppingListService shoppingListService;
     @Setter private NutritionService nutritionService;
+    @Setter private GeneratePlanService generatePlanService;
 
     private static final Logger log = Logger.getLogger(MainController.class.getName());
     private final DateTimeFormatter weekFormatter = DateTimeFormatter.ofPattern("dd LLLL yyyy");
@@ -46,6 +48,7 @@ public class MainController {
     @FXML private GridPane mealPlanGrid;
     @FXML private Label weekLabel;
     @FXML private Label weeklyCalories;
+    @FXML private Button generateButton;
     @FXML private Button createButton;
     @FXML private Button deleteButton;
 
@@ -302,8 +305,10 @@ public class MainController {
         MealCardBuilder builder = new MealCardBuilder(this.user);
         this.mealPlanGrid.getChildren().clear();
         this.weeklyCalories.setText("");
+        this.generateButton.setVisible(false);
         this.createButton.setVisible(false);
         this.deleteButton.setVisible(false);
+        this.generateButton.setManaged(false);
         this.createButton.setManaged(false);
         this.deleteButton.setManaged(false);
 
@@ -316,6 +321,8 @@ public class MainController {
             this.shoppingListController.refresh(new HashMap<>());
             this.createButton.setVisible(true);
             this.createButton.setManaged(true);
+            this.generateButton.setVisible(true);
+            this.generateButton.setManaged(true);
             return;
         }
 
@@ -421,6 +428,27 @@ public class MainController {
         } catch (SQLException e) {
             handleGridRefreshError(e);
         }
+    }
+
+    @FXML
+    private void generatePlan() {
+        Task<MealPlan> task = new Task<>() {
+            @Override
+            protected MealPlan call() throws Exception {
+                return generatePlanService.generateAndSave(user, currentWeekStart);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            try {
+                refreshMealPlanGrid();
+            } catch (SQLException ex) {
+                handleGridRefreshError(ex);
+            }
+        });
+        task.setOnFailed(e -> {
+            styledAlert(Alert.AlertType.ERROR, "Error!", task.getException().getMessage()).showAndWait();
+        });
+        new Thread(task).start();
     }
 
     @FXML

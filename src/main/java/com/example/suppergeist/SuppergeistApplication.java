@@ -24,8 +24,10 @@ public class SuppergeistApplication extends Application {
     private MealIngredientService mealIngredientService;
     private ShoppingListService shoppingListService;
     private NutritionService nutritionService;
+    private GeneratePlanService generatePlanService;
     private Exception initError;
     private static final Logger log = Logger.getLogger(SuppergeistApplication.class.getName());
+    private static final String LLM_MODEL = "qwen2.5:7b";
 
     private void showFatalError(Exception error) {
         log.log(Level.SEVERE, "Application startup failed", error);
@@ -67,6 +69,8 @@ public class SuppergeistApplication extends Application {
             this.mealIngredientService = new MealIngredientService(mealIngredientRepository, ingredientRepository);
             this.shoppingListService = new ShoppingListService(mealPlanEntryRepository, mealIngredientRepository);
             this.nutritionService = new NutritionService(mealIngredientRepository);
+            OllamaClient ollamaClient = new OllamaClient(LLM_MODEL);
+            this.generatePlanService = new GeneratePlanService(ingredientRepository, ollamaClient, mealPlanService, mealIngredientService);
         } catch (SQLException | IOException e) {
             log.log(Level.SEVERE, "Application startup failed", e);
             this.initError = e;
@@ -95,6 +99,7 @@ public class SuppergeistApplication extends Application {
         controller.setMealIngredientService(mealIngredientService);
         controller.setShoppingListService(shoppingListService);
         controller.setNutritionService(nutritionService);
+        controller.setGeneratePlanService(generatePlanService);
 
         try {
             controller.setup();

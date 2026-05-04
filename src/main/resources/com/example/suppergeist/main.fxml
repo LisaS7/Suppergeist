@@ -59,6 +59,8 @@
     </right>
     <bottom>
         <HBox fx:id="footerBox" spacing="10" styleClass="footer">
+            <Button fx:id="generateButton" onAction="#generatePlan" styleClass="button,button-primary">Conjure with AI
+            </Button>
             <Button fx:id="createButton" onAction="#createPlan" styleClass="button,button-primary">Summon Week</Button>
             <Button fx:id="deleteButton" onAction="#deletePlan" styleClass="button,button-primary">Banish Plan</Button>
             <Label fx:id="weeklyCalories"></Label>
