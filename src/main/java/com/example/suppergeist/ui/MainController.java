@@ -441,23 +441,29 @@ public class MainController {
 
     @FXML
     private void generatePlan() {
-        log.info(() -> "Starting generated meal plan task for week " + currentWeekStart);
+        User generationUser = this.user;
+        LocalDate generationWeekStart = this.currentWeekStart;
+
+        log.info(() -> "Starting generated meal plan task for week " + generationWeekStart);
         generateButton.setText("Generating...");
         generateButton.setDisable(true);
         Task<MealPlan> task = new Task<>() {
             @Override
             protected MealPlan call() throws Exception {
-                return generatePlanService.generateAndSave(user, currentWeekStart);
+                return generatePlanService.generateAndSave(generationUser, generationWeekStart);
             }
         };
         task.setOnSucceeded(e -> {
             try {
-                log.info(() -> "Generated meal plan task completed for week " + currentWeekStart);
-                refreshMealPlanGrid();
-                generateButton.setText("Conjure with AI");
-                generateButton.setDisable(false);
+                log.info(() -> "Generated meal plan task completed for week " + generationWeekStart);
+                if (generationWeekStart.equals(currentWeekStart)) {
+                    refreshMealPlanGrid();
+                }
             } catch (SQLException ex) {
                 handleGridRefreshError(ex);
+            } finally {
+                generateButton.setText("Conjure with AI");
+                generateButton.setDisable(false);
             }
         });
         task.setOnFailed(e -> {
