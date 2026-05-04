@@ -34,26 +34,25 @@ public class PromptBuilder {
                 "\nAvoid foods: " + String.join(";", avoidFoodNames) +
                 "\nServings per meal: " + user.getServingsPerMeal() +
                 """
-                
-                Return 7 meals.
-                The JSON structure must be:
-                
-                {
-                  "meals": [
-                    {
-                      "day": "Monday",
-                      "mealType": "Dinner",
-                      "name": "Meal name",
-                      "ingredients": [
+                        
+                        Return 7 meals.
+                        The JSON structure must be:
+                        
                         {
-                          "name": "Ingredient name",
-                          "quantity": 200,
-                          "unit": "g"
+                          "meals": [
+                            {
+                              "mealType": "Dinner",
+                              "name": "Meal name",
+                              "ingredients": [
+                                {
+                                  "name": "Ingredient name",
+                                  "quantity": 200,
+                                  "unit": "g"
+                                }
+                              ]
+                            }
+                          ]
                         }
-                      ]
-                    }
-                  ]
-                }
-                """;
+                        """;
     }
 }

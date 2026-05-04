@@ -65,9 +65,10 @@ public class MealPlanService {
         mealPlanRepository.delete(id);
     }
 
-    public void addMealToSlot(String mealName, String mealType, int mealPlanId, int dayOffset) throws SQLException {
+    public int addMealToSlot(String mealName, String mealType, int mealPlanId, int dayOffset) throws SQLException {
         Meal entry = new Meal(mealPlanId, dayOffset, mealType, mealName);
         mealRepository.create(entry);
+        return entry.getId();
     }
 
     public void updateMeal(int mealId, String mealName, String mealType) throws SQLException {
