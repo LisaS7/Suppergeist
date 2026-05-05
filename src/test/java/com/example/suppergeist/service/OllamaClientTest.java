@@ -18,7 +18,10 @@ import java.net.http.HttpClient;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OllamaClientTest {
 
@@ -28,9 +31,17 @@ class OllamaClientTest {
     private String requestContentType;
     private String requestBody;
     private IOException serverError;
+    private int responseStatus;
+    private String responseReason;
+    private String responseBody;
 
     @BeforeEach
     void setUp() throws IOException {
+        responseStatus = 200;
+        responseReason = "OK";
+        responseBody = """
+                {"model":"llama3.2","response":"{\\"meals\\":[]}","done":true}
+                """;
         serverSocket = new ServerSocket(0, 1, InetAddress.getLoopbackAddress());
         serverThread = new Thread(this::handleSingleRequest);
         serverThread.start();
@@ -64,6 +75,44 @@ class OllamaClientTest {
         assertEquals(false, body.get("stream").getAsBoolean());
     }
 
+    @Test
+    void generate_throwsTypedExceptionForHttpErrorWithoutParsingBody() {
+        responseStatus = 500;
+        responseReason = "Internal Server Error";
+        responseBody = "ollama model failed";
+        URI uri = URI.create("http://127.0.0.1:" + serverSocket.getLocalPort() + "/api/generate");
+        OllamaClient client = new OllamaClient("llama3.2", uri, HttpClient.newHttpClient());
+
+        OllamaClient.OllamaHttpException exception = assertThrows(
+                OllamaClient.OllamaHttpException.class,
+                () -> client.generate("return JSON")
+        );
+
+        assertNull(serverError);
+        assertEquals(500, exception.statusCode());
+        assertEquals("ollama model failed", exception.bodyPreview());
+        assertEquals("Ollama request failed with HTTP status 500 and response body: ollama model failed", exception.getMessage());
+    }
+
+    @Test
+    void generate_truncatesHttpErrorBodyPreview() {
+        responseStatus = 404;
+        responseReason = "Not Found";
+        responseBody = "x".repeat(600);
+        URI uri = URI.create("http://127.0.0.1:" + serverSocket.getLocalPort() + "/api/generate");
+        OllamaClient client = new OllamaClient("llama3.2", uri, HttpClient.newHttpClient());
+
+        OllamaClient.OllamaHttpException exception = assertThrows(
+                OllamaClient.OllamaHttpException.class,
+                () -> client.generate("return JSON")
+        );
+
+        assertEquals(404, exception.statusCode());
+        assertEquals(503, exception.bodyPreview().length());
+        assertTrue(exception.bodyPreview().endsWith("..."));
+        assertFalse(exception.bodyPreview().contains("x".repeat(501)));
+    }
+
     private void handleSingleRequest() {
         try (Socket socket = serverSocket.accept();
              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
@@ -92,10 +141,9 @@ class OllamaClientTest {
             }
             requestBody = new String(body, 0, offset);
 
-            byte[] response = """
-                    {"model":"llama3.2","response":"{\\"meals\\":[]}","done":true}
-                    """.getBytes(StandardCharsets.UTF_8);
-            output.write(("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: "
+            byte[] response = responseBody.getBytes(StandardCharsets.UTF_8);
+            output.write(("HTTP/1.1 " + responseStatus + " " + responseReason
+                    + "\r\nContent-Type: application/json\r\nContent-Length: "
                     + response.length + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
             output.write(response);
             output.flush();

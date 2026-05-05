@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 public class OllamaClient {
     private static final String OLLAMA_URL = "http://localhost:11434/api/generate";
+    private static final int ERROR_BODY_PREVIEW_LIMIT = 500;
     private static final Gson GSON = new Gson();
     private static final Logger log = Logger.getLogger(OllamaClient.class.getName());
 
@@ -43,8 +44,7 @@ public class OllamaClient {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             log.info(() -> "Ollama generation request completed with status " + response.statusCode());
             if (response.statusCode() >= 400) {
-                log.warning(() -> "Ollama returned unsuccessful status " + response.statusCode()
-                        + " with response body length " + response.body().length());
+                throw new OllamaHttpException(response.statusCode(), bodyPreview(response.body()));
             }
             return parseGenerateResponse(response.body());
         } catch (InterruptedException e) {
@@ -59,6 +59,25 @@ public class OllamaClient {
 
     private record GenerateRequest(String model, String prompt, boolean stream) {}
 
+    public static class OllamaHttpException extends IOException {
+        private final int statusCode;
+        private final String bodyPreview;
+
+        OllamaHttpException(int statusCode, String bodyPreview) {
+            super("Ollama request failed with HTTP status " + statusCode + " and response body: " + bodyPreview);
+            this.statusCode = statusCode;
+            this.bodyPreview = bodyPreview;
+        }
+
+        public int statusCode() {
+            return statusCode;
+        }
+
+        public String bodyPreview() {
+            return bodyPreview;
+        }
+    }
+
     private String parseGenerateResponse(String body) throws IOException {
         try {
             GenerateResponse response = GSON.fromJson(body, GenerateResponse.class);
@@ -72,4 +91,14 @@ public class OllamaClient {
     }
 
     private record GenerateResponse(String response) {}
+
+    private String bodyPreview(String body) {
+        if (body == null) {
+            return "";
+        }
+        if (body.length() <= ERROR_BODY_PREVIEW_LIMIT) {
+            return body;
+        }
+        return body.substring(0, ERROR_BODY_PREVIEW_LIMIT) + "...";
+    }
 }
