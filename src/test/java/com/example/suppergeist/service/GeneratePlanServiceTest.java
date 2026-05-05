@@ -136,7 +136,8 @@ class GeneratePlanServiceTest {
                       "ingredients": [
                         { "foodCode": "lentils", "name": "Different Display Name", "quantity": 200, "unit": "g" },
                         { "foodCode": "tomato", "name": "Tomatoes", "quantity": 1, "unit": "cup" },
-                        { "foodCode": "unknown-code", "name": "Ingredient Not In Repository", "quantity": 1, "unit": "piece" }
+                        { "foodCode": "unknown-code", "name": "Ingredient Not In Repository", "quantity": 1, "unit": "piece" },
+                        { "foodCode": "avoid-rice", "name": "Rice", "quantity": 100, "unit": "g" }
                       ]
                     },
                     { "name": "Tuesday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] },

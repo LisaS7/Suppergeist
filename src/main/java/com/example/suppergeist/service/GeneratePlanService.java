@@ -34,6 +34,7 @@ public class GeneratePlanService {
         List<Ingredient> ingredientList = ingredientRepository.getAllIngredients();
         Map<String, Ingredient> ingredientsByFoodCode = ingredientList.stream()
                 .filter(ingredient -> ingredient.getFoodCode() != null && !ingredient.getFoodCode().isBlank())
+                .filter(ingredient -> !user.getAvoidFoodCodes().contains(ingredient.getFoodCode()))
                 .collect(Collectors.toMap(Ingredient::getFoodCode, Function.identity(), (first, ignored) -> first));
         log.info(() -> "Loaded " + ingredientList.size() + " candidate ingredients for generation");
 
@@ -66,7 +67,7 @@ public class GeneratePlanService {
                 Ingredient match = ingredientsByFoodCode.get(ing.foodCode());
                 if (match == null) {
                     unmatchedIngredients++;
-                    log.warning(() -> "Generated ingredient did not match repository food code and was skipped: "
+                    log.warning(() -> "Generated ingredient food code was unknown or disallowed and was skipped: "
                             + ing.foodCode() + " (" + ing.name() + ")");
                 } else {
                     mealIngredientService.addIngredientToMeal(mealId, match.getId(), ing.quantity(), ing.unit());
