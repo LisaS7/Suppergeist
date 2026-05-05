@@ -28,9 +28,9 @@ class PromptBuilderTest {
         assertTrue(prompt.contains("Output format must be valid JSON only. No extra text."));
         assertTrue(prompt.contains("Return 7 meals."));
         assertTrue(prompt.contains("\"meals\""));
-        assertTrue(prompt.contains("\"day\": \"Monday\""));
         assertTrue(prompt.contains("\"mealType\": \"Dinner\""));
         assertTrue(prompt.contains("\"ingredients\""));
+        assertTrue(prompt.contains("\"foodCode\": \"11-001\""));
         assertTrue(prompt.contains("\"quantity\": 200"));
         assertTrue(prompt.contains("\"unit\": \"g\""));
     }
@@ -46,9 +46,9 @@ class PromptBuilderTest {
 
         String prompt = promptBuilder.build(user, ingredients);
 
-        assertTrue(prompt.contains("You must only use ingredients from this list: Rice;Tomato"));
+        assertTrue(prompt.contains("You must only use ingredients from this list: [{\"foodCode\":\"11-001\",\"name\":\"Rice\"},{\"foodCode\":\"13-001\",\"name\":\"Tomato\"}]"));
         assertTrue(prompt.contains("Avoid foods: Peanuts"));
-        assertFalse(prompt.contains("You must only use ingredients from this list: Rice;Peanuts;Tomato"));
+        assertFalse(prompt.contains("{\"foodCode\":\"12-001\",\"name\":\"Peanuts\"}"));
     }
 
     @Test
@@ -72,7 +72,7 @@ class PromptBuilderTest {
 
         String prompt = promptBuilder.build(user, ingredients);
 
-        assertTrue(prompt.contains("You must only use ingredients from this list: Rice;Tomato"));
+        assertTrue(prompt.contains("You must only use ingredients from this list: [{\"foodCode\":\"11-001\",\"name\":\"Rice\"},{\"foodCode\":\"12-001\",\"name\":\"Tomato\"}]"));
         assertTrue(prompt.contains("Avoid foods: "));
     }
 }

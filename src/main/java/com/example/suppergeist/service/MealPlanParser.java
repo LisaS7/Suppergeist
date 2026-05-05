@@ -6,7 +6,7 @@ import com.google.gson.JsonSyntaxException;
 import java.util.List;
 
 public class MealPlanParser {
-    record ParsedIngredient(String name, double quantity, String unit) {}
+    record ParsedIngredient(String foodCode, String name, double quantity, String unit) {}
 
     record ParsedMeal(String name, String mealType, List<ParsedIngredient> ingredients) {}
 
@@ -54,6 +54,9 @@ public class MealPlanParser {
                 int ingredientNumber = j + 1;
                 if (ingredient == null) {
                     throw new MealPlanParseException("Meal " + mealNumber + " ingredient " + ingredientNumber + " is missing");
+                }
+                if (isBlank(ingredient.foodCode())) {
+                    throw new MealPlanParseException("Meal " + mealNumber + " ingredient " + ingredientNumber + " is missing a foodCode");
                 }
                 if (isBlank(ingredient.name())) {
                     throw new MealPlanParseException("Meal " + mealNumber + " ingredient " + ingredientNumber + " is missing a name");

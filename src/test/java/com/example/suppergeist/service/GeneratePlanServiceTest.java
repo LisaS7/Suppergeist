@@ -48,9 +48,9 @@ class GeneratePlanServiceTest {
         assertTrue(ingredientRepository.getAllIngredientsCalled);
         assertTrue(client.prompt.contains("Dietary constraints: [vegetarian]"));
         assertTrue(client.prompt.contains("Avoid foods: Rice"));
-        assertTrue(client.prompt.contains("Lentils"));
-        assertTrue(client.prompt.contains("Tomato"));
-        assertFalse(client.prompt.contains("You must only use ingredients from this list: Lentils;Tomato;Rice"));
+        assertTrue(client.prompt.contains("{\"foodCode\":\"lentils\",\"name\":\"Lentils\"}"));
+        assertTrue(client.prompt.contains("{\"foodCode\":\"tomato\",\"name\":\"Tomato\"}"));
+        assertFalse(client.prompt.contains("{\"foodCode\":\"avoid-rice\",\"name\":\"Rice\"}"));
 
         assertEquals(List.of(99), mealPlanService.deletedPlanIds);
         assertEquals(user.getId(), mealPlanService.createdUserId);
@@ -60,10 +60,11 @@ class GeneratePlanServiceTest {
         assertEquals(new AddedMeal("Monday Stew", "Dinner", mealPlanService.createdPlan.id(), 0), mealPlanService.addedMeals.getFirst());
         assertEquals(new AddedMeal("Sunday Stew", "Dinner", mealPlanService.createdPlan.id(), 6), mealPlanService.addedMeals.get(6));
 
-        assertEquals(List.of(
-                new AddedIngredient(1000, 10, 200.0, "g"),
-                new AddedIngredient(1001, 11, 1.0, "cup")
-        ), mealIngredientService.addedIngredients);
+        assertEquals(8, mealIngredientService.addedIngredients.size());
+        assertTrue(mealIngredientService.addedIngredients.contains(new AddedIngredient(1000, 10, 200.0, "g")));
+        assertTrue(mealIngredientService.addedIngredients.contains(new AddedIngredient(1000, 11, 1.0, "cup")));
+        assertFalse(mealIngredientService.addedIngredients.stream()
+                .anyMatch(ingredient -> ingredient.ingredientId() == 12));
     }
 
     @Test
@@ -133,17 +134,17 @@ class GeneratePlanServiceTest {
                       "name": "Monday Stew",
                       "mealType": "Dinner",
                       "ingredients": [
-                        { "name": "Lentils", "quantity": 200, "unit": "g" },
-                        { "name": "Tomato", "quantity": 1, "unit": "cup" },
-                        { "name": "Ingredient Not In Repository", "quantity": 1, "unit": "piece" }
+                        { "foodCode": "lentils", "name": "Different Display Name", "quantity": 200, "unit": "g" },
+                        { "foodCode": "tomato", "name": "Tomatoes", "quantity": 1, "unit": "cup" },
+                        { "foodCode": "unknown-code", "name": "Ingredient Not In Repository", "quantity": 1, "unit": "piece" }
                       ]
                     },
-                    { "name": "Tuesday Stew", "mealType": "Dinner", "ingredients": [{ "name": "Lentils", "quantity": 150, "unit": "g" }] },
-                    { "name": "Wednesday Stew", "mealType": "Dinner", "ingredients": [{ "name": "Lentils", "quantity": 150, "unit": "g" }] },
-                    { "name": "Thursday Stew", "mealType": "Dinner", "ingredients": [{ "name": "Lentils", "quantity": 150, "unit": "g" }] },
-                    { "name": "Friday Stew", "mealType": "Dinner", "ingredients": [{ "name": "Lentils", "quantity": 150, "unit": "g" }] },
-                    { "name": "Saturday Stew", "mealType": "Dinner", "ingredients": [{ "name": "Lentils", "quantity": 150, "unit": "g" }] },
-                    { "name": "Sunday Stew", "mealType": "Dinner", "ingredients": [{ "name": "Lentils", "quantity": 150, "unit": "g" }] }
+                    { "name": "Tuesday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] },
+                    { "name": "Wednesday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] },
+                    { "name": "Thursday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] },
+                    { "name": "Friday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] },
+                    { "name": "Saturday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] },
+                    { "name": "Sunday Stew", "mealType": "Dinner", "ingredients": [{ "foodCode": "lentils", "name": "Lentils", "quantity": 150, "unit": "g" }] }
                   ]
                 }
                 """;

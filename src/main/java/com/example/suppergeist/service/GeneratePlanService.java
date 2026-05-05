@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.logging.Logger;
 
 public class GeneratePlanService {
@@ -29,6 +32,9 @@ public class GeneratePlanService {
     public MealPlan generateAndSave(User user, LocalDate weekStart) throws IOException, MealPlanParseException, SQLException {
         log.info(() -> "Generating meal plan for user " + user.getId() + " and week " + weekStart);
         List<Ingredient> ingredientList = ingredientRepository.getAllIngredients();
+        Map<String, Ingredient> ingredientsByFoodCode = ingredientList.stream()
+                .filter(ingredient -> ingredient.getFoodCode() != null && !ingredient.getFoodCode().isBlank())
+                .collect(Collectors.toMap(Ingredient::getFoodCode, Function.identity(), (first, ignored) -> first));
         log.info(() -> "Loaded " + ingredientList.size() + " candidate ingredients for generation");
 
         // Build prompt
@@ -57,18 +63,14 @@ public class GeneratePlanService {
             MealPlanParser.ParsedMeal meal = parsedMeals.get(i);
             int mealId = mealPlanService.addMealToSlot(meal.name(), meal.mealType(), newPlan.id(), i);
             for (MealPlanParser.ParsedIngredient ing : meal.ingredients()) {
-                boolean matched = false;
-                for (Ingredient match : ingredientList) {
-                    if (match.getName().equals(ing.name())) {
-                        mealIngredientService.addIngredientToMeal(mealId, match.getId(), ing.quantity(), ing.unit());
-                        matched = true;
-                        matchedIngredients++;
-                        break;
-                    }
-                }
-                if (!matched) {
+                Ingredient match = ingredientsByFoodCode.get(ing.foodCode());
+                if (match == null) {
                     unmatchedIngredients++;
-                    log.warning(() -> "Generated ingredient did not match repository ingredient and was skipped: " + ing.name());
+                    log.warning(() -> "Generated ingredient did not match repository food code and was skipped: "
+                            + ing.foodCode() + " (" + ing.name() + ")");
+                } else {
+                    mealIngredientService.addIngredientToMeal(mealId, match.getId(), ing.quantity(), ing.unit());
+                    matchedIngredients++;
                 }
             }
         }

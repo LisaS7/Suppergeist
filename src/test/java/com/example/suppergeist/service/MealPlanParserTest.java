@@ -22,11 +22,13 @@ class MealPlanParserTest {
                           "mealType": "Dinner",
                           "ingredients": [
                             {
+                              "foodCode": "lentils",
                               "name": "Lentils",
                               "quantity": 200,
                               "unit": "g"
                             },
                             {
+                              "foodCode": "tomato",
                               "name": "Tomato",
                               "quantity": 1.5,
                               "unit": "cups"
@@ -51,11 +53,13 @@ class MealPlanParserTest {
         assertEquals(2, meal.ingredients().size());
 
         MealPlanParser.ParsedIngredient firstIngredient = meal.ingredients().getFirst();
+        assertEquals("lentils", firstIngredient.foodCode());
         assertEquals("Lentils", firstIngredient.name());
         assertEquals(200.0, firstIngredient.quantity());
         assertEquals("g", firstIngredient.unit());
 
         MealPlanParser.ParsedIngredient secondIngredient = meal.ingredients().get(1);
+        assertEquals("tomato", secondIngredient.foodCode());
         assertEquals("Tomato", secondIngredient.name());
         assertEquals(1.5, secondIngredient.quantity());
         assertEquals("cups", secondIngredient.unit());
@@ -162,6 +166,7 @@ class MealPlanParserTest {
                                   "name": "Tuesday Meal",
                                   "ingredients": [
                                     {
+                                      "foodCode": "rice",
                                       "name": "Rice",
                                       "quantity": 100,
                                       "unit": "g"
@@ -215,11 +220,13 @@ class MealPlanParserTest {
                                   "mealType": "Dinner",
                                   "ingredients": [
                                     {
+                                      "foodCode": "rice",
                                       "name": "Rice",
                                       "quantity": 100,
                                       "unit": "g"
                                     },
                                     {
+                                      "foodCode": "blank",
                                       "name": "",
                                       "quantity": 50,
                                       "unit": "g"
@@ -239,6 +246,36 @@ class MealPlanParserTest {
     }
 
     @Test
+    void parse_throwsWhenIngredientFoodCodeIsMissing() {
+        MealPlanParseException exception = assertThrows(
+                MealPlanParseException.class,
+                () -> parser.parse(jsonWithMeals(
+                        validMeal("Monday Meal", "Dinner"),
+                        """
+                                {
+                                  "name": "Tuesday Meal",
+                                  "mealType": "Dinner",
+                                  "ingredients": [
+                                    {
+                                      "name": "Rice",
+                                      "quantity": 100,
+                                      "unit": "g"
+                                    }
+                                  ]
+                                }
+                                """,
+                        validMeal("Wednesday Meal", "Dinner"),
+                        validMeal("Thursday Meal", "Dinner"),
+                        validMeal("Friday Meal", "Dinner"),
+                        validMeal("Saturday Meal", "Dinner"),
+                        validMeal("Sunday Meal", "Dinner")
+                ))
+        );
+
+        assertEquals("Meal 2 ingredient 1 is missing a foodCode", exception.getMessage());
+    }
+
+    @Test
     void parse_throwsWhenIngredientQuantityIsZeroOrMissing() {
         MealPlanParseException exception = assertThrows(
                 MealPlanParseException.class,
@@ -252,6 +289,7 @@ class MealPlanParserTest {
                                   "mealType": "Dinner",
                                   "ingredients": [
                                     {
+                                      "foodCode": "rice",
                                       "name": "Rice",
                                       "unit": "g"
                                     }
@@ -276,11 +314,13 @@ class MealPlanParserTest {
                           "mealType": "Dinner",
                           "ingredients": [
                             {
+                              "foodCode": "egg",
                               "name": "Egg",
                               "quantity": 2,
                               "unit": null
                             },
                             {
+                              "foodCode": "salt",
                               "name": "Salt",
                               "quantity": 1,
                               "unit": ""
@@ -323,6 +363,7 @@ class MealPlanParserTest {
                   "mealType": "%s",
                   "ingredients": [
                     {
+                      "foodCode": "rice",
                       "name": "Rice",
                       "quantity": 100,
                       "unit": "g"
